@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { Star, Upload, X, ArrowLeft, Store } from 'lucide-react';
 import { api } from '../api/client';
-import { Checkbox } from './ui/Checkbox';
+import { Checkbox } from './ui/checkbox';
 
 export function FeedbackForm() {
   const navigate = useNavigate();

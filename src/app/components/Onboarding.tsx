@@ -5,7 +5,7 @@ import { api } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import { Footer } from './Footer';
 const logo = "/logo.png";
-import { Checkbox } from './ui/Checkbox';
+import { Checkbox } from './ui/checkbox';
 
 interface OnboardingData {
   // Account info

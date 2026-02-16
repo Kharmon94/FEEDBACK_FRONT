@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { ArrowLeft, User, Mail, Phone, CheckCircle2 } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
-import { Checkbox } from './ui/Checkbox';
+import { Checkbox } from './ui/checkbox';
 
 export function OptInPage() {
   const navigate = useNavigate();
