@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { MapPin, Plus, Edit2, ExternalLink, Copy, Check, ChevronRight, ArrowUpCircle } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { api } from '../../api/client';
+import { useAuth } from '../../contexts/AuthContext';
+import { api as railsApi, type Plan } from '../../../services/api';
 
 interface Location {
   id: string;
@@ -16,21 +18,43 @@ interface Location {
 
 export function LocationsManager() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Current plan info - this could be fetched from the server in the future
-  // For now, we'll use a hardcoded plan (Starter = 1, Pro = 5, Business = 15, Enterprise = unlimited)
-  const [currentPlan] = useState({
-    id: 'starter',
-    name: 'Starter',
-    locationLimit: 1
+  const [currentPlan, setCurrentPlan] = useState<{ slug: string; name: string; locationLimit: number | null }>({
+    slug: user?.plan || 'free',
+    name: 'Free',
+    locationLimit: 1,
   });
 
   useEffect(() => {
     loadLocations();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const planSlug = user?.plan || 'free';
+        const data = await railsApi.getPlans();
+        const match = data.plans.find((p: Plan) => p.slug === planSlug);
+        if (!cancelled) {
+          setCurrentPlan({
+            slug: match?.slug || planSlug,
+            name: match?.name || 'Free',
+            locationLimit: match ? match.location_limit : 1,
+          });
+        }
+      } catch {
+        // If plans fail to load, keep a safe default.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.plan]);
 
   const loadLocations = async () => {
     try {
@@ -66,7 +90,7 @@ export function LocationsManager() {
   }
 
   // Check if user has reached their location limit
-  const hasReachedLimit = locations.length >= currentPlan.locationLimit;
+  const hasReachedLimit = currentPlan.locationLimit != null && locations.length >= currentPlan.locationLimit;
 
   return (
     <div className="space-y-6">

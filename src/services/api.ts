@@ -173,6 +173,10 @@ export const api = {
     return request('/dashboard');
   },
 
+  async getPlans(): Promise<{ plans: Plan[] }> {
+    return request<{ plans: Plan[] }>('/plans', { skipAuth: true });
+  },
+
   async getFeedback(): Promise<FeedbackSubmission[]> {
     const { feedback } = await request<{ feedback: FeedbackSubmission[] }>('/feedback');
     return feedback;
@@ -198,6 +202,34 @@ export const api = {
 
   async getAdminDashboard(): Promise<AdminDashboardResponse> {
     return request<AdminDashboardResponse>('/admin/dashboard');
+  },
+
+  async getAdminPlans(): Promise<{ plans: AdminPlan[] }> {
+    return request<{ plans: AdminPlan[] }>('/admin/plans');
+  },
+
+  async getAdminPlan(id: string): Promise<AdminPlan> {
+    return request<AdminPlan>(`/admin/plans/${id}`);
+  },
+
+  async createAdminPlan(payload: AdminPlanUpsertPayload): Promise<AdminPlan> {
+    return request<AdminPlan>('/admin/plans', { method: 'POST', body: JSON.stringify(payload) });
+  },
+
+  async updateAdminPlan(id: string, payload: AdminPlanUpsertPayload & { replacement_slug?: string }): Promise<AdminPlan> {
+    return request<AdminPlan>(`/admin/plans/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  },
+
+  async deleteAdminPlan(id: string, payload?: { replacement_slug?: string; hard?: boolean }): Promise<AdminPlan | { success: true }> {
+    return request<AdminPlan | { success: true }>(`/admin/plans/${id}`, { method: 'DELETE', body: JSON.stringify(payload ?? {}) });
+  },
+
+  async getAdminPlanUsage(id: string): Promise<AdminPlanUsage> {
+    return request<AdminPlanUsage>(`/admin/plans/${id}/usage`);
+  },
+
+  async reassignAdminPlan(id: string, replacement_slug: string): Promise<{ updated_users_count: number }> {
+    return request(`/admin/plans/${id}/reassign`, { method: 'POST', body: JSON.stringify({ replacement_slug }) });
   },
 
   async getAdminUsers(params?: { page?: number; per_page?: number; search?: string; plan?: string; status?: string }): Promise<AdminUsersResponse> {
@@ -353,6 +385,42 @@ export interface AdminRecentActivityItem {
   user_name?: string;
   location_name?: string;
 }
+
+export interface Plan {
+  id: string;
+  slug: string;
+  name: string;
+  monthly_price_cents: number | null;
+  yearly_price_cents: number | null;
+  location_limit: number | null;
+  features: string[];
+  cta: string | null;
+  highlighted: boolean;
+  display_order: number;
+}
+
+export interface AdminPlan extends Plan {
+  active: boolean;
+}
+
+export interface AdminPlanUsage {
+  plan_id: string;
+  slug: string;
+  users_count: number;
+}
+
+export type AdminPlanUpsertPayload = {
+  slug?: string;
+  name?: string;
+  monthly_price_cents?: number | null;
+  yearly_price_cents?: number | null;
+  location_limit?: number | null;
+  features?: string[];
+  cta?: string | null;
+  highlighted?: boolean;
+  display_order?: number;
+  active?: boolean;
+};
 
 export interface AdminUser {
   id: string;

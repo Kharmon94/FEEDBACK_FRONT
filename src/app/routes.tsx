@@ -37,6 +37,7 @@ import { AdminSuggestionsPage } from './components/admin/AdminSuggestionsPage';
 import { AdminAnalyticsPage } from './components/admin/AdminAnalyticsPage';
 import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
 import { AdminLoginPage } from './components/admin/AdminLoginPage';
+import { AdminPlansPage } from './components/admin/AdminPlansPage';
 
 export const router = createBrowserRouter([
   {
@@ -193,6 +194,10 @@ export const router = createBrowserRouter([
       {
         path: 'analytics',
         Component: AdminAnalyticsPage,
+      },
+      {
+        path: 'plans',
+        Component: AdminPlansPage,
       },
       {
         path: 'settings',

@@ -7,6 +7,7 @@ import {
   MessageSquare, 
   Lightbulb,
   BarChart3, 
+  BadgeDollarSign,
   Settings, 
   LogOut, 
   Menu, 
@@ -47,6 +48,7 @@ export function AdminLayout() {
     { to: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
     { to: '/admin/suggestions', label: 'Suggestions', icon: Lightbulb },
     { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    { to: '/admin/plans', label: 'Plans', icon: BadgeDollarSign },
     { to: '/admin/settings', label: 'Settings', icon: Settings },
   ];
 

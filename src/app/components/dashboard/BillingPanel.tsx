@@ -1,134 +1,42 @@
-import { useState, useEffect } from 'react';
-import { CreditCard, Check, Crown, Zap, Building2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { CreditCard, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router';
-
-interface Plan {
-  id: string;
-  name: string;
-  price: number | null;
-  billingPeriod: 'monthly' | 'yearly';
-  locations: number | null;
-  features: string[];
-}
-
-interface PlanOption {
-  id: string;
-  name: string;
-  icon: any;
-  price: { monthly: number | null; yearly: number | null };
-  locations: number | null;
-  description: string;
-  features: string[];
-  cta: string;
-  highlighted: boolean;
-}
+import { useAuth } from '../../contexts/AuthContext';
+import { api, type Plan } from '../../../services/api';
 
 export function BillingPanel() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [showFeatures, setShowFeatures] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState<Plan>({
-    id: 'starter',
-    name: 'Starter',
-    price: 29,
-    billingPeriod: 'monthly',
-    locations: 1,
-    features: [
-      '1 location',
-      'Unlimited feedback submissions',
-      'Advanced analytics',
-      'Priority email support',
-      'Custom branding',
-      'Email notifications',
-      'CSV export',
-    ]
-  });
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
 
-  const plans: PlanOption[] = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      icon: Check,
-      price: { monthly: 29, yearly: 297 },
-      locations: 1,
-      description: 'Perfect for single location businesses',
-      features: [
-        '1 location',
-        'Unlimited feedback submissions',
-        'Advanced analytics',
-        'Priority email support',
-        'Custom branding',
-        'Email notifications',
-        'CSV export',
-      ],
-      cta: 'Upgrade Plan',
-      highlighted: false,
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      icon: Zap,
-      price: { monthly: 59, yearly: 597 },
-      locations: 5,
-      description: 'For growing businesses',
-      features: [
-        'Up to 5 locations',
-        'Unlimited feedback submissions',
-        'Advanced analytics & reporting',
-        'Priority email support',
-        'Custom branding',
-        'Email notifications',
-        'API access',
-        'Location management dashboard',
-      ],
-      cta: 'Upgrade Plan',
-      highlighted: true,
-    },
-    {
-      id: 'business',
-      name: 'Business',
-      icon: Crown,
-      price: { monthly: 99, yearly: 997 },
-      locations: 15,
-      description: 'For multi-location businesses',
-      features: [
-        'Up to 15 locations',
-        'Unlimited feedback submissions',
-        'Advanced analytics & reporting',
-        'Priority email & phone support',
-        'White-label solution',
-        'Custom integrations',
-        'Dedicated account manager',
-        'Advanced security features',
-      ],
-      cta: 'Upgrade Plan',
-      highlighted: false,
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      icon: Building2,
-      price: { monthly: null, yearly: null },
-      locations: null,
-      description: 'For large organizations',
-      features: [
-        'Unlimited locations',
-        'Unlimited feedback submissions',
-        'Custom analytics & reporting',
-        '24/7 priority support',
-        'White-label solution',
-        'Custom integrations',
-        'Dedicated success team',
-        'SLA guarantee',
-        'Custom contracts',
-      ],
-      cta: 'Contact Sales',
-      highlighted: false,
-    },
-  ];
+  const currentPlanSlug = user?.plan || 'free';
+  const currentPlan = useMemo(() => plans.find((p) => p.slug === currentPlanSlug) || null, [plans, currentPlanSlug]);
 
-  const currentPlanInfo = plans.find(p => p.id === currentPlan.id);
-  const Icon = currentPlanInfo?.icon || Check;
+  const priceDollars = useMemo(() => {
+    if (!currentPlan) return null;
+    const cents = billingPeriod === 'monthly' ? currentPlan.monthly_price_cents : currentPlan.yearly_price_cents;
+    return cents == null ? null : Math.round(cents / 100);
+  }, [currentPlan, billingPeriod]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await api.getPlans();
+        if (!cancelled) setPlans(data.plans);
+      } catch {
+        // Keep UI resilient; no hard fail required here.
+      } finally {
+        if (!cancelled) setPlansLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -139,14 +47,14 @@ export function BillingPanel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <div>
             <div className="text-sm text-gray-600 mb-1">Current Plan</div>
-            <h3 className="text-2xl font-bold text-black">{currentPlan.name}</h3>
+            <h3 className="text-2xl font-bold text-black">{currentPlan?.name || (plansLoading ? 'Loading…' : 'Free')}</h3>
           </div>
           <div className="text-left sm:text-right">
-            {currentPlan.price ? (
+            {priceDollars != null ? (
               <>
-                <div className="text-3xl font-bold text-black">${currentPlan.price}</div>
+                <div className="text-3xl font-bold text-black">${priceDollars}</div>
                 <div className="text-sm text-gray-600">
-                  {currentPlan.billingPeriod === 'yearly' ? 'per year' : 'per month'}
+                  {billingPeriod === 'yearly' ? 'per year' : 'per month'}
                 </div>
               </>
             ) : (
@@ -187,7 +95,7 @@ export function BillingPanel() {
         {showFeatures && (
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {currentPlan.features.map((feature, index) => (
+              {(currentPlan?.features || []).map((feature, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <div className="w-5 h-5 rounded-full bg-black flex items-center justify-center flex-shrink-0">
                     <Check className="w-3 h-3 text-white" />

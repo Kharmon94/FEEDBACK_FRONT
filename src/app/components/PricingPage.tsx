@@ -2,79 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { Check, Zap, Crown, Building2, Menu, X } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
 import { Footer } from './Footer';
 import { SEO } from './SEO';
+import { api, type Plan } from '../../services/api';
 const logo = "/logo.png";
-
-const plans = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    icon: Zap,
-    price: { monthly: 29, yearly: 297 },
-    cta: 'Start Free Trial',
-    highlighted: false,
-    features: [
-      '1 location',
-      'Unlimited feedback',
-      'Advanced analytics',
-      'Priority email support',
-      'Custom branding',
-      'CSV export'
-    ]
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    icon: Crown,
-    price: { monthly: 59, yearly: 597 },
-    cta: 'Start Free Trial',
-    highlighted: true,
-    features: [
-      'Up to 5 locations',
-      'Unlimited feedback',
-      'Advanced analytics',
-      'Priority support',
-      'Custom branding',
-      'CSV export'
-    ]
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    icon: Building2,
-    price: { monthly: 99, yearly: 997 },
-    cta: 'Start Free Trial',
-    highlighted: false,
-    features: [
-      'Up to 15 locations',
-      'Unlimited feedback',
-      'Advanced analytics',
-      'Priority support',
-      'Custom branding',
-      'CSV export',
-      'White label options'
-    ]
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    icon: Building2,
-    price: { monthly: null, yearly: null },
-    cta: 'Contact Sales',
-    highlighted: false,
-    features: [
-      'Unlimited locations',
-      'Unlimited feedback',
-      'Advanced analytics',
-      'Dedicated support',
-      'Custom branding',
-      'CSV export',
-      'White label options'
-    ]
-  }
-];
 
 export function PricingPage() {
   const navigate = useNavigate();
@@ -83,6 +14,8 @@ export function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [plansError, setPlansError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,6 +24,25 @@ export function PricingPage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await api.getPlans();
+        // Keep the pricing page focused on paid plans + enterprise (exclude free).
+        const items = data.plans
+          .filter((p) => p.slug !== 'free')
+          .sort((a, b) => a.display_order - b.display_order);
+        if (!cancelled) setPlans(items);
+      } catch (e) {
+        if (!cancelled) setPlansError(e instanceof Error ? e.message : 'Failed to load plans');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSelectPlan = async (planId: string) => {
@@ -293,12 +245,18 @@ export function PricingPage() {
           </div>
         </div>
 
+        {plansError && (
+          <div className="max-w-3xl mx-auto mb-8 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm text-center">
+            {plansError}
+          </div>
+        )}
+
         {/* Plans */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {plans.map((plan) => {
-            const Icon = plan.icon;
-            const price = plan.price[billingPeriod];
-            const yearlyPrice = plan.price.yearly;
+            const Icon = plan.slug === 'starter' ? Zap : plan.slug === 'pro' ? Crown : Building2;
+            const cents = billingPeriod === 'monthly' ? plan.monthly_price_cents : plan.yearly_price_cents;
+            const price = cents == null ? null : Math.round(cents / 100);
 
             return (
               <div
@@ -351,15 +309,15 @@ export function PricingPage() {
                 </div>
 
                 <button
-                  onClick={() => handleSelectPlan(plan.id)}
-                  disabled={loading === plan.id}
+                  onClick={() => handleSelectPlan(plan.slug)}
+                  disabled={loading === plan.slug}
                   className={`w-full py-3 rounded-lg font-medium transition-colors mb-6 ${
                     plan.highlighted
                       ? 'bg-slate-900 text-white hover:bg-slate-800'
                       : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {loading === plan.id ? 'Loading...' : plan.cta}
+                  {loading === plan.slug ? 'Loading...' : (plan.cta || (plan.slug === 'enterprise' ? 'Contact Sales' : 'Select Plan'))}
                 </button>
 
                 <ul className="space-y-3">

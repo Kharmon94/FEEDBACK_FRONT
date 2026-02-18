@@ -1,104 +1,46 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, Crown, Zap, Building2 } from 'lucide-react';
-
-interface PlanOption {
-  id: string;
-  name: string;
-  icon: any;
-  price: { monthly: number | null; yearly: number | null };
-  locations: number | null;
-  description: string;
-  features: string[];
-  cta: string;
-  highlighted: boolean;
-}
+import { useAuth } from '../../contexts/AuthContext';
+import { api, type Plan } from '../../../services/api';
 
 export function PlansPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  const currentPlanId = 'starter'; // TODO: Get from actual user data
+  const { user } = useAuth();
+  const currentPlanSlug = user?.plan || 'free';
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const plans: PlanOption[] = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      icon: Check,
-      price: { monthly: 29, yearly: 297 },
-      locations: 1,
-      description: 'Perfect for single location businesses',
-      features: [
-        '1 location',
-        'Unlimited feedback submissions',
-        'Advanced analytics',
-        'Priority email support',
-        'Custom branding',
-        'Email notifications',
-        'CSV export',
-      ],
-      cta: 'Upgrade to Starter',
-      highlighted: false,
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      icon: Zap,
-      price: { monthly: 59, yearly: 597 },
-      locations: 5,
-      description: 'For growing businesses',
-      features: [
-        'Up to 5 locations',
-        'Unlimited feedback submissions',
-        'Advanced analytics & reporting',
-        'Priority email support',
-        'Custom branding',
-        'Email notifications',
-        'API access',
-        'Location management dashboard',
-      ],
-      cta: 'Upgrade to Pro',
-      highlighted: true,
-    },
-    {
-      id: 'business',
-      name: 'Business',
-      icon: Crown,
-      price: { monthly: 99, yearly: 997 },
-      locations: 15,
-      description: 'For multi-location businesses',
-      features: [
-        'Up to 15 locations',
-        'Unlimited feedback submissions',
-        'Advanced analytics & reporting',
-        'Priority email & phone support',
-        'White-label solution',
-        'Custom integrations',
-        'Dedicated account manager',
-        'Advanced security features',
-      ],
-      cta: 'Upgrade to Business',
-      highlighted: false,
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      icon: Building2,
-      price: { monthly: null, yearly: null },
-      locations: null,
-      description: 'For large organizations',
-      features: [
-        'Unlimited locations',
-        'Unlimited feedback submissions',
-        'Custom analytics & reporting',
-        '24/7 priority support',
-        'White-label solution',
-        'Custom integrations',
-        'Dedicated success team',
-        'SLA guarantee',
-        'Custom contracts',
-      ],
-      cta: 'Contact Sales',
-      highlighted: false,
-    },
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await api.getPlans();
+        const items = data.plans.sort((a, b) => a.display_order - b.display_order);
+        if (!cancelled) setPlans(items);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load plans');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const iconFor = useMemo(() => {
+    return (slug: string) => (slug === 'free' ? Check : slug === 'starter' ? Check : slug === 'pro' ? Zap : slug === 'business' ? Crown : Building2);
+  }, []);
+
+  const descriptionFor = useMemo(() => {
+    return (p: Plan) => {
+      if (p.location_limit == null) return 'For large organizations';
+      if (p.location_limit <= 1) return 'Perfect for single location businesses';
+      if (p.location_limit <= 5) return 'For growing businesses';
+      return 'For multi-location businesses';
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -143,12 +85,20 @@ export function PlansPage() {
         </div>
       </div>
 
+      {loading && <div className="text-slate-500">Loading plans…</div>}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Plans Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {plans.map((plan) => {
-          const PlanIcon = plan.icon;
-          const price = plan.price[billingPeriod];
-          const isCurrentPlan = plan.id === currentPlanId;
+          const PlanIcon = iconFor(plan.slug);
+          const cents = billingPeriod === 'monthly' ? plan.monthly_price_cents : plan.yearly_price_cents;
+          const price = cents == null ? null : Math.round(cents / 100);
+          const isCurrentPlan = plan.slug === currentPlanSlug;
 
           return (
             <div
@@ -187,7 +137,7 @@ export function PlansPage() {
                 <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
               </div>
 
-              <p className="text-slate-600 text-sm mb-4">{plan.description}</p>
+              <p className="text-slate-600 text-sm mb-4">{descriptionFor(plan)}</p>
 
               <div className="mb-4">
                 {price !== null ? (
@@ -211,7 +161,7 @@ export function PlansPage() {
 
               <button
                 onClick={() => {
-                  if (plan.id === 'enterprise') {
+                  if (plan.slug === 'enterprise') {
                     alert('Contact sales for Enterprise plan');
                   } else {
                     alert(`Upgrading to ${plan.name} plan`);
@@ -226,7 +176,7 @@ export function PlansPage() {
                     : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                 }`}
               >
-                {isCurrentPlan ? 'Current Plan' : plan.cta}
+                {isCurrentPlan ? 'Current Plan' : (plan.cta || (plan.slug === 'enterprise' ? 'Contact Sales' : 'Select Plan'))}
               </button>
 
               <div className="pt-4 border-t border-slate-200">
