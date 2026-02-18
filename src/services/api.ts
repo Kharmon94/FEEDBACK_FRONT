@@ -223,6 +223,10 @@ export const api = {
     return request(`/admin/users/${id}/activate`, { method: 'PUT' });
   },
 
+  async updateAdminUser(id: string, payload: { admin?: boolean; plan?: string }): Promise<AdminUser> {
+    return request<AdminUser>(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  },
+
   async exportAdminUsers(): Promise<Blob> {
     return adminExport('/admin/users/export');
   },
@@ -347,6 +351,7 @@ export interface AdminUser {
   name: string | null;
   email: string;
   plan: string;
+  admin?: boolean;
   status: string;
   locations_count: number;
   feedback_count: number;

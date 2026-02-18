@@ -10,17 +10,34 @@ import {
   Ban,
   MessageSquare,
   User as UserIcon,
-  Building
+  Building,
+  Shield,
+  ShieldOff
 } from 'lucide-react';
 import { api, type AdminUser } from '../../../services/api';
+import { useAuth } from '../../../contexts/AuthContext';
+
+const PLAN_OPTIONS = [
+  { value: 'free', label: 'Free' },
+  { value: 'starter', label: 'Starter' },
+  { value: 'pro', label: 'Pro' },
+  { value: 'business', label: 'Business' },
+  { value: 'enterprise', label: 'Enterprise' },
+];
 
 export function AdminUserDetail() {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [planSelect, setPlanSelect] = useState('free');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.plan) setPlanSelect(user.plan);
+  }, [user?.plan]);
 
   const loadUser = async (id: string) => {
     setLoading(true);
@@ -65,6 +82,53 @@ export function AdminUserDetail() {
     } catch (e) {
       console.error('Activate failed:', e);
       alert('Failed to activate user.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePromote = async () => {
+    if (!userId || !user) return;
+    if (!window.confirm(`Grant admin access to ${user.email}?`)) return;
+    setActionLoading(true);
+    setError(null);
+    try {
+      await api.updateAdminUser(userId, { admin: true });
+      await loadUser(userId);
+    } catch (e: unknown) {
+      const msg = (e instanceof Error ? e.message : 'Failed to promote user.');
+      setError(msg);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRevoke = async () => {
+    if (!userId || !user) return;
+    if (!window.confirm(`Revoke admin access for ${user.email}?`)) return;
+    setActionLoading(true);
+    setError(null);
+    try {
+      await api.updateAdminUser(userId, { admin: false });
+      await loadUser(userId);
+    } catch (e: unknown) {
+      const msg = (e instanceof Error ? e.message : 'Failed to revoke admin.');
+      setError(msg);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePlanSave = async () => {
+    if (!userId || !user || planSelect === user.plan) return;
+    setActionLoading(true);
+    setError(null);
+    try {
+      await api.updateAdminUser(userId, { plan: planSelect });
+      await loadUser(userId);
+    } catch (e: unknown) {
+      const msg = (e instanceof Error ? e.message : 'Failed to update plan.');
+      setError(msg);
     } finally {
       setActionLoading(false);
     }
@@ -169,6 +233,12 @@ export function AdminUserDetail() {
                 <Building className="w-4 h-4" />
                 Plan: <span className={`inline-block px-2 py-0.5 border rounded text-xs font-medium uppercase ${getPlanBadgeColor(user.plan)}`}>{user.plan}</span>
               </div>
+              {user.admin && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 border border-indigo-200 rounded text-xs font-medium">
+                  <Shield className="w-3 h-3" />
+                  Admin
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -207,6 +277,35 @@ export function AdminUserDetail() {
         </div>
       </div>
 
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h4 className="text-lg font-bold text-slate-900 mb-4">Change plan</h4>
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={planSelect}
+            onChange={(e) => setPlanSelect(e.target.value)}
+            className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+          >
+            {PLAN_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handlePlanSave}
+            disabled={actionLoading || planSelect === user.plan}
+            className="px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 disabled:opacity-50"
+          >
+            Save plan
+          </button>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <h4 className="text-lg font-bold text-slate-900 mb-4">Account actions</h4>
         <div className="flex flex-wrap gap-3">
@@ -227,6 +326,26 @@ export function AdminUserDetail() {
             >
               <Ban className="w-4 h-4" />
               Suspend user
+            </button>
+          )}
+          {!user.admin ? (
+            <button
+              onClick={handlePromote}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-indigo-300 text-indigo-700 rounded-lg font-medium hover:bg-indigo-50 disabled:opacity-50"
+            >
+              <Shield className="w-4 h-4" />
+              Promote to admin
+            </button>
+          ) : (
+            <button
+              onClick={handleRevoke}
+              disabled={actionLoading || (currentUser?.id != null && String(currentUser.id) === user.id)}
+              title={currentUser?.id != null && String(currentUser.id) === user.id ? 'You cannot revoke your own admin access' : undefined}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-amber-300 text-amber-700 rounded-lg font-medium hover:bg-amber-50 disabled:opacity-50"
+            >
+              <ShieldOff className="w-4 h-4" />
+              Revoke admin
             </button>
           )}
         </div>
