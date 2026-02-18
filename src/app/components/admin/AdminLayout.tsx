@@ -13,6 +13,8 @@ import {
   X
 } from 'lucide-react';
 const logo = "/logo.png";
+// Admin layout: requires user.admin and shared JWT for /admin/* routes.
+// Redirects to /admin/login if not authenticated.
 import { useAuth } from '../../contexts/AuthContext';
 
 export function AdminLayout() {
