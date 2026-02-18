@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
+import { getGoogleOAuthUrl } from '../../services/api';
 import { Mail, Lock, User, AlertCircle, Menu, X } from 'lucide-react';
 const logo = "/logo.png";
 import { Footer } from './Footer';
@@ -41,8 +42,7 @@ export function LoginPage() {
   };
 
   const handleGoogleSignIn = () => {
-    // This will redirect to Rails backend OAuth endpoint
-    window.location.href = '/auth/google_oauth2';
+    window.location.href = getGoogleOAuthUrl();
   };
 
   return (

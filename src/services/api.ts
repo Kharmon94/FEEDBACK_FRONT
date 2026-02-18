@@ -9,6 +9,11 @@ const BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api
 
 const TOKEN_KEY = 'authToken';
 
+/** URL to start Google OAuth (redirect the browser here). */
+export function getGoogleOAuthUrl(): string {
+  return `${BASE_URL}/auth/google_oauth2`;
+}
+
 function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }

@@ -8,6 +8,7 @@ import { OptInPage } from './components/OptInPage';
 import { SubmittedPage } from './components/SubmittedPage';
 import { SuggestionForm } from './components/SuggestionForm';
 import { LoginPage } from './components/LoginPage';
+import { AuthCallbackPage } from './components/AuthCallbackPage';
 import { OnboardingFlow } from './components/OnboardingFlow';
 import { Dashboard } from './components/Dashboard';
 import { DashboardLayout } from './components/dashboard/DashboardLayout';
@@ -77,6 +78,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     Component: LoginPage,
+  },
+  {
+    path: '/auth/callback',
+    Component: AuthCallbackPage,
   },
   {
     path: '/onboarding',

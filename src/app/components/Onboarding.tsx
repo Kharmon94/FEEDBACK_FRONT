@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router';
 import { Check, ChevronRight, ChevronLeft, Eye, EyeOff, Menu, X, Upload } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
+import { getGoogleOAuthUrl } from '../../services/api';
 import { Footer } from './Footer';
 const logo = "/logo.png";
 import { Checkbox } from './ui/checkbox';
@@ -320,8 +321,7 @@ export function Onboarding() {
 
 function Step0({ data, setData }: { data: OnboardingData; setData: (data: OnboardingData) => void }) {
   const handleGoogleSignIn = () => {
-    // This will redirect to Rails backend OAuth endpoint
-    window.location.href = '/auth/google_oauth2';
+    window.location.href = getGoogleOAuthUrl();
   };
 
   return (
