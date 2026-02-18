@@ -16,7 +16,7 @@ export function getGoogleOAuthUrl(): string {
   return `${base}/api/v1/auth/google_oauth2`;
 }
 
-function getToken(): string | null {
+export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 

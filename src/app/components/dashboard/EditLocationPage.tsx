@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Trash2, Eye, Palette, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../../api/client';
-import { getBaseUrl, getToken } from '../../services/api';
+import { getBaseUrl, getToken } from '../../../services/api';
 import { FeedbackPagePreview } from './FeedbackPagePreview';
 
 interface Location {
