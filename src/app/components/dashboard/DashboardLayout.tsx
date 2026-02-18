@@ -36,7 +36,7 @@ export function DashboardLayout() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/home');
+    navigate('/');
   };
 
   const tabs = [
