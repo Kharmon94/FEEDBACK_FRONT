@@ -15,7 +15,7 @@ import {
   ShieldOff
 } from 'lucide-react';
 import { api, type AdminUser } from '../../../services/api';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PLAN_OPTIONS = [
   { value: 'free', label: 'Free' },
