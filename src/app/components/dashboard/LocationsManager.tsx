@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Edit2, ExternalLink, Copy, Check, ChevronRight, ArrowUpCircle } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { api } from '../../api/client';
 import { useAuth } from '../../contexts/AuthContext';
 import { api as railsApi, type Plan } from '../../../services/api';
@@ -18,6 +18,7 @@ interface Location {
 
 export function LocationsManager() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +33,15 @@ export function LocationsManager() {
   useEffect(() => {
     loadLocations();
   }, []);
+
+  // Refetch when returning from Add Location (create success)
+  useEffect(() => {
+    const state = location.state as { fromCreate?: boolean } | null;
+    if (state?.fromCreate) {
+      loadLocations();
+      navigate(location.pathname + (location.search || ''), { replace: true, state: {} });
+    }
+  }, [location.state]);
 
   useEffect(() => {
     let cancelled = false;

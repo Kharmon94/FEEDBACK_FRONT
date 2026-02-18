@@ -78,10 +78,11 @@ export function AddLocationPage() {
       };
 
       await api.createLocation(locationData);
-      navigate('/dashboard?tab=locations');
+      navigate('/dashboard?tab=locations', { state: { fromCreate: true } });
     } catch (error) {
       console.error('Failed to save location:', error);
-      alert('Failed to save location. Please try again.');
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      alert(`Failed to save location: ${msg}`);
     } finally {
       setSaving(false);
     }
