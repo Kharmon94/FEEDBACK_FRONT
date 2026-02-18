@@ -10,7 +10,7 @@ import {
   Download,
   UserPlus
 } from 'lucide-react';
-import { api, downloadBlob, type AdminUser } from '../../../services/api';
+import { api, downloadBlob, type AdminUser, type AdminPlan, type Plan } from '../../../services/api';
 
 export function AdminUsersPage() {
   const navigate = useNavigate();
@@ -26,6 +26,13 @@ export function AdminUsersPage() {
   const [createUserForm, setCreateUserForm] = useState({ email: '', name: '', password: '', plan: 'free' });
   const [createUserError, setCreateUserError] = useState<string | null>(null);
   const [creatingUser, setCreatingUser] = useState(false);
+  const [planOptions, setPlanOptions] = useState<Plan[]>([]);
+  const [allPlansForFilter, setAllPlansForFilter] = useState<AdminPlan[]>([]);
+
+  useEffect(() => {
+    api.getPlans().then((data) => setPlanOptions(data.plans)).catch(() => setPlanOptions([]));
+    api.getAdminPlans().then((data) => setAllPlansForFilter(data.plans)).catch(() => setAllPlansForFilter([]));
+  }, []);
 
   const loadUsers = useCallback(async (page = 1) => {
     setLoading(true);
@@ -221,11 +228,13 @@ export function AdminUsersPage() {
                   onChange={(e) => setCreateUserForm((f) => ({ ...f, plan: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
                 >
-                  <option value="free">Free</option>
-                  <option value="starter">Starter</option>
-                  <option value="pro">Pro</option>
-                  <option value="business">Business</option>
-                  <option value="enterprise">Enterprise</option>
+                  {planOptions.length === 0 ? (
+                    <option value="free">Free</option>
+                  ) : (
+                    planOptions.map((p) => (
+                      <option key={p.id} value={p.slug}>{p.name}</option>
+                    ))
+                  )}
                 </select>
               </div>
               <div className="flex justify-end gap-2 pt-2">
@@ -297,11 +306,9 @@ export function AdminUsersPage() {
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
               >
                 <option value="all">All Plans</option>
-                <option value="free">Free</option>
-                <option value="starter">Starter</option>
-                <option value="pro">Pro</option>
-                <option value="business">Business</option>
-                <option value="enterprise">Enterprise</option>
+                {allPlansForFilter.map((p) => (
+                  <option key={p.id} value={p.slug}>{p.name}</option>
+                ))}
               </select>
             </div>
             <div className="flex-1">

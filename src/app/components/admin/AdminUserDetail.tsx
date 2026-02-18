@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, Link } from 'react-router';
 import {
   ArrowLeft,
   Mail,
@@ -14,16 +14,8 @@ import {
   Shield,
   ShieldOff
 } from 'lucide-react';
-import { api, type AdminUser } from '../../../services/api';
+import { api, type AdminUser, type Plan } from '../../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-
-const PLAN_OPTIONS = [
-  { value: 'free', label: 'Free' },
-  { value: 'starter', label: 'Starter' },
-  { value: 'pro', label: 'Pro' },
-  { value: 'business', label: 'Business' },
-  { value: 'enterprise', label: 'Enterprise' },
-];
 
 export function AdminUserDetail() {
   const { userId } = useParams();
@@ -34,10 +26,15 @@ export function AdminUserDetail() {
   const [actionLoading, setActionLoading] = useState(false);
   const [planSelect, setPlanSelect] = useState('free');
   const [error, setError] = useState<string | null>(null);
+  const [planOptions, setPlanOptions] = useState<Plan[]>([]);
 
   useEffect(() => {
     if (user?.plan) setPlanSelect(user.plan);
   }, [user?.plan]);
+
+  useEffect(() => {
+    api.getPlans().then((data) => setPlanOptions(data.plans)).catch(() => setPlanOptions([]));
+  }, []);
 
   const loadUser = async (id: string) => {
     setLoading(true);
@@ -253,12 +250,12 @@ export function AdminUserDetail() {
             <span className="text-sm font-medium text-slate-600">Locations</span>
           </div>
           <p className="text-3xl font-bold text-slate-900">{user.locations_count}</p>
-          <a
-            href={`/admin/locations?user_id=${user.id}`}
+          <Link
+            to={`/admin/locations?user_id=${user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
           >
             View locations →
-          </a>
+          </Link>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -268,12 +265,12 @@ export function AdminUserDetail() {
             <span className="text-sm font-medium text-slate-600">Feedback</span>
           </div>
           <p className="text-3xl font-bold text-slate-900">{user.feedback_count.toLocaleString()}</p>
-          <a
-            href={`/admin/feedback?user_id=${user.id}`}
+          <Link
+            to={`/admin/feedback?user_id=${user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
           >
             View feedback →
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -291,9 +288,15 @@ export function AdminUserDetail() {
             onChange={(e) => setPlanSelect(e.target.value)}
             className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
           >
-            {PLAN_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {user.plan && !planOptions.some((p) => p.slug === user.plan) && (
+              <option value={user.plan}>{user.plan} (inactive)</option>
+            )}
+            {planOptions.map((p) => (
+              <option key={p.id} value={p.slug}>{p.name}</option>
             ))}
+            {planOptions.length === 0 && !user.plan && (
+              <option value="">Loading...</option>
+            )}
           </select>
           <button
             type="button"

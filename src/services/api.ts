@@ -51,8 +51,9 @@ export async function request<T>(
     throw new Error(text || 'Request failed');
   }
   if (!res.ok) {
-    const err = data as ApiError;
-    const msg = err?.error || res.statusText || 'Request failed';
+    const err = data as ApiError & { error?: string | string[] };
+    const raw = err?.error ?? res.statusText ?? 'Request failed';
+    const msg = Array.isArray(raw) ? raw.join('. ') : String(raw);
     if (res.status === 404) {
       const apiUrl = import.meta.env.VITE_API_URL || '(same origin)';
       throw new Error(`${msg} — ensure the Rails API is running and VITE_API_URL (${apiUrl}) points to it.`);

@@ -119,6 +119,10 @@ export function AdminPlansPage() {
   };
 
   const submitForm = async () => {
+    if (!editing && !form.slug.trim()) {
+      setError('Slug is required for new plans.');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -355,13 +359,14 @@ export function AdminPlansPage() {
             </div>
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="text-sm">
-                <div className="text-slate-700 font-medium mb-1">Slug</div>
+                <div className="text-slate-700 font-medium mb-1">Slug {!editing && '*'}</div>
                 <input
                   value={form.slug}
                   onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg"
                   placeholder="starter"
                   disabled={!!editing}
+                  required={!editing}
                 />
               </label>
               <label className="text-sm">
