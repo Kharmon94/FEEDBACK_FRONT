@@ -172,7 +172,18 @@ export const api = {
     }
   },
 
-  async createLocation(data: { name: string; logo_url?: string; review_platforms?: Record<string, string> }): Promise<Location> {
+  async createLocation(data: {
+    name: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    logo_url?: string;
+    review_platforms?: Record<string, string>;
+    custom_message?: string;
+    color_scheme?: { primary?: string; secondary?: string; accent?: string };
+    email_notifications?: boolean;
+    notification_emails?: string[];
+  }): Promise<Location> {
     const { location } = await request<{ location: Location }>('/locations', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -180,7 +191,18 @@ export const api = {
     return location;
   },
 
-  async updateLocation(id: string | number, data: { name?: string; logo_url?: string; review_platforms?: Record<string, string> }): Promise<Location> {
+  async updateLocation(id: string | number, data: {
+    name?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    logo_url?: string;
+    review_platforms?: Record<string, string>;
+    custom_message?: string;
+    color_scheme?: { primary?: string; secondary?: string; accent?: string };
+    email_notifications?: boolean;
+    notification_emails?: string[];
+  }): Promise<Location> {
     const { location } = await request<{ location: Location }>(`/locations/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),

@@ -39,6 +39,11 @@ export function LocationRatingPage() {
       const timer = setTimeout(() => {
         const search = `?locationId=${encodeURIComponent(locationId)}&rating=${rating}`;
         if (rating >= 4) {
+          const platforms = (location?.reviewPlatforms || []).filter((p: { url?: string }) => p?.url);
+          if (platforms.length >= 1) {
+            window.location.href = platforms[0].url;
+            return;
+          }
           navigate(`/thank-you${search}`, {
             state: {
               rating,

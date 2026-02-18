@@ -21,8 +21,15 @@ export interface Location {
   id: number;
   name: string;
   slug?: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
   logo_url?: string | null;
   review_platforms: Record<string, string>;
+  custom_message?: string | null;
+  color_scheme?: { primary?: string; secondary?: string; accent?: string } | null;
+  email_notifications?: boolean;
+  notification_emails?: string[];
 }
 
 export interface FeedbackSubmission {

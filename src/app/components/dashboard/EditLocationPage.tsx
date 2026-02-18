@@ -127,6 +127,15 @@ export function EditLocationPage() {
         const formData = new FormData();
         formData.append('logo', logoFile);
         formData.append('name', name);
+        if (address) formData.append('address', address);
+        if (phone) formData.append('phone', phone);
+        if (email) formData.append('email', email);
+        formData.append('custom_message', customMessage);
+        formData.append('email_notifications', String(emailNotifications));
+        formData.append('color_scheme[primary]', colorScheme.primary);
+        formData.append('color_scheme[secondary]', colorScheme.secondary);
+        formData.append('color_scheme[accent]', colorScheme.accent);
+        notificationEmails.filter(e => e.trim()).forEach((e) => formData.append('notification_emails[]', e));
         const platformsObj: Record<string, string> = {};
         reviewPlatforms.filter(p => p.url).forEach((p) => {
           const key = p.name === 'Custom' && p.customName ? p.customName : p.name;

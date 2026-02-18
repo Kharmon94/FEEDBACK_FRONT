@@ -177,7 +177,7 @@ export function AddLocationPage() {
 
       {/* Form */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 lg:p-8">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => { e.preventDefault(); if (currentStep === 3) handleSubmit(e); }}>
           {/* Step 1: Basic Info */}
           {currentStep === 1 && (
             <div className="space-y-6">
@@ -462,8 +462,8 @@ export function AddLocationPage() {
                 <div className="border-t border-slate-200 pt-6">
                   <h3 className="text-sm font-semibold text-slate-900 mb-4 text-center">Preview</h3>
                   <FeedbackPagePreview
-                    name={name || 'Your Location'}
-                    address={address || 'Your Address'}
+                    locationName={name || 'Your Location'}
+                    locationAddress={address || 'Your Address'}
                     phone={phone}
                     email={email}
                     logoUrl={logoPreview || undefined}
@@ -514,7 +514,8 @@ export function AddLocationPage() {
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
                   disabled={saving}
                   className="w-full sm:w-auto px-6 py-3 text-base bg-black text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 font-medium flex items-center justify-center gap-2"
                 >

@@ -22,6 +22,50 @@ function mapReviewPlatforms(platforms: Record<string, string>): { name: string; 
     }));
 }
 
+function reviewPlatformsToHash(platforms?: Array<{ name: string; url: string; customName?: string }>): Record<string, string> {
+  if (!platforms?.length) return {};
+  const out: Record<string, string> = {};
+  for (const p of platforms) {
+    if (p.url && (p.name !== 'Custom' || p.customName)) {
+      const key = p.name === 'Custom' && p.customName ? p.customName : p.name;
+      out[key] = p.url;
+    }
+  }
+  return out;
+}
+
+function mapLocationFromApi(l: {
+  id: number;
+  name: string;
+  slug?: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  logo_url?: string | null;
+  review_platforms?: Record<string, string>;
+  custom_message?: string | null;
+  color_scheme?: { primary?: string; secondary?: string; accent?: string } | null;
+  email_notifications?: boolean;
+  notification_emails?: string[];
+}) {
+  const rp = l.review_platforms ?? {};
+  return {
+    id: String(l.id),
+    name: l.name,
+    slug: l.slug,
+    address: l.address ?? '',
+    phone: l.phone ?? '',
+    email: l.email ?? '',
+    logoUrl: l.logo_url ?? undefined,
+    reviewPlatforms: mapReviewPlatforms(rp).map(({ name, url }) => ({ name, url })),
+    customMessage: l.custom_message ?? '',
+    colorScheme: l.color_scheme ?? { primary: '#000000', secondary: '#ffffff', accent: '#fbbf24' },
+    emailNotifications: l.email_notifications ?? true,
+    notificationEmails: l.notification_emails ?? [],
+    createdAt: '',
+  };
+}
+
 export const api = {
   async createBusiness(data: { id?: string; name?: string; businessName?: string; logoUrl?: string; platforms?: Record<string, string>; reviewPlatforms?: Array<{ name: string; url: string }> }) {
     const platforms: Record<string, string> = {};
@@ -66,78 +110,69 @@ export const api = {
 
   async getLocations() {
     const locs = await railsApi.getLocations();
-    return locs.map((l) => ({
-      id: String(l.id),
-      name: l.name,
-      slug: l.slug,
-      address: '',
-      phone: '',
-      email: '',
-      logoUrl: l.logo_url ?? undefined,
-      reviewPlatforms: mapReviewPlatforms(l.review_platforms ?? {}),
-      createdAt: '',
-    }));
+    return locs.map((l) => mapLocationFromApi(l));
   },
 
   async getLocation(locationId: string) {
     const loc = await railsApi.getLocation(locationId) ?? await railsApi.getLocationPublic(locationId);
     if (!loc) throw new Error('Location not found');
-    return {
-      id: String(loc.id),
-      name: loc.name,
-      slug: loc.slug,
-      address: '',
-      phone: '',
-      email: '',
-      logoUrl: loc.logo_url ?? undefined,
-      reviewPlatforms: mapReviewPlatforms(loc.review_platforms ?? {}),
-      createdAt: '',
-    };
+    return mapLocationFromApi(loc);
   },
 
-  async createLocation(data: { name: string; logoUrl?: string; platforms?: Record<string, string> }) {
-    const platforms: Record<string, string> = {};
-    if (data.platforms) {
-      Object.entries(data.platforms).forEach(([k, v]) => { if (typeof v === 'string' && v) platforms[k] = v; });
-    }
+  async createLocation(data: {
+    name: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    logoUrl?: string;
+    reviewPlatforms?: Array<{ name: string; url: string; customName?: string }>;
+    customMessage?: string;
+    colorScheme?: { primary?: string; secondary?: string; accent?: string };
+    emailNotifications?: boolean;
+    notificationEmails?: string[];
+  }) {
+    const platforms = reviewPlatformsToHash(data.reviewPlatforms);
     const loc = await railsApi.createLocation({
       name: data.name,
+      address: data.address,
+      phone: data.phone,
+      email: data.email,
       logo_url: data.logoUrl,
       review_platforms: Object.keys(platforms).length ? platforms : undefined,
+      custom_message: data.customMessage,
+      color_scheme: data.colorScheme,
+      email_notifications: data.emailNotifications,
+      notification_emails: data.notificationEmails,
     });
-    return {
-      id: String(loc.id),
-      name: loc.name,
-      slug: loc.slug,
-      address: '',
-      phone: '',
-      email: '',
-      logoUrl: loc.logo_url ?? undefined,
-      reviewPlatforms: mapReviewPlatforms(loc.review_platforms ?? {}),
-      createdAt: '',
-    };
+    return mapLocationFromApi(loc);
   },
 
-  async updateLocation(locationId: string, data: { name?: string; logoUrl?: string; platforms?: Record<string, string> }) {
-    const platforms: Record<string, string> | undefined = data.platforms
-      ? Object.fromEntries(Object.entries(data.platforms).filter(([, v]) => typeof v === 'string' && v))
-      : undefined;
+  async updateLocation(locationId: string, data: {
+    name?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    logoUrl?: string;
+    reviewPlatforms?: Array<{ name: string; url: string; customName?: string }>;
+    customMessage?: string;
+    colorScheme?: { primary?: string; secondary?: string; accent?: string };
+    emailNotifications?: boolean;
+    notificationEmails?: string[];
+  }) {
+    const platforms = data.reviewPlatforms ? reviewPlatformsToHash(data.reviewPlatforms) : undefined;
     const loc = await railsApi.updateLocation(locationId, {
       name: data.name,
+      address: data.address,
+      phone: data.phone,
+      email: data.email,
       logo_url: data.logoUrl,
       review_platforms: platforms,
+      custom_message: data.customMessage,
+      color_scheme: data.colorScheme,
+      email_notifications: data.emailNotifications,
+      notification_emails: data.notificationEmails,
     });
-    return {
-      id: String(loc.id),
-      name: loc.name,
-      slug: loc.slug,
-      address: '',
-      phone: '',
-      email: '',
-      logoUrl: loc.logo_url ?? undefined,
-      reviewPlatforms: mapReviewPlatforms(loc.review_platforms ?? {}),
-      createdAt: '',
-    };
+    return mapLocationFromApi(loc);
   },
 
   async deleteLocation(locationId: string) {
