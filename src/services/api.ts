@@ -5,13 +5,15 @@
 
 import type { User, AuthResponse, Location, FeedbackSubmission, Suggestion, ApiError } from '../types';
 
-const BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api/v1';
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const BASE_URL = API_BASE + '/api/v1';
 
 const TOKEN_KEY = 'authToken';
 
-/** URL to start Google OAuth (redirect the browser here). */
+/** URL to start Google OAuth (redirect the browser here). Must be absolute so production hits the API, not the frontend. */
 export function getGoogleOAuthUrl(): string {
-  return `${BASE_URL}/auth/google_oauth2`;
+  const base = API_BASE || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+  return `${base}/api/v1/auth/google_oauth2`;
 }
 
 function getToken(): string | null {
