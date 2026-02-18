@@ -149,6 +149,8 @@ export const api = {
     rating: number;
     name?: string;
     email?: string;
+    phone?: string;
+    contactMe?: boolean;
     comment: string;
     type: 'feedback' | 'suggestion';
   }): Promise<Feedback | null> {
@@ -176,6 +178,8 @@ export const api = {
         comment: data.comment,
         customer_name: data.name,
         customer_email: data.email,
+        phone_number: data.phone,
+        contact_me: data.contactMe,
       });
       return {
         id: String(f.id),
@@ -193,21 +197,26 @@ export const api = {
     }
   },
 
-  async getFeedback(businessId: string): Promise<Feedback[]> {
+  async getFeedback(businessId?: string): Promise<Feedback[]> {
     try {
       const items = await railsApi.getFeedback();
-      return items
-        .filter((f) => String(f.location_id) === businessId)
-        .map((f) => ({
+      const filtered = businessId != null
+        ? items.filter((f) => String(f.location_id) === businessId)
+        : items;
+      return filtered.map((f) => {
+        const locId = String(f.location_id);
+        return {
           id: String(f.id),
-          businessId: String(f.location_id),
+          businessId: locId,
+          locationId: locId,
           rating: f.rating,
           name: f.customer_name ?? undefined,
           email: f.customer_email ?? undefined,
           comment: f.comment ?? '',
           type: 'feedback' as const,
           createdAt: new Date(f.created_at),
-        })) as Feedback[];
+        };
+      }) as Feedback[];
     } catch (error) {
       console.error('Error fetching feedback:', error);
       return [];

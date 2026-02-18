@@ -35,30 +35,35 @@ export function LocationRatingPage() {
   }, [locationId, navigate]);
 
   useEffect(() => {
-    if (rating > 0) {
+    if (rating > 0 && locationId) {
       const timer = setTimeout(() => {
+        const search = `?locationId=${encodeURIComponent(locationId)}&rating=${rating}`;
         if (rating >= 4) {
-          navigate('/thank-you', { 
-            state: { 
+          navigate(`/thank-you${search}`, {
+            state: {
               rating,
               comment,
               locationId,
+              locationName: location?.name,
+              logoUrl: location?.logoUrl,
               reviewPlatforms: location?.reviewPlatforms || []
-            } 
+            }
           });
         } else {
-          navigate('/feedback', { 
-            state: { 
+          navigate(`/feedback${search}${comment ? `&comment=${encodeURIComponent(comment)}` : ''}`, {
+            state: {
               rating,
               comment,
-              locationId
-            } 
+              locationId,
+              locationName: location?.name,
+              logoUrl: location?.logoUrl
+            }
           });
         }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [rating, comment, navigate, location]);
+  }, [rating, comment, navigate, location, locationId]);
 
   if (loading) {
     return (

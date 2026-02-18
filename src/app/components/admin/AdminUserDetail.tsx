@@ -44,7 +44,7 @@ export function AdminUserDetail() {
       setUser(data);
     } catch (e) {
       console.error('Error loading user:', e);
-      setError('Failed to load user');
+      setError(e instanceof Error ? e.message : 'Failed to load user');
       setUser(null);
     } finally {
       setLoading(false);

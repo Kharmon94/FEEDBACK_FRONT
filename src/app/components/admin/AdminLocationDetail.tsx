@@ -26,7 +26,7 @@ export function AdminLocationDetail() {
         .then(setLocation)
         .catch((e) => {
           console.error('Error loading location:', e);
-          setError('Failed to load location');
+          setError(e instanceof Error ? e.message : 'Failed to load location');
           setLocation(null);
         })
         .finally(() => setLoading(false));

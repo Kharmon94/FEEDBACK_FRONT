@@ -1,34 +1,39 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router';
+import { useNavigate, useLocation, Link, useSearchParams } from 'react-router';
 import { CheckCircle2 } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
-import { Business } from '../types';
 
 export function SubmittedPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [business, setBusiness] = useState<Business | null>(null);
-  
-  // Determine type based on the route
+  const [searchParams] = useSearchParams();
   const type = location.pathname.includes('suggestion') ? 'suggestion' : 'feedback';
 
+  const stateLocationName = location.state?.locationName;
+  const stateLocationId = location.state?.locationId;
+  const urlLocationId = searchParams.get('locationId') || '';
+  const locationId = stateLocationId || urlLocationId;
+
+  const [businessName, setBusinessName] = useState<string>(stateLocationName || '');
+  const [loading, setLoading] = useState(!stateLocationName && !!locationId);
+
   useEffect(() => {
-    loadBusiness();
-  }, []);
-
-  const loadBusiness = async () => {
-    try {
-      await api.initDemo();
-      const businessId = 'demo-business';
-      const businessData = await api.getBusiness(businessId);
-      setBusiness(businessData);
-    } catch (error) {
-      console.error('Failed to load business:', error);
+    if (stateLocationName) {
+      setBusinessName(stateLocationName);
+      setLoading(false);
+      return;
     }
-  };
+    if (locationId) {
+      api.getLocation(locationId).then((loc) => {
+        setBusinessName(loc.name);
+      }).catch(() => {}).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [locationId, stateLocationName]);
 
-  if (!business) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-slate-600">Loading...</div>
@@ -63,9 +68,13 @@ export function SubmittedPage() {
             {type === 'feedback' ? 'Thank you for your feedback' : 'Thanks for your suggestion!'}
           </h1>
           <p className="text-sm text-gray-600 mb-8">
-            {type === 'feedback' 
-              ? `Your feedback has been received by ${business.name}. We take all feedback seriously and will work to improve.`
-              : `Your suggestion has been received by ${business.name}. We appreciate you taking the time to help us improve!`
+            {type === 'feedback'
+              ? businessName
+                ? `Your feedback has been received by ${businessName}. We take all feedback seriously and will work to improve.`
+                : 'Your feedback has been received. We take all feedback seriously and will work to improve.'
+              : businessName
+                ? `Your suggestion has been received by ${businessName}. We appreciate you taking the time to help us improve!`
+                : 'Your suggestion has been received. We appreciate you taking the time to help us improve!'
             }
           </p>
 

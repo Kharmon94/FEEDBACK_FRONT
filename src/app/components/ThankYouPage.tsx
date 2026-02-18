@@ -8,39 +8,47 @@ export function ThankYouPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  // Try to get data from location.state first, then fall back to URL params
   const rating = location.state?.rating || Number(searchParams.get('rating')) || 0;
   const comment = location.state?.comment || searchParams.get('comment') || '';
   const images = location.state?.images || [];
-  const [business, setBusiness] = useState<any>(null);
-  const [copied, setCopied] = useState(false);
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('ThankYouPage - location.state:', location.state);
-    console.log('ThankYouPage - searchParams rating:', searchParams.get('rating'));
-    console.log('ThankYouPage - searchParams comment:', searchParams.get('comment'));
-    console.log('ThankYouPage - final rating:', rating);
-    console.log('ThankYouPage - final comment:', comment);
-    console.log('ThankYouPage - comment length:', comment.length);
-    console.log('ThankYouPage - comment exists?:', !!comment);
-  }, [location.state, rating, comment, searchParams]);
-  
-  useEffect(() => {
-    const loadBusiness = async () => {
-      try {
-        // Initialize demo data first
-        await api.initDemo();
-        
-        const data = await api.getBusiness('demo-business');
-        setBusiness(data);
-      } catch (error) {
-        console.error('Failed to load business:', error);
-      }
-    };
+  const stateReviewPlatforms = location.state?.reviewPlatforms || [];
+  const stateLocationName = location.state?.locationName;
+  const stateLogoUrl = location.state?.logoUrl;
+  const stateLocationId = location.state?.locationId;
+  const urlLocationId = searchParams.get('locationId') || '';
+  const locationId = stateLocationId || urlLocationId;
 
-    loadBusiness();
-  }, []);
+  const [business, setBusiness] = useState<{
+    logoUrl?: string;
+    name?: string;
+    reviewPlatforms?: Array<{ name: string; url: string }>;
+  } | null>(() => {
+    if (stateReviewPlatforms.length > 0 || stateLocationName || stateLogoUrl) {
+      return {
+        logoUrl: stateLogoUrl,
+        name: stateLocationName,
+        reviewPlatforms: stateReviewPlatforms
+      };
+    }
+    return null;
+  });
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!business && locationId) {
+      api.getLocation(locationId).then((loc) => {
+        setBusiness({
+          logoUrl: loc.logoUrl,
+          name: loc.name,
+          reviewPlatforms: loc.reviewPlatforms || []
+        });
+      }).catch(() => {
+        setBusiness({ name: 'Business', reviewPlatforms: [] });
+      });
+    } else if (!business && !locationId) {
+      setBusiness({ name: 'Business', reviewPlatforms: [] });
+    }
+  }, [locationId, business]);
 
   const handleCopyLink = () => {
     const link = window.location.href;

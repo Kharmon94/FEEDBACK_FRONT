@@ -28,6 +28,11 @@ function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+/** Base URL for API requests (exported for FormData uploads that cannot use request()). */
+export function getBaseUrl(): string {
+  return BASE_URL;
+}
+
 export async function request<T>(
   path: string,
   options: RequestInit & { skipAuth?: boolean } = {}
@@ -41,7 +46,20 @@ export async function request<T>(
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
+  } catch (e) {
+    const errMsg = e instanceof Error ? e.message : '';
+    const isNetworkError =
+      (e instanceof TypeError && errMsg.toLowerCase().includes('fetch')) ||
+      errMsg.toLowerCase().includes('load failed') ||
+      errMsg.toLowerCase().includes('networkerror');
+    const msg = isNetworkError
+      ? 'Cannot reach the API. Ensure the Rails server is running (rails server) and VITE_API_URL points to it.'
+      : errMsg || 'Network error';
+    throw new Error(msg);
+  }
   const text = await res.text();
   let data: unknown;
   try {
@@ -55,6 +73,11 @@ export async function request<T>(
     const raw = err?.error ?? res.statusText ?? 'Request failed';
     const msg = Array.isArray(raw) ? raw.join('. ') : String(raw);
     if (res.status === 404) {
+      // Only add connection hint when response looks like a generic 404 (e.g. static server)
+      const hasJsonError = data && typeof data === 'object' && 'error' in data;
+      if (hasJsonError) {
+        throw new Error(msg);
+      }
       const apiUrl = import.meta.env.VITE_API_URL || '(same origin)';
       throw new Error(`${msg} — ensure the Rails API is running and VITE_API_URL (${apiUrl}) points to it.`);
     }

@@ -9,24 +9,18 @@ export function FeedbackForm() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   
-  // Try to get rating and comment from location.state first, then from URL params, then from localStorage
   const stateRating = location.state?.rating || 0;
   const stateComment = location.state?.comment || '';
+  const stateLocationId = location.state?.locationId;
+  const stateLocationName = location.state?.locationName;
+  const stateLogoUrl = location.state?.logoUrl;
   const urlRating = Number(searchParams.get('rating')) || 0;
   const urlComment = searchParams.get('comment') || '';
+  const urlLocationId = searchParams.get('locationId') || '';
   const localStorageRating = parseInt(localStorage.getItem('feedbackRating') || '0');
   const rating = stateRating || urlRating || localStorageRating;
   const initialComment = stateComment || urlComment || '';
-
-  console.log('=== FEEDBACK FORM LOADED ===');
-  console.log('Location state:', location.state);
-  console.log('State rating:', stateRating);
-  console.log('State comment:', stateComment);
-  console.log('URL rating:', urlRating);
-  console.log('URL comment:', urlComment);
-  console.log('LocalStorage rating:', localStorageRating);
-  console.log('Final rating:', rating);
-  console.log('Initial comment:', initialComment);
+  const locationId = stateLocationId || urlLocationId;
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,44 +28,61 @@ export function FeedbackForm() {
   const [comment, setComment] = useState(initialComment);
   const [contactMe, setContactMe] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [business, setBusiness] = useState<{ logoUrl?: string; name?: string }>({});
+  const [business, setBusiness] = useState<{ logoUrl?: string; name?: string }>(() => ({
+    logoUrl: stateLogoUrl,
+    name: stateLocationName
+  }));
 
-  // Move the navigation check to useEffect to avoid setState during render
   useEffect(() => {
     if (!rating || rating === 0) {
-      console.log('No rating found, redirecting to home');
       navigate('/');
-    } else {
-      console.log('Rating found:', rating);
     }
   }, [rating, navigate]);
 
-  // Don't render if there's no rating (prevents flash of content)
+  useEffect(() => {
+    if (locationId && !stateLocationName && !stateLogoUrl) {
+      api.getLocation(locationId).then((loc) => {
+        setBusiness({ logoUrl: loc.logoUrl, name: loc.name });
+      }).catch(() => {});
+    }
+  }, [locationId, stateLocationName, stateLogoUrl]);
+
   if (!rating) {
     return null;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!locationId) {
+      alert('Unable to submit: location context was lost. Please go back and try again.');
+      return;
+    }
     setSubmitting(true);
 
     try {
       await api.submitFeedback({
-        businessId: 'demo-business',
+        businessId: locationId,
         rating,
         name: name || undefined,
         email: email || undefined,
         phone: contactMe ? phone : undefined,
+        contactMe: contactMe || undefined,
         comment,
         type: 'feedback'
       });
 
-      // Clear localStorage after successful submission
       localStorage.removeItem('feedbackRating');
       localStorage.removeItem('feedbackComment');
       localStorage.removeItem('feedbackImages');
 
-      navigate('/feedback-submitted');
+      const locationName = business?.name || stateLocationName;
+      navigate(`/feedback-submitted?locationId=${encodeURIComponent(locationId)}`, {
+        state: {
+          locationId,
+          locationName,
+          logoUrl: business?.logoUrl || stateLogoUrl
+        }
+      });
     } catch (error) {
       console.error('Failed to submit feedback:', error);
       alert('Failed to submit feedback. Please try again.');
@@ -185,7 +196,7 @@ export function FeedbackForm() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={submitting || !comment.trim()}
+              disabled={submitting || !comment.trim() || !locationId}
               className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black shadow-sm mt-6"
             >
               {submitting ? 'Submitting...' : 'Submit Feedback'}

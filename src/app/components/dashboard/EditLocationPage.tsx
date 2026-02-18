@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Trash2, Eye, Palette, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../../api/client';
+import { getBaseUrl, getToken } from '../../services/api';
 import { FeedbackPagePreview } from './FeedbackPagePreview';
 
 interface Location {
@@ -132,10 +133,8 @@ export function EditLocationPage() {
           platformsObj[key] = p.url;
         });
         Object.entries(platformsObj).forEach(([k, v]) => formData.append(`review_platforms[${k}]`, v));
-        const { api: railsApi } = await import('../../../services/api');
-        const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api/v1';
-        const token = railsApi.getToken();
-        const res = await fetch(`${BASE}/locations/${locationId}`, {
+        const token = getToken();
+        const res = await fetch(`${getBaseUrl()}/locations/${locationId}`, {
           method: 'PUT',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           body: formData,
@@ -144,6 +143,16 @@ export function EditLocationPage() {
           navigate('/dashboard');
           return;
         }
+        const errText = await res.text();
+        let errMsg: string;
+        try {
+          const parsed = errText ? JSON.parse(errText) : null;
+          const raw = (parsed as { error?: string | string[] })?.error ?? res.statusText ?? 'Request failed';
+          errMsg = Array.isArray(raw) ? raw.join('. ') : String(raw);
+        } catch {
+          errMsg = res.statusText || errText || 'Request failed';
+        }
+        throw new Error(errMsg);
       }
 
       const locationData = {
@@ -168,7 +177,8 @@ export function EditLocationPage() {
       navigate('/dashboard');
     } catch (error) {
       console.error('Failed to update location:', error);
-      alert('Failed to update location. Please try again.');
+      const message = error instanceof Error ? error.message : 'Failed to update location. Please try again.';
+      alert(message);
     } finally {
       setSaving(false);
     }

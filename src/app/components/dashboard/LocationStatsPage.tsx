@@ -16,9 +16,10 @@ interface Location {
 
 interface Feedback {
   id: string;
-  locationId: string;
+  locationId?: string;
+  businessId?: string;
   rating: number;
-  message: string;
+  comment: string;
   name?: string;
   email?: string;
   phone?: string;
@@ -52,9 +53,7 @@ export function LocationStatsPage() {
 
       setLocation(loc);
 
-      // Load feedback for this location
-      const allFeedback = await api.getFeedback();
-      const locationFeedback = allFeedback.filter(f => f.locationId === locationId);
+      const locationFeedback = await api.getFeedback(locationId);
       setFeedback(locationFeedback);
     } catch (error) {
       console.error('Failed to load location data:', error);
@@ -91,14 +90,14 @@ export function LocationStatsPage() {
   const exportCSV = () => {
     if (!location) return;
 
-    const headers = ['Date', 'Rating', 'Name', 'Email', 'Phone', 'Message'];
+    const headers = ['Date', 'Rating', 'Name', 'Email', 'Phone', 'Comment'];
     const rows = feedback.map(f => [
       new Date(f.createdAt).toLocaleDateString(),
       f.rating,
       f.name || 'Anonymous',
       f.email || '',
       f.phone || '',
-      f.message.replace(/"/g, '""'),
+      (f.comment || '').replace(/"/g, '""'),
     ]);
 
     const csv = [
@@ -262,7 +261,7 @@ export function LocationStatsPage() {
                     {new Date(item.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-slate-700 text-sm">{item.message}</p>
+                <p className="text-slate-700 text-sm">{item.comment}</p>
                 {(item.email || item.phone) && (
                   <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-600">
                     {item.email && <span>✉️ {item.email}</span>}
