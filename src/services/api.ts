@@ -215,6 +215,10 @@ export const api = {
     return request<AdminUser>(`/admin/users/${id}`);
   },
 
+  async createAdminUser(payload: { email: string; name?: string; password: string; plan?: string }): Promise<AdminUser> {
+    return request<AdminUser>('/admin/users', { method: 'POST', body: JSON.stringify(payload) });
+  },
+
   async suspendAdminUser(id: string): Promise<{ success: boolean; message: string }> {
     return request(`/admin/users/${id}/suspend`, { method: 'PUT' });
   },
@@ -243,6 +247,10 @@ export const api = {
 
   async getAdminLocation(id: string): Promise<AdminLocation> {
     return request<AdminLocation>(`/admin/locations/${id}`);
+  },
+
+  async createAdminLocation(payload: { user_id: string; name: string }): Promise<AdminLocation> {
+    return request<AdminLocation>('/admin/locations', { method: 'POST', body: JSON.stringify(payload) });
   },
 
   async exportAdminLocations(): Promise<Blob> {

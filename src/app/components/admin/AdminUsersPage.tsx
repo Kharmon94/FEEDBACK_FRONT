@@ -7,7 +7,8 @@ import {
   CheckCircle,
   XCircle,
   Ban,
-  Download
+  Download,
+  UserPlus
 } from 'lucide-react';
 import { api, downloadBlob, type AdminUser } from '../../../services/api';
 
@@ -21,6 +22,10 @@ export function AdminUsersPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [createUserForm, setCreateUserForm] = useState({ email: '', name: '', password: '', plan: 'free' });
+  const [createUserError, setCreateUserError] = useState<string | null>(null);
+  const [creatingUser, setCreatingUser] = useState(false);
 
   const loadUsers = useCallback(async (page = 1) => {
     setLoading(true);
@@ -105,6 +110,31 @@ export function AdminUsersPage() {
     }
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateUserError(null);
+    if (!createUserForm.email.trim() || !createUserForm.password) {
+      setCreateUserError('Email and password are required.');
+      return;
+    }
+    setCreatingUser(true);
+    try {
+      await api.createAdminUser({
+        email: createUserForm.email.trim(),
+        name: createUserForm.name.trim() || undefined,
+        password: createUserForm.password,
+        plan: createUserForm.plan,
+      });
+      setShowCreateUser(false);
+      setCreateUserForm({ email: '', name: '', password: '', plan: 'free' });
+      loadUsers(1);
+    } catch (err: unknown) {
+      setCreateUserError(err instanceof Error ? err.message : 'Failed to create user.');
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -123,15 +153,102 @@ export function AdminUsersPage() {
             {pagination.total_count} users
           </p>
         </div>
-        <button
-          onClick={exportUsers}
-          disabled={exporting}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
-        >
-          <Download className="w-4 h-4" />
-          {exporting ? 'Exporting...' : 'Export CSV'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => { setShowCreateUser(true); setCreateUserError(null); }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Create user
+          </button>
+          <button
+            onClick={exportUsers}
+            disabled={exporting}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+        </div>
       </div>
+
+      {showCreateUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => !creatingUser && setShowCreateUser(false)}>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Create user</h3>
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              {createUserError && (
+                <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{createUserError}</div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  required
+                  value={createUserForm.email}
+                  onChange={(e) => setCreateUserForm((f) => ({ ...f, email: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  placeholder="user@example.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={createUserForm.name}
+                  onChange={(e) => setCreateUserForm((f) => ({ ...f, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  placeholder="Display name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Password *</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={createUserForm.password}
+                  onChange={(e) => setCreateUserForm((f) => ({ ...f, password: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  placeholder="Min 6 characters"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Plan</label>
+                <select
+                  value={createUserForm.plan}
+                  onChange={(e) => setCreateUserForm((f) => ({ ...f, plan: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                >
+                  <option value="free">Free</option>
+                  <option value="starter">Starter</option>
+                  <option value="pro">Pro</option>
+                  <option value="business">Business</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateUser(false)}
+                  disabled={creatingUser}
+                  className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingUser}
+                  className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {creatingUser ? 'Creating...' : 'Create user'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">

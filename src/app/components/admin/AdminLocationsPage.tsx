@@ -6,9 +6,10 @@ import {
   MessageSquare,
   Star,
   ExternalLink,
-  Download
+  Download,
+  MapPinPlus
 } from 'lucide-react';
-import { api, downloadBlob, type AdminLocation } from '../../../services/api';
+import { api, downloadBlob, type AdminLocation, type AdminUser } from '../../../services/api';
 
 export function AdminLocationsPage() {
   const navigate = useNavigate();
@@ -20,6 +21,12 @@ export function AdminLocationsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [showCreateLocation, setShowCreateLocation] = useState(false);
+  const [createLocationForm, setCreateLocationForm] = useState({ user_id: '', name: '' });
+  const [createLocationError, setCreateLocationError] = useState<string | null>(null);
+  const [creatingLocation, setCreatingLocation] = useState(false);
+  const [usersForSelect, setUsersForSelect] = useState<AdminUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const loadLocations = useCallback(async (page = 1) => {
     setLoading(true);
@@ -65,6 +72,50 @@ export function AdminLocationsPage() {
     }
   };
 
+  const openCreateLocation = async () => {
+    setShowCreateLocation(true);
+    setCreateLocationError(null);
+    setCreateLocationForm({ user_id: '', name: '' });
+    if (usersForSelect.length === 0) {
+      setLoadingUsers(true);
+      try {
+        const data = await api.getAdminUsers({ per_page: 500 });
+        setUsersForSelect(data.users);
+        if (data.users.length > 0) {
+          setCreateLocationForm((f) => ({ ...f, user_id: data.users[0].id }));
+        }
+      } catch (e) {
+        console.error('Failed to load users:', e);
+        setCreateLocationError('Could not load users.');
+      } finally {
+        setLoadingUsers(false);
+      }
+    }
+  };
+
+  const handleCreateLocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateLocationError(null);
+    if (!createLocationForm.user_id || !createLocationForm.name.trim()) {
+      setCreateLocationError('Select a user and enter a location name.');
+      return;
+    }
+    setCreatingLocation(true);
+    try {
+      await api.createAdminLocation({
+        user_id: createLocationForm.user_id,
+        name: createLocationForm.name.trim(),
+      });
+      setShowCreateLocation(false);
+      setCreateLocationForm({ user_id: '', name: '' });
+      loadLocations(1);
+    } catch (err: unknown) {
+      setCreateLocationError(err instanceof Error ? err.message : 'Failed to create location.');
+    } finally {
+      setCreatingLocation(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -80,15 +131,88 @@ export function AdminLocationsPage() {
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Locations</h2>
           <p className="text-slate-600">{pagination.total_count} total locations</p>
         </div>
-        <button
-          onClick={exportLocations}
-          disabled={exporting}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
-        >
-          <Download className="w-4 h-4" />
-          {exporting ? 'Exporting...' : 'Export CSV'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openCreateLocation}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+          >
+            <MapPinPlus className="w-4 h-4" />
+            Create location
+          </button>
+          <button
+            onClick={exportLocations}
+            disabled={exporting}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+        </div>
       </div>
+
+      {showCreateLocation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => !creatingLocation && setShowCreateLocation(false)}>
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Create location</h3>
+            <form onSubmit={handleCreateLocation} className="space-y-4">
+              {createLocationError && (
+                <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">{createLocationError}</div>
+              )}
+              {loadingUsers ? (
+                <div className="text-slate-500 text-sm">Loading users...</div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Owner (user) *</label>
+                    <select
+                      value={createLocationForm.user_id}
+                      onChange={(e) => setCreateLocationForm((f) => ({ ...f, user_id: e.target.value }))}
+                      required
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    >
+                      <option value="">Select user</option>
+                      {usersForSelect.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name ?? u.email} ({u.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Location name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={createLocationForm.name}
+                      onChange={(e) => setCreateLocationForm((f) => ({ ...f, name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      placeholder="e.g. Downtown Branch"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateLocation(false)}
+                      disabled={creatingLocation}
+                      className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={creatingLocation || usersForSelect.length === 0}
+                      className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50"
+                    >
+                      {creatingLocation ? 'Creating...' : 'Create location'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border border-slate-200 p-4">
         <div className="flex flex-col lg:flex-row gap-4">
