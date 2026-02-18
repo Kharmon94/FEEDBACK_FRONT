@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
 const logo = "/logo.png";
 import { useAuth } from '../../contexts/AuthContext';
-import { api } from '../../services/api';
+import { api } from '../../../services/api';
 
 export function AdminLoginPage() {
   const [email, setEmail] = useState('');

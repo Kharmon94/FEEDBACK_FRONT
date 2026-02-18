@@ -9,7 +9,7 @@ import {
   Ban,
   Download
 } from 'lucide-react';
-import { api, downloadBlob, type AdminUser } from '../../services/api';
+import { api, downloadBlob, type AdminUser } from '../../../services/api';
 
 export function AdminUsersPage() {
   const navigate = useNavigate();

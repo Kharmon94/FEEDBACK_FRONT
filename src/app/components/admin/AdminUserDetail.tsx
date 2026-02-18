@@ -12,7 +12,7 @@ import {
   User as UserIcon,
   Building
 } from 'lucide-react';
-import { api, type AdminUser } from '../../services/api';
+import { api, type AdminUser } from '../../../services/api';
 
 export function AdminUserDetail() {
   const { userId } = useParams();

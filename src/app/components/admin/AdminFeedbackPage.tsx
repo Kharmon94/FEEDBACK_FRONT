@@ -10,7 +10,7 @@ import {
   Eye,
   X
 } from 'lucide-react';
-import { api, downloadBlob, type AdminFeedbackItem } from '../../services/api';
+import { api, downloadBlob, type AdminFeedbackItem } from '../../../services/api';
 
 export function AdminFeedbackPage() {
   const [searchParams] = useSearchParams();

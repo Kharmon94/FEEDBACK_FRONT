@@ -7,7 +7,7 @@ import {
   Star,
   Activity
 } from 'lucide-react';
-import { api, type AdminRecentActivityItem } from '../../services/api';
+import { api, type AdminRecentActivityItem } from '../../../services/api';
 
 export function AdminDashboard() {
   const [totalUsers, setTotalUsers] = useState(0);

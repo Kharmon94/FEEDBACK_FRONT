@@ -9,7 +9,7 @@ import {
   Mail,
   ExternalLink
 } from 'lucide-react';
-import { api, type AdminLocation } from '../../services/api';
+import { api, type AdminLocation } from '../../../services/api';
 
 export function AdminLocationDetail() {
   const { locationId } = useParams();

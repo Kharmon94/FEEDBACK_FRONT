@@ -9,7 +9,7 @@ import {
   Star,
   Download
 } from 'lucide-react';
-import { api, downloadBlob, type AdminAnalyticsResponse } from '../../services/api';
+import { api, downloadBlob, type AdminAnalyticsResponse } from '../../../services/api';
 
 export function AdminAnalyticsPage() {
   const [analytics, setAnalytics] = useState<AdminAnalyticsResponse | null>(null);

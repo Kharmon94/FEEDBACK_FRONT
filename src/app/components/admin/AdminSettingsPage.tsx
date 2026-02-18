@@ -6,7 +6,7 @@ import {
   Shield,
   Globe
 } from 'lucide-react';
-import { api, type AdminSettings } from '../../services/api';
+import { api, type AdminSettings } from '../../../services/api';
 
 export function AdminSettingsPage() {
   const [settings, setSettings] = useState<AdminSettings | null>(null);

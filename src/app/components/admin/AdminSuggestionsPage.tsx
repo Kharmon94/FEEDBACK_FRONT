@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { MapPin, User, Download, Mail, Calendar } from 'lucide-react';
-import { api, downloadBlob, type AdminSuggestion } from '../../services/api';
+import { api, downloadBlob, type AdminSuggestion } from '../../../services/api';
 
 export function AdminSuggestionsPage() {
   const navigate = useNavigate();

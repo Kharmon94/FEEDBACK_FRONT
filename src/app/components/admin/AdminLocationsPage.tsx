@@ -8,7 +8,7 @@ import {
   ExternalLink,
   Download
 } from 'lucide-react';
-import { api, downloadBlob, type AdminLocation } from '../../services/api';
+import { api, downloadBlob, type AdminLocation } from '../../../services/api';
 
 export function AdminLocationsPage() {
   const navigate = useNavigate();
