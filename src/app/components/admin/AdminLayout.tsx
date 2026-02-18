@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router';
 import { 
   LayoutDashboard, 
   Users, 
   MapPin, 
   MessageSquare, 
+  Lightbulb,
   BarChart3, 
   Settings, 
   LogOut, 
@@ -17,7 +18,18 @@ import { useAuth } from '../../contexts/AuthContext';
 export function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      navigate('/admin/login', { replace: true });
+      return;
+    }
+    if (!user.admin) {
+      navigate('/', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSignOut = async () => {
     if (signOut) {
@@ -31,9 +43,18 @@ export function AdminLayout() {
     { to: '/admin/users', label: 'Users', icon: Users },
     { to: '/admin/locations', label: 'Locations', icon: MapPin },
     { to: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
+    { to: '/admin/suggestions', label: 'Suggestions', icon: Lightbulb },
     { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { to: '/admin/settings', label: 'Settings', icon: Settings },
   ];
+
+  if (loading || !user || !user.admin) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-slate-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">

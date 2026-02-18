@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
 const logo = "/logo.png";
+import { useAuth } from '../../contexts/AuthContext';
+import { api } from '../../services/api';
 
 export function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -10,6 +12,7 @@ export function AdminLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn, signOut } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,21 +20,17 @@ export function AdminLoginPage() {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual admin login API call
-      // const response = await fetch('/api/admin/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password }),
-      // });
-      // const data = await response.json();
-      
-      // Mock authentication - remove this in production
-      if (email === 'admin@feedback-page.com' && password === 'admin') {
-        // Store admin token
-        localStorage.setItem('adminToken', 'mock-admin-token');
+      const { error: signInError } = await signIn(email, password);
+      if (signInError) {
+        setError('Invalid email or password.');
+        return;
+      }
+      const user = await api.getCurrentUser();
+      if (user?.admin) {
         navigate('/admin');
       } else {
-        setError('Invalid email or password. Admin access only.');
+        setError('Admin access only. This account does not have admin privileges.');
+        await signOut();
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -77,7 +76,7 @@ export function AdminLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="admin@feedback-page.com"
+                placeholder="admin@example.com"
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
               />
             </div>

@@ -33,6 +33,7 @@ import { AdminUserDetail } from './components/admin/AdminUserDetail';
 import { AdminLocationsPage } from './components/admin/AdminLocationsPage';
 import { AdminLocationDetail } from './components/admin/AdminLocationDetail';
 import { AdminFeedbackPage } from './components/admin/AdminFeedbackPage';
+import { AdminSuggestionsPage } from './components/admin/AdminSuggestionsPage';
 import { AdminAnalyticsPage } from './components/admin/AdminAnalyticsPage';
 import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
 import { AdminLoginPage } from './components/admin/AdminLoginPage';
@@ -184,6 +185,10 @@ export const router = createBrowserRouter([
       {
         path: 'feedback',
         Component: AdminFeedbackPage,
+      },
+      {
+        path: 'suggestions',
+        Component: AdminSuggestionsPage,
       },
       {
         path: 'analytics',

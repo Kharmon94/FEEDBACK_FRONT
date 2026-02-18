@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { 
   Search, 
@@ -9,110 +9,43 @@ import {
   Ban,
   Download
 } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  plan: 'free' | 'starter' | 'pro' | 'business' | 'enterprise';
-  status: 'active' | 'inactive' | 'suspended';
-  locationsCount: number;
-  feedbackCount: number;
-  createdAt: string;
-  lastLogin: string;
-  mrr: number; // Monthly Recurring Revenue
-}
+import { api, downloadBlob, type AdminUser } from '../../services/api';
 
 export function AdminUsersPage() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [pagination, setPagination] = useState({ current_page: 1, total_pages: 1, total_count: 0, per_page: 50 });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPlan, setFilterPlan] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async (page = 1) => {
+    setLoading(true);
     try {
-      // TODO: Replace with actual API call to Rails backend
-      // const response = await fetch('/api/admin/users');
-      // const data = await response.json();
-      
-      // Mock data for now
-      setUsers([
-        {
-          id: '1',
-          name: 'John Smith',
-          email: 'john.smith@example.com',
-          plan: 'pro',
-          status: 'active',
-          locationsCount: 3,
-          feedbackCount: 245,
-          createdAt: '2024-01-15',
-          lastLogin: '2024-02-10',
-          mrr: 59,
-        },
-        {
-          id: '2',
-          name: 'Sarah Johnson',
-          email: 'sarah.j@company.com',
-          plan: 'business',
-          status: 'active',
-          locationsCount: 8,
-          feedbackCount: 892,
-          createdAt: '2023-11-20',
-          lastLogin: '2024-02-14',
-          mrr: 99,
-        },
-        {
-          id: '3',
-          name: 'Mike Chen',
-          email: 'mike.chen@startup.io',
-          plan: 'starter',
-          status: 'active',
-          locationsCount: 1,
-          feedbackCount: 67,
-          createdAt: '2024-02-01',
-          lastLogin: '2024-02-13',
-          mrr: 29,
-        },
-        {
-          id: '4',
-          name: 'Emma Wilson',
-          email: 'emma.w@business.com',
-          plan: 'free',
-          status: 'inactive',
-          locationsCount: 0,
-          feedbackCount: 5,
-          createdAt: '2024-01-28',
-          lastLogin: '2024-01-30',
-          mrr: 0,
-        },
-        {
-          id: '5',
-          name: 'David Lee',
-          email: 'david.lee@corp.com',
-          plan: 'enterprise',
-          status: 'active',
-          locationsCount: 25,
-          feedbackCount: 3456,
-          createdAt: '2023-09-10',
-          lastLogin: '2024-02-14',
-          mrr: 299,
-        },
-      ]);
+      const data = await api.getAdminUsers({
+        page,
+        per_page: 50,
+        search: searchQuery || undefined,
+        plan: filterPlan === 'all' ? undefined : filterPlan,
+        status: filterStatus === 'all' ? undefined : filterStatus === 'suspended' ? 'suspended' : filterStatus === 'active' ? 'active' : undefined,
+      });
+      setUsers(data.users);
+      setPagination(data.pagination);
     } catch (error) {
       console.error('Error loading users:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, filterPlan, filterStatus]);
 
-  const getPlanBadgeColor = (plan: User['plan']) => {
+  useEffect(() => {
+    loadUsers(1);
+  }, [loadUsers]);
+
+  const getPlanBadgeColor = (plan: string) => {
     switch (plan) {
       case 'enterprise':
         return 'bg-purple-100 text-purple-700 border-purple-200';
@@ -129,20 +62,13 @@ export function AdminUsersPage() {
     }
   };
 
-  const getStatusBadge = (status: User['status']) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
             <CheckCircle className="w-3 h-3" />
             Active
-          </span>
-        );
-      case 'inactive':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">
-            <XCircle className="w-3 h-3" />
-            Inactive
           </span>
         );
       case 'suspended':
@@ -153,24 +79,30 @@ export function AdminUsersPage() {
           </span>
         );
       default:
-        return null;
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">
+            <XCircle className="w-3 h-3" />
+            {status}
+          </span>
+        );
     }
   };
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch = 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPlan = filterPlan === 'all' || user.plan === filterPlan;
-    const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
-    return matchesSearch && matchesPlan && matchesStatus;
-  });
+  const handleSearch = () => {
+    loadUsers(1);
+  };
 
-  const totalMRR = filteredUsers.reduce((sum, user) => sum + user.mrr, 0);
-
-  const exportUsers = () => {
-    // TODO: Implement CSV export
-    alert('Export users to CSV - TODO: Implement with Rails backend');
+  const exportUsers = async () => {
+    setExporting(true);
+    try {
+      const blob = await api.exportAdminUsers();
+      downloadBlob(blob, `users-${new Date().toISOString().slice(0, 10)}.csv`);
+    } catch (e) {
+      console.error('Export failed:', e);
+      alert('Export failed. Ensure you are signed in as an admin.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (loading) {
@@ -188,15 +120,16 @@ export function AdminUsersPage() {
         <div>
           <h2 className="text-2xl text-slate-900 mb-2">User Management</h2>
           <p className="text-slate-600">
-            {filteredUsers.length} users • ${totalMRR.toLocaleString()} MRR
+            {pagination.total_count} users
           </p>
         </div>
         <button
           onClick={exportUsers}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
+          disabled={exporting}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50"
         >
           <Download className="w-4 h-4" />
-          Export CSV
+          {exporting ? 'Exporting...' : 'Export CSV'}
         </button>
       </div>
 
@@ -211,9 +144,17 @@ export function AdminUsersPage() {
               placeholder="Search by name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
           </div>
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800"
+          >
+            Search
+          </button>
 
           {/* Filter Toggle */}
           <button
@@ -285,9 +226,6 @@ export function AdminUsersPage() {
                   Feedback
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  MRR
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Joined
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -296,14 +234,14 @@ export function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {filteredUsers.length === 0 ? (
+              {users.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
                     No users found
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => (
+                users.map((user) => (
                   <tr 
                     key={user.id} 
                     onClick={() => navigate(`/admin/users/${user.id}`)}
@@ -311,7 +249,7 @@ export function AdminUsersPage() {
                   >
                     <td className="px-6 py-4">
                       <div>
-                        <div className="font-medium text-slate-900">{user.name}</div>
+                        <div className="font-medium text-slate-900">{user.name ?? '—'}</div>
                         <div className="text-sm text-slate-500">{user.email}</div>
                       </div>
                     </td>
@@ -324,16 +262,13 @@ export function AdminUsersPage() {
                       {getStatusBadge(user.status)}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-900">
-                      {user.locationsCount}
+                      {user.locations_count}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-900">
-                      {user.feedbackCount.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                      ${user.mrr}
+                      {user.feedback_count.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
@@ -352,6 +287,31 @@ export function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+        {pagination.total_pages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-slate-200 bg-slate-50">
+            <span className="text-sm text-slate-600">
+              Page {pagination.current_page} of {pagination.total_pages} ({pagination.total_count} total)
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={pagination.current_page <= 1}
+                onClick={() => loadUsers(pagination.current_page - 1)}
+                className="px-3 py-1 border border-slate-300 rounded-lg text-sm disabled:opacity-50 hover:bg-slate-100"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={pagination.current_page >= pagination.total_pages}
+                onClick={() => loadUsers(pagination.current_page + 1)}
+                className="px-3 py-1 border border-slate-300 rounded-lg text-sm disabled:opacity-50 hover:bg-slate-100"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -193,6 +193,243 @@ export const api = {
       body: JSON.stringify(data),
     });
   },
+
+  // --- Admin API (requires user.admin) ---
+
+  async getAdminDashboard(): Promise<AdminDashboardResponse> {
+    return request<AdminDashboardResponse>('/admin/dashboard');
+  },
+
+  async getAdminUsers(params?: { page?: number; per_page?: number; search?: string; plan?: string; status?: string }): Promise<AdminUsersResponse> {
+    const sp = new URLSearchParams();
+    if (params?.page != null) sp.set('page', String(params.page));
+    if (params?.per_page != null) sp.set('per_page', String(params.per_page));
+    if (params?.search) sp.set('search', params.search);
+    if (params?.plan) sp.set('plan', params.plan);
+    if (params?.status) sp.set('status', params.status);
+    const q = sp.toString();
+    return request<AdminUsersResponse>(`/admin/users${q ? `?${q}` : ''}`);
+  },
+
+  async getAdminUser(id: string): Promise<AdminUser> {
+    return request<AdminUser>(`/admin/users/${id}`);
+  },
+
+  async suspendAdminUser(id: string): Promise<{ success: boolean; message: string }> {
+    return request(`/admin/users/${id}/suspend`, { method: 'PUT' });
+  },
+
+  async activateAdminUser(id: string): Promise<{ success: boolean; message: string }> {
+    return request(`/admin/users/${id}/activate`, { method: 'PUT' });
+  },
+
+  async exportAdminUsers(): Promise<Blob> {
+    return adminExport('/admin/users/export');
+  },
+
+  async getAdminLocations(params?: { page?: number; per_page?: number; search?: string; user_id?: string }): Promise<AdminLocationsResponse> {
+    const sp = new URLSearchParams();
+    if (params?.page != null) sp.set('page', String(params.page));
+    if (params?.per_page != null) sp.set('per_page', String(params.per_page));
+    if (params?.search) sp.set('search', params.search);
+    if (params?.user_id) sp.set('user_id', params.user_id);
+    const q = sp.toString();
+    return request<AdminLocationsResponse>(`/admin/locations${q ? `?${q}` : ''}`);
+  },
+
+  async getAdminLocation(id: string): Promise<AdminLocation> {
+    return request<AdminLocation>(`/admin/locations/${id}`);
+  },
+
+  async exportAdminLocations(): Promise<Blob> {
+    return adminExport('/admin/locations/export');
+  },
+
+  async getAdminFeedback(params?: { page?: number; per_page?: number; location_id?: string; user_id?: string; rating?: number }): Promise<AdminFeedbackResponse> {
+    const sp = new URLSearchParams();
+    if (params?.page != null) sp.set('page', String(params.page));
+    if (params?.per_page != null) sp.set('per_page', String(params.per_page));
+    if (params?.location_id) sp.set('location_id', params.location_id);
+    if (params?.user_id) sp.set('user_id', params.user_id);
+    if (params?.rating != null) sp.set('rating', String(params.rating));
+    const q = sp.toString();
+    return request<AdminFeedbackResponse>(`/admin/feedback${q ? `?${q}` : ''}`);
+  },
+
+  async getAdminFeedbackItem(id: string): Promise<AdminFeedbackItem> {
+    return request<AdminFeedbackItem>(`/admin/feedback/${id}`);
+  },
+
+  async exportAdminFeedback(): Promise<Blob> {
+    return adminExport('/admin/feedback/export');
+  },
+
+  async getAdminAnalytics(params?: { range?: string }): Promise<AdminAnalyticsResponse> {
+    const q = params?.range ? `?range=${encodeURIComponent(params.range)}` : '';
+    return request<AdminAnalyticsResponse>(`/admin/analytics${q}`);
+  },
+
+  async exportAdminAnalytics(): Promise<Blob> {
+    return adminExport('/admin/analytics/export');
+  },
+
+  async getAdminSettings(): Promise<AdminSettings> {
+    return request<AdminSettings>('/admin/settings');
+  },
+
+  async updateAdminSettings(payload: Partial<AdminSettings>): Promise<{ success: boolean; message: string; settings: AdminSettings }> {
+    return request('/admin/settings', { method: 'PUT', body: JSON.stringify(payload) });
+  },
+
+  async getAdminSuggestions(params?: { page?: number; per_page?: number; location_id?: string; user_id?: string }): Promise<AdminSuggestionsResponse> {
+    const sp = new URLSearchParams();
+    if (params?.page != null) sp.set('page', String(params.page));
+    if (params?.per_page != null) sp.set('per_page', String(params.per_page));
+    if (params?.location_id) sp.set('location_id', params.location_id);
+    if (params?.user_id) sp.set('user_id', params.user_id);
+    const q = sp.toString();
+    return request<AdminSuggestionsResponse>(`/admin/suggestions${q ? `?${q}` : ''}`);
+  },
+
+  async getAdminSuggestion(id: string): Promise<AdminSuggestion> {
+    return request<AdminSuggestion>(`/admin/suggestions/${id}`);
+  },
+
+  async exportAdminSuggestions(): Promise<Blob> {
+    return adminExport('/admin/suggestions/export');
+  },
 };
+
+/** Fetch admin CSV export with auth; returns blob for download. */
+async function adminExport(path: string): Promise<Blob> {
+  const token = getToken();
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (res.status === 401 || res.status === 403) {
+    throw new Error('Unauthorized. Sign in as an admin.');
+  }
+  if (!res.ok) throw new Error(res.statusText || 'Export failed');
+  return res.blob();
+}
+
+/** Trigger browser download of a blob (e.g. CSV). */
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Admin API response types (snake_case from Rails)
+export interface AdminDashboardResponse {
+  total_users: number;
+  active_users: number;
+  total_locations: number;
+  total_feedback: number;
+  avg_rating: number | null;
+  recent_activity: AdminRecentActivityItem[];
+}
+
+export interface AdminRecentActivityItem {
+  type: 'user' | 'location' | 'feedback';
+  id: string;
+  message: string;
+  created_at: string;
+  user_name?: string;
+  location_name?: string;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string;
+  plan: string;
+  status: string;
+  locations_count: number;
+  feedback_count: number;
+  created_at: string;
+}
+
+export interface AdminUsersResponse {
+  users: AdminUser[];
+  pagination: { current_page: number; total_pages: number; total_count: number; per_page: number };
+}
+
+export interface AdminLocation {
+  id: string;
+  name: string;
+  user_id: string;
+  user_name: string | null;
+  user_email: string;
+  feedback_count: number;
+  avg_rating: number | null;
+  created_at: string;
+}
+
+export interface AdminLocationsResponse {
+  locations: AdminLocation[];
+  pagination: { current_page: number; total_pages: number; total_count: number; per_page: number };
+}
+
+export interface AdminFeedbackItem {
+  id: string;
+  rating: number;
+  comment: string | null;
+  location_id: string;
+  location_name: string;
+  user_id: string;
+  user_name: string | null;
+  user_email: string;
+  created_at: string;
+  customer_name: string | null;
+  customer_email: string | null;
+}
+
+export interface AdminFeedbackResponse {
+  feedback: AdminFeedbackItem[];
+  pagination: { current_page: number; total_pages: number; total_count: number; per_page: number };
+}
+
+export interface AdminAnalyticsResponse {
+  revenue: { total: number; growth: number; by_plan: unknown[] };
+  users: { total: number; growth: number; new_this_month: number; churn_rate: number };
+  feedback: {
+    total: number;
+    growth: number;
+    avg_rating: number | null;
+    rating_distribution: { rating: number; count: number }[];
+  };
+  top_locations: { id: string; name: string; owner?: string; feedback_count?: number; avg_rating?: number }[];
+  top_users: { id: string; name: string; plan?: string; locations_count?: number }[];
+}
+
+export interface AdminSettings {
+  site_name: string;
+  support_email: string;
+  max_locations_per_user: number;
+  enable_user_registration: boolean;
+  enable_email_verification: boolean;
+  enable_social_login: boolean;
+}
+
+export interface AdminSuggestion {
+  id: string;
+  content: string;
+  submitter_email: string | null;
+  location_id: string | null;
+  location_name: string | null;
+  user_id: string | null;
+  user_name: string | null;
+  user_email: string | null;
+  created_at: string;
+}
+
+export interface AdminSuggestionsResponse {
+  suggestions: AdminSuggestion[];
+  pagination: { current_page: number; total_pages: number; total_count: number; per_page: number };
+}
 
 export default api;

@@ -4,46 +4,18 @@ import {
   Users, 
   MapPin, 
   MessageSquare, 
-  TrendingUp, 
-  DollarSign,
   Star,
-  AlertCircle,
-  CheckCircle,
   Activity
 } from 'lucide-react';
-
-interface DashboardStats {
-  totalUsers: number;
-  activeUsers: number;
-  totalLocations: number;
-  totalFeedback: number;
-  avgRating: number;
-  monthlyRevenue: number;
-  newUsersThisMonth: number;
-  feedbackThisMonth: number;
-}
-
-interface RecentActivity {
-  id: string;
-  type: 'user' | 'location' | 'feedback' | 'subscription';
-  message: string;
-  timestamp: string;
-  userName?: string;
-  locationName?: string;
-}
+import { api, type AdminRecentActivityItem } from '../../services/api';
 
 export function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalUsers: 0,
-    activeUsers: 0,
-    totalLocations: 0,
-    totalFeedback: 0,
-    avgRating: 0,
-    monthlyRevenue: 0,
-    newUsersThisMonth: 0,
-    feedbackThisMonth: 0,
-  });
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [totalLocations, setTotalLocations] = useState(0);
+  const [totalFeedback, setTotalFeedback] = useState(0);
+  const [avgRating, setAvgRating] = useState<number | null>(null);
+  const [recentActivity, setRecentActivity] = useState<AdminRecentActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -53,60 +25,13 @@ export function AdminDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // TODO: Replace with actual API call to Rails backend
-      // const response = await fetch('/api/admin/dashboard');
-      // const data = await response.json();
-      
-      // Mock data for now
-      setStats({
-        totalUsers: 1247,
-        activeUsers: 892,
-        totalLocations: 3456,
-        totalFeedback: 28934,
-        avgRating: 4.2,
-        monthlyRevenue: 45670,
-        newUsersThisMonth: 156,
-        feedbackThisMonth: 2847,
-      });
-
-      setRecentActivity([
-        {
-          id: '1',
-          type: 'user',
-          message: 'New user registration',
-          timestamp: '2 minutes ago',
-          userName: 'John Smith',
-        },
-        {
-          id: '2',
-          type: 'subscription',
-          message: 'Upgraded to Pro plan',
-          timestamp: '15 minutes ago',
-          userName: 'Sarah Johnson',
-        },
-        {
-          id: '3',
-          type: 'location',
-          message: 'New location added',
-          timestamp: '1 hour ago',
-          locationName: 'Downtown Store',
-          userName: 'Mike Chen',
-        },
-        {
-          id: '4',
-          type: 'feedback',
-          message: 'New feedback submission (5 stars)',
-          timestamp: '2 hours ago',
-          locationName: 'Main Street Cafe',
-        },
-        {
-          id: '5',
-          type: 'feedback',
-          message: 'New feedback submission (2 stars)',
-          timestamp: '3 hours ago',
-          locationName: 'West Side Shop',
-        },
-      ]);
+      const data = await api.getAdminDashboard();
+      setTotalUsers(data.total_users);
+      setActiveUsers(data.active_users);
+      setTotalLocations(data.total_locations);
+      setTotalFeedback(data.total_feedback);
+      setAvgRating(data.avg_rating);
+      setRecentActivity(data.recent_activity || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -117,49 +42,42 @@ export function AdminDashboard() {
   const statCards = [
     {
       label: 'Total Users',
-      value: stats.totalUsers.toLocaleString(),
-      subtext: `${stats.newUsersThisMonth} new this month`,
+      value: totalUsers.toLocaleString(),
+      subtext: 'Registered accounts',
       icon: Users,
       color: 'bg-blue-500',
     },
     {
       label: 'Active Users',
-      value: stats.activeUsers.toLocaleString(),
-      subtext: `${((stats.activeUsers / stats.totalUsers) * 100).toFixed(0)}% of total`,
+      value: activeUsers.toLocaleString(),
+      subtext: totalUsers > 0 ? `${((activeUsers / totalUsers) * 100).toFixed(0)}% of total` : 'Not suspended',
       icon: Activity,
       color: 'bg-green-500',
     },
     {
       label: 'Total Locations',
-      value: stats.totalLocations.toLocaleString(),
-      subtext: `Across all users`,
+      value: totalLocations.toLocaleString(),
+      subtext: 'Across all users',
       icon: MapPin,
       color: 'bg-purple-500',
     },
     {
       label: 'Total Feedback',
-      value: stats.totalFeedback.toLocaleString(),
-      subtext: `${stats.feedbackThisMonth.toLocaleString()} this month`,
+      value: totalFeedback.toLocaleString(),
+      subtext: 'Submissions',
       icon: MessageSquare,
       color: 'bg-orange-500',
     },
     {
       label: 'Avg Rating',
-      value: stats.avgRating.toFixed(1),
+      value: avgRating != null ? avgRating.toFixed(1) : '—',
       subtext: 'System-wide average',
       icon: Star,
       color: 'bg-yellow-500',
     },
-    {
-      label: 'Monthly Revenue',
-      value: `$${stats.monthlyRevenue.toLocaleString()}`,
-      subtext: 'Current month',
-      icon: DollarSign,
-      color: 'bg-emerald-500',
-    },
   ];
 
-  const getActivityIcon = (type: RecentActivity['type']) => {
+  const getActivityIcon = (type: AdminRecentActivityItem['type']) => {
     switch (type) {
       case 'user':
         return <Users className="w-4 h-4" />;
@@ -167,14 +85,12 @@ export function AdminDashboard() {
         return <MapPin className="w-4 h-4" />;
       case 'feedback':
         return <MessageSquare className="w-4 h-4" />;
-      case 'subscription':
-        return <DollarSign className="w-4 h-4" />;
       default:
         return <Activity className="w-4 h-4" />;
     }
   };
 
-  const getActivityColor = (type: RecentActivity['type']) => {
+  const getActivityColor = (type: AdminRecentActivityItem['type']) => {
     switch (type) {
       case 'user':
         return 'bg-blue-100 text-blue-700';
@@ -182,11 +98,21 @@ export function AdminDashboard() {
         return 'bg-purple-100 text-purple-700';
       case 'feedback':
         return 'bg-orange-100 text-orange-700';
-      case 'subscription':
-        return 'bg-green-100 text-green-700';
       default:
         return 'bg-slate-100 text-slate-700';
     }
+  };
+
+  const formatActivityTime = (createdAt: string) => {
+    const d = new Date(createdAt);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hr ago`;
+    return `${diffDays} days ago`;
   };
 
   if (loading) {
@@ -206,7 +132,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -242,7 +168,7 @@ export function AdminDashboard() {
             </div>
           ) : (
             recentActivity.map((activity) => (
-              <div key={activity.id} className="p-4 hover:bg-slate-50 transition-colors">
+              <div key={`${activity.type}-${activity.id}`} className="p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex items-start gap-4">
                   <div className={`${getActivityColor(activity.type)} w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0`}>
                     {getActivityIcon(activity.type)}
@@ -250,17 +176,17 @@ export function AdminDashboard() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-900">{activity.message}</p>
                     <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
-                      {activity.userName && <span>{activity.userName}</span>}
-                      {activity.locationName && (
+                      {activity.user_name && <span>{activity.user_name}</span>}
+                      {activity.location_name && (
                         <>
-                          {activity.userName && <span>•</span>}
-                          <span>{activity.locationName}</span>
+                          {activity.user_name && <span>•</span>}
+                          <span>{activity.location_name}</span>
                         </>
                       )}
                     </div>
                   </div>
                   <div className="text-xs text-slate-500 flex-shrink-0">
-                    {activity.timestamp}
+                    {formatActivityTime(activity.created_at)}
                   </div>
                 </div>
               </div>
