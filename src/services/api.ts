@@ -78,8 +78,8 @@ export const api = {
     return data;
   },
 
-  async signUp(params: { email: string; password: string; name?: string; business_name?: string }): Promise<AuthResponse> {
-    const data = await request<AuthResponse>('/auth/sign_up', {
+  async signUp(params: { email: string; password: string; name?: string; business_name?: string }): Promise<AuthResponse | { message: string; requires_confirmation: true }> {
+    const data = await request<AuthResponse | { message: string; requires_confirmation: true }>('/auth/sign_up', {
       method: 'POST',
       body: JSON.stringify({
         email: params.email,
@@ -89,8 +89,34 @@ export const api = {
       }),
       skipAuth: true,
     });
-    setToken(data.token);
+    if (!('requires_confirmation' in data && data.requires_confirmation)) {
+      setToken((data as AuthResponse).token);
+    }
     return data;
+  },
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    return request<{ message: string }>('/auth/password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      skipAuth: true,
+    });
+  },
+
+  async resetPassword(token: string, password: string): Promise<{ message: string }> {
+    return request<{ message: string }>('/auth/password', {
+      method: 'PUT',
+      body: JSON.stringify({ token, password }),
+      skipAuth: true,
+    });
+  },
+
+  async resendConfirmation(email: string): Promise<{ message: string }> {
+    return request<{ message: string }>('/auth/confirm/resend', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      skipAuth: true,
+    });
   },
 
   async getCurrentUser(): Promise<User | null> {
@@ -495,6 +521,8 @@ export interface AdminSettings {
   enable_user_registration: boolean;
   enable_email_verification: boolean;
   enable_social_login: boolean;
+  notify_on_new_feedback: boolean;
+  notify_on_new_suggestion: boolean;
 }
 
 export interface AdminSuggestion {

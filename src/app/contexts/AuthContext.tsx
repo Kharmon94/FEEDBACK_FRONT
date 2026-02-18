@@ -34,9 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     name: string,
     businessName?: string
-  ): Promise<{ error: unknown }> => {
+  ): Promise<{ error: unknown; requiresConfirmation?: boolean }> => {
     try {
-      await api.signUp({ email, password, name, business_name: businessName });
+      const data = await api.signUp({ email, password, name, business_name: businessName });
+      if ('requires_confirmation' in data && data.requires_confirmation) {
+        return { error: null, requiresConfirmation: true };
+      }
       const u = await api.getCurrentUser();
       setUser(u);
       setSession({ access_token: api.getToken() ?? undefined });

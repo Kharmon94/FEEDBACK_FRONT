@@ -58,13 +58,17 @@ export function Onboarding() {
     if (step === 0) {
       setIsSaving(true);
       try {
-        const { error: signUpError } = await signUp(data.email, data.password, data.name);
+        const { error: signUpError, requiresConfirmation } = await signUp(data.email, data.password, data.name);
         if (signUpError) {
           setIsSaving(false);
-          setError(signUpError.message || 'Failed to create account. Please try again.');
+          setError(signUpError instanceof Error ? signUpError.message : 'Failed to create account. Please try again.');
           return;
         }
         setIsSaving(false);
+        if (requiresConfirmation) {
+          navigate('/verify-email', { state: { email: data.email } });
+          return;
+        }
         setStep(step + 1);
       } catch (err: any) {
         setIsSaving(false);

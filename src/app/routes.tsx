@@ -38,6 +38,9 @@ import { AdminAnalyticsPage } from './components/admin/AdminAnalyticsPage';
 import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
 import { AdminLoginPage } from './components/admin/AdminLoginPage';
 import { AdminPlansPage } from './components/admin/AdminPlansPage';
+import { ForgotPasswordPage } from './components/ForgotPasswordPage';
+import { ResetPasswordPage } from './components/ResetPasswordPage';
+import { VerifyEmailPage } from './components/VerifyEmailPage';
 
 export const router = createBrowserRouter([
   {
@@ -80,6 +83,18 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     Component: LoginPage,
+  },
+  {
+    path: '/forgot-password',
+    Component: ForgotPasswordPage,
+  },
+  {
+    path: '/reset-password',
+    Component: ResetPasswordPage,
+  },
+  {
+    path: '/verify-email',
+    Component: VerifyEmailPage,
   },
   {
     path: '/auth/callback',

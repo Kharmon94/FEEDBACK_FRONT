@@ -28,7 +28,12 @@ export function LoginPage() {
 
     try {
       if (isSignUp) {
-        await signUp(email, password, name);
+        const { error: signUpErr, requiresConfirmation } = await signUp(email, password, name);
+        if (signUpErr) throw signUpErr;
+        if (requiresConfirmation) {
+          navigate('/verify-email', { state: { email } });
+          return;
+        }
         navigate('/onboarding');
       } else {
         await signIn(email, password);
@@ -269,6 +274,13 @@ export function LoginPage() {
                 </div>
                 {isSignUp && (
                   <p className="mt-1 text-xs text-slate-500">Must be at least 6 characters</p>
+                )}
+                {!isSignUp && (
+                  <p className="mt-2 text-right">
+                    <Link to="/forgot-password" className="text-sm text-slate-600 hover:text-slate-900">
+                      Forgot password?
+                    </Link>
+                  </p>
                 )}
               </div>
 

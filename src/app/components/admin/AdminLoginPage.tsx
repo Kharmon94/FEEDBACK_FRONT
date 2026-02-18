@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import { Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
 const logo = "/logo.png";
 import { useAuth } from '../../contexts/AuthContext';
@@ -104,6 +104,12 @@ export function AdminLoginPage() {
                 </button>
               </div>
             </div>
+
+            <p className="text-right">
+              <Link to="/forgot-password" className="text-sm text-slate-600 hover:text-slate-900">
+                Forgot password?
+              </Link>
+            </p>
 
             {/* Login Button */}
             <button
