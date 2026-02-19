@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router';
 import { Check, ChevronRight, ChevronLeft, Eye, EyeOff, Menu, X, Upload } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
-import { getGoogleOAuthUrl } from '../../services/api';
+import { api, signInWithGooglePopup } from '../../services/api';
 import { Footer } from './Footer';
 const logo = "/logo.png";
 import { Checkbox } from './ui/checkbox';
@@ -28,7 +28,7 @@ interface OnboardingData {
 
 export function Onboarding() {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { signUp, refreshUser } = useAuth();
   const [step, setStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -50,6 +50,21 @@ export function Onboarding() {
   });
 
   const totalSteps = 4;
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsSaving(true);
+    try {
+      const token = await signInWithGooglePopup();
+      api.setToken(token);
+      await refreshUser();
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign-in failed');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleNext = async () => {
     setError('');
@@ -287,7 +302,7 @@ export function Onboarding() {
 
           {/* Content - No Card */}
           <div className="px-2 md:px-4">
-            {step === 0 && <Step0 data={data} setData={setData} />}
+            {step === 0 && <Step0 data={data} setData={setData} onGoogleSignIn={handleGoogleSignIn} error={error} loading={isSaving} />}
             {step === 1 && <Step1 data={data} setData={setData} />}
             {step === 2 && <Step2 data={data} setData={setData} />}
             {step === 3 && <Step3 data={data} setData={setData} />}
@@ -323,11 +338,7 @@ export function Onboarding() {
   );
 }
 
-function Step0({ data, setData }: { data: OnboardingData; setData: (data: OnboardingData) => void }) {
-  const handleGoogleSignIn = () => {
-    window.location.href = getGoogleOAuthUrl();
-  };
-
+function Step0({ data, setData, onGoogleSignIn, error, loading }: { data: OnboardingData; setData: (data: OnboardingData) => void; onGoogleSignIn: () => Promise<void>; error?: string; loading?: boolean }) {
   return (
     <div>
       <h2 className="text-xl md:text-2xl lg:text-3xl text-slate-900 mb-1.5 md:mb-2">
@@ -337,11 +348,13 @@ function Step0({ data, setData }: { data: OnboardingData; setData: (data: Onboar
         Enter your details to get started
       </p>
 
+      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
       {/* Google Sign In Button */}
       <button
-        onClick={handleGoogleSignIn}
+        onClick={onGoogleSignIn}
         type="button"
-        className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-300 text-slate-700 py-3 px-4 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors mb-6"
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-300 text-slate-700 py-3 px-4 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path
@@ -361,7 +374,7 @@ function Step0({ data, setData }: { data: OnboardingData; setData: (data: Onboar
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           />
         </svg>
-        Continue with Google
+        {loading ? 'Signing in...' : 'Continue with Google'}
       </button>
 
       {/* Divider */}

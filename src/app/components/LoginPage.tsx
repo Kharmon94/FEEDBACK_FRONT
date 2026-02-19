@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
-import { getGoogleOAuthUrl } from '../../services/api';
+import { api, signInWithGooglePopup } from '../../services/api';
 import { Mail, Lock, User, AlertCircle, Menu, X } from 'lucide-react';
 const logo = "/logo.png";
 import { Footer } from './Footer';
@@ -17,7 +17,7 @@ export function LoginPage() {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, refreshUser } = useAuth();
   
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -46,8 +46,19 @@ export function LoginPage() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    window.location.href = getGoogleOAuthUrl();
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const token = await signInWithGooglePopup();
+      api.setToken(token);
+      await refreshUser();
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign-in failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -183,7 +194,8 @@ export function LoginPage() {
             <button
               onClick={handleGoogleSignIn}
               type="button"
-              className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-300 text-slate-700 py-3 px-4 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-300 text-slate-700 py-3 px-4 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -203,7 +215,7 @@ export function LoginPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continue with Google
+              {loading ? 'Signing in...' : 'Continue with Google'}
             </button>
 
             {/* Divider */}

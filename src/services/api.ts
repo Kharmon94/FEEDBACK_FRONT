@@ -42,6 +42,37 @@ export function getGoogleOAuthUrl(): string {
   return host ? `${host}${path}` : path;
 }
 
+/** Run Google OAuth in a popup. Session cookie stays first-party (popup is on API domain). Returns token or throws. */
+export function signInWithGooglePopup(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = getGoogleOAuthUrl();
+    const w = window.open(url, 'oauth', 'width=500,height=600,scrollbars=yes');
+    if (!w) {
+      reject(new Error('Popups are blocked. Please allow popups for this site.'));
+      return;
+    }
+    const allowedOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    let intervalId: ReturnType<typeof setInterval>;
+    const handler = (e: MessageEvent) => {
+      if (e.origin !== allowedOrigin) return;
+      const d = e.data;
+      if (d?.type !== 'oauth-callback') return;
+      clearInterval(intervalId);
+      window.removeEventListener('message', handler);
+      if (d.token) resolve(d.token);
+      else reject(new Error(d.error || 'Sign-in failed'));
+    };
+    window.addEventListener('message', handler);
+    intervalId = setInterval(() => {
+      if (w.closed) {
+        clearInterval(intervalId);
+        window.removeEventListener('message', handler);
+        reject(new Error('Sign-in was cancelled'));
+      }
+    }, 500);
+  });
+}
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }

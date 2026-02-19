@@ -12,6 +12,11 @@ export function AuthCallbackPage() {
 
   useEffect(() => {
     if (token) {
+      if (window.opener) {
+        window.opener.postMessage({ type: 'oauth-callback', token }, window.location.origin);
+        window.close();
+        return;
+      }
       api.setToken(token);
       refreshUser().then(() => {
         navigate('/dashboard', { replace: true });
@@ -20,6 +25,11 @@ export function AuthCallbackPage() {
   }, [token, refreshUser, navigate]);
 
   if (error) {
+    if (window.opener) {
+      window.opener.postMessage({ type: 'oauth-callback', error: error }, window.location.origin);
+      window.close();
+      return null;
+    }
     const errorDesc = searchParams.get('error_description') || error;
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
@@ -45,6 +55,11 @@ export function AuthCallbackPage() {
     );
   }
 
+  if (window.opener) {
+    window.opener.postMessage({ type: 'oauth-callback', error: 'No token received' }, window.location.origin);
+    window.close();
+    return null;
+  }
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
       <p className="text-slate-700 mb-4">No token received. Please try signing in again.</p>
