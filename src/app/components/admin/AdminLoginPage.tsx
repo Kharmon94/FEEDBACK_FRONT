@@ -4,6 +4,7 @@ import { Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
 const logo = "/logo.png";
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../../services/api';
+import { canViewAdmin } from '../../../utils/permissions';
 
 export function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export function AdminLoginPage() {
         return;
       }
       const user = await api.getCurrentUser();
-      if (user?.admin) {
+      if (canViewAdmin(user)) {
         navigate('/admin');
       } else {
         setError('Admin access only. This account does not have admin privileges.');

@@ -27,10 +27,19 @@ function getBaseUrlInternal(): string {
   return base ? base : API_PATH;
 }
 
-/** URL to start Google OAuth (redirect the browser here). */
+/** API host (origin) without path. Used for OAuth which must hit /api/v1. */
+function getApiHost(): string {
+  const base = getApiBase();
+  if (!base) return '';
+  // Strip /api/v1 or trailing slash so we can append /api/v1 consistently
+  return base.replace(/\/(api\/v1?)?\/?$/, '').replace(/\/$/, '');
+}
+
+/** URL to start Google OAuth. Always uses /api/v1/auth path. */
 export function getGoogleOAuthUrl(): string {
-  const base = getBaseUrlInternal();
-  return `${base.replace(/\/$/, '')}/auth/google_oauth2`;
+  const host = getApiHost();
+  const path = '/api/v1/auth/google_oauth2';
+  return host ? `${host}${path}` : path;
 }
 
 export function getToken(): string | null {

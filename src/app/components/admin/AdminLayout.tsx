@@ -17,6 +17,7 @@ const logo = "/logo.png";
 // Admin layout: requires user.admin and shared JWT for /admin/* routes.
 // Redirects to /admin/login if not authenticated.
 import { useAuth } from '../../contexts/AuthContext';
+import { canViewAdmin } from '../../../utils/permissions';
 
 export function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,7 +30,7 @@ export function AdminLayout() {
       navigate('/admin/login', { replace: true });
       return;
     }
-    if (!user.admin) {
+    if (!canViewAdmin(user)) {
       navigate('/', { replace: true });
     }
   }, [user, loading, navigate]);
@@ -52,7 +53,7 @@ export function AdminLayout() {
     { to: '/admin/settings', label: 'Settings', icon: Settings },
   ];
 
-  if (loading || !user || !user.admin) {
+  if (loading || !user || !canViewAdmin(user)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-slate-500">Loading...</div>
