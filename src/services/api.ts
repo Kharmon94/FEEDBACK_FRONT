@@ -32,7 +32,7 @@ function getBaseUrlInternal(): string {
   return `${host.replace(/\/$/, '')}/api/v1`;
 }
 
-/** API host (origin) without path. Used for OAuth which must hit /api/v1. */
+/** API host (origin) without path. Used for OAuth which hits /auth/google_oauth2. */
 function getApiHost(): string {
   const base = getApiBase();
   if (!base) return '';
@@ -40,10 +40,10 @@ function getApiHost(): string {
   return base.replace(/\/(api\/v1?)?\/?$/, '').replace(/\/$/, '');
 }
 
-/** URL to start Google OAuth. Uses landing page that sets session before redirect (fixes cross-site cookie loss). */
+/** URL to start Google OAuth. Direct link to /auth/google_oauth2 (no /api/v1). */
 export function getGoogleOAuthUrl(): string {
   const host = getApiHost();
-  const path = '/api/v1/auth/oauth_start';
+  const path = '/auth/google_oauth2';
   return host ? `${host}${path}` : path;
 }
 
