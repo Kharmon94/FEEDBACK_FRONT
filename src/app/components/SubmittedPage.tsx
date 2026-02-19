@@ -12,10 +12,12 @@ export function SubmittedPage() {
 
   const stateLocationName = location.state?.locationName;
   const stateLocationId = location.state?.locationId;
+  const stateLogoUrl = location.state?.logoUrl;
   const urlLocationId = searchParams.get('locationId') || '';
   const locationId = stateLocationId || urlLocationId;
 
   const [businessName, setBusinessName] = useState<string>(stateLocationName || '');
+  const [logoUrl, setLogoUrl] = useState<string | null>(stateLogoUrl ?? null);
   const [loading, setLoading] = useState(!stateLocationName && !!locationId);
 
   useEffect(() => {
@@ -27,11 +29,12 @@ export function SubmittedPage() {
     if (locationId) {
       api.getLocation(locationId).then((loc) => {
         setBusinessName(loc.name);
+        if (!stateLogoUrl) setLogoUrl(loc.logoUrl || null);
       }).catch(() => {}).finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
-  }, [locationId, stateLocationName]);
+  }, [locationId, stateLocationName, stateLogoUrl]);
 
   if (loading) {
     return (
@@ -48,9 +51,9 @@ export function SubmittedPage() {
         <div className="text-center mb-8 md:mb-10">
           <Link to="/" className="inline-block">
             <img 
-              src={logo} 
-              alt="Feedback Page" 
-              className="h-16 md:h-20 mx-auto mb-6 hover:opacity-80 transition-opacity"
+              src={logoUrl || logo} 
+              alt={businessName || 'Feedback Page'} 
+              className="h-16 md:h-20 mx-auto mb-6 hover:opacity-80 transition-opacity object-contain"
             />
           </Link>
         </div>

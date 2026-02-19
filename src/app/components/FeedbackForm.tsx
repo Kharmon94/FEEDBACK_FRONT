@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
-import { Star, Upload, X, ArrowLeft, Store } from 'lucide-react';
+import { Star, Upload, X, ArrowLeft } from 'lucide-react';
+const logo = "/logo.png";
 import { api } from '../api/client';
 import { Checkbox } from './ui/checkbox';
 
@@ -109,17 +110,11 @@ export function FeedbackForm() {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="flex justify-center mb-6 mt-4">
-            {business?.logoUrl ? (
-              <img 
-                src={business.logoUrl} 
-                alt={business.name} 
-                className="max-w-[200px] max-h-[200px] w-auto h-auto object-contain"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center">
-                <Store className="w-12 h-12 text-white" />
-              </div>
-            )}
+            <img 
+              src={business?.logoUrl || logo} 
+              alt={business?.name || 'Business'} 
+              className="max-w-[200px] max-h-[200px] w-auto h-auto object-contain"
+            />
           </div>
 
           {/* Business Name */}

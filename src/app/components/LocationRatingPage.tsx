@@ -96,9 +96,9 @@ export function LocationRatingPage() {
         <div className="text-center mb-8 md:mb-12">
           <Link to="/" className="inline-block">
             <img 
-              src={logo} 
-              alt="Feedback Page" 
-              className="h-20 md:h-28 mx-auto mb-3 md:mb-4 hover:opacity-80 transition-opacity"
+              src={location.logoUrl || logo} 
+              alt={location.name} 
+              className="h-20 md:h-28 mx-auto mb-3 md:mb-4 hover:opacity-80 transition-opacity object-contain"
             />
           </Link>
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 md:mb-3 px-4">

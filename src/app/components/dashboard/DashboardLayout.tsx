@@ -8,28 +8,30 @@ import { TrialBanner } from './TrialBanner';
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Mock trial data - In production, this would come from your backend/database
-  // This simulates a user who started their trial and has X days remaining
-  const trialStartDate = new Date('2026-02-01'); // Example trial start
-  const trialEndDate = new Date(trialStartDate);
-  trialEndDate.setDate(trialEndDate.getDate() + 30); // 30-day trial
-  
+  // Trial data from backend: trial starts at signup, 30 days for free plan
+  const trialEndsAt = user?.trial_ends_at ? new Date(user.trial_ends_at) : null;
+  const hasPaymentMethod = user?.has_payment_method ?? false;
   const today = new Date();
-  const daysRemaining = Math.max(0, Math.ceil((trialEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
-  const isTrialActive = daysRemaining > 0;
-  const hasPaymentMethod = false; // Mock - would come from backend
-  
-  const showTrialBanner = isTrialActive && !hasPaymentMethod && daysRemaining <= 15;
-  
-  // Redirect to trial expired page if trial ended and no payment method
-  // Allow access to certain pages even when trial expired
+  const daysRemaining = trialEndsAt
+    ? Math.max(0, Math.ceil((trialEndsAt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
+    : 0;
+  // No trial_ends_at means paid plan or legacy user - treat as no trial restriction
+  const isTrialActive = trialEndsAt ? daysRemaining > 0 : true;
+  const showTrialBanner = isTrialActive && !hasPaymentMethod && trialEndsAt != null && daysRemaining <= 15;
+
+  // Redirect to trial expired only when: trial ended, no payment, and user data loaded
   const allowedPathsWhenExpired = ['/dashboard/trial-expired', '/dashboard/plans', '/dashboard/contact-support'];
-  const shouldRedirectToTrialExpired = !isTrialActive && !hasPaymentMethod && 
-    !allowedPathsWhenExpired.some(path => location.pathname === path);
-  
+  const shouldRedirectToTrialExpired =
+    !loading &&
+    user != null &&
+    trialEndsAt != null &&
+    !isTrialActive &&
+    !hasPaymentMethod &&
+    !allowedPathsWhenExpired.some((path) => location.pathname === path);
+
   if (shouldRedirectToTrialExpired && location.pathname !== '/dashboard/trial-expired') {
     navigate('/dashboard/trial-expired', { replace: true });
   }

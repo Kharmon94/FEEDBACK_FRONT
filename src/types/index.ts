@@ -10,6 +10,9 @@ export interface User {
   business_name: string | null;
   plan: string;
   admin?: boolean;
+  created_at?: string;
+  trial_ends_at?: string | null;
+  has_payment_method?: boolean;
 }
 
 export interface AuthResponse {

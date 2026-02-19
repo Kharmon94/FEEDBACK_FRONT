@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate, Link, useLocation } from 'react-router';
 import { Sparkles, User, Mail, MessageSquare, ArrowRight } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
@@ -7,6 +7,8 @@ import { Business } from '../types';
 
 export function SuggestionForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationIdFromState = (location.state as { locationId?: string })?.locationId;
   const [business, setBusiness] = useState<Business | null>(null);
 
   const [formData, setFormData] = useState({
@@ -17,14 +19,21 @@ export function SuggestionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    loadBusiness();
-  }, []);
+    if (locationIdFromState) {
+      api.getLocation(locationIdFromState).then((loc) => {
+        setBusiness({ name: loc.name, logoUrl: loc.logoUrl } as Business);
+      }).catch(() => {
+        loadBusiness();
+      });
+    } else {
+      loadBusiness();
+    }
+  }, [locationIdFromState]);
 
   const loadBusiness = async () => {
     try {
       await api.initDemo();
-      const businessId = 'demo-business';
-      const businessData = await api.getBusiness(businessId);
+      const businessData = await api.getBusiness('demo-business');
       setBusiness(businessData);
     } catch (error) {
       console.error('Failed to load business:', error);
@@ -36,7 +45,7 @@ export function SuggestionForm() {
     setIsSubmitting(true);
 
     try {
-      const businessId = 'demo-business';
+      const businessId = locationIdFromState || 'demo-business';
       
       await api.submitFeedback({
         businessId,
@@ -47,7 +56,7 @@ export function SuggestionForm() {
         type: 'suggestion'
       });
 
-      navigate('/suggestion-submitted');
+      navigate('/suggestion-submitted', { state: { locationId: businessId, locationName: business?.name, logoUrl: business?.logoUrl } });
     } catch (error) {
       console.error('Error submitting suggestion:', error);
       alert('Failed to submit suggestion. Please try again.');
@@ -71,9 +80,9 @@ export function SuggestionForm() {
         <div className="text-center mb-8 md:mb-10">
           <Link to="/" className="inline-block">
             <img 
-              src={logo} 
-              alt="Feedback Page" 
-              className="h-16 md:h-20 mx-auto mb-6 hover:opacity-80 transition-opacity"
+              src={business?.logoUrl || logo} 
+              alt={business?.name || 'Feedback Page'} 
+              className="h-16 md:h-20 mx-auto mb-6 hover:opacity-80 transition-opacity object-contain"
             />
           </Link>
           <h1 className="text-2xl md:text-3xl font-semibold text-black mb-2 tracking-tight">
