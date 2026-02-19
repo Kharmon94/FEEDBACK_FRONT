@@ -25,34 +25,29 @@ export function OptInsList() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    loadOptIns();
-    loadLocations();
+    let cancelled = false;
+    (async () => {
+      try {
+        const [locsData, optInsData] = await Promise.all([
+          api.getLocations(),
+          api.getOptIns(), // Load all opt-ins for user's locations
+        ]);
+        if (!cancelled) {
+          setLocations(locsData);
+          setOptIns(optInsData);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setLocations([]);
+          setOptIns([]);
+          setError(true);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
-
-  const loadOptIns = async () => {
-    try {
-      setLoading(true);
-      setError(false);
-      const data = await api.getOptIns('demo-business');
-      setOptIns(data);
-    } catch (error) {
-      console.error('Error fetching opt-ins:', error);
-      setError(true);
-      setOptIns([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadLocations = async () => {
-    try {
-      const data = await api.getLocations();
-      setLocations(data);
-    } catch (error) {
-      console.error('Error fetching locations:', error);
-      setLocations([]);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

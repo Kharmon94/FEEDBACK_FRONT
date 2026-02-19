@@ -262,11 +262,27 @@ export const api = {
     return false;
   },
 
-  async submitOptIn(data: { businessId: string; name: string; email: string; phone: string }): Promise<boolean> {
-    return false;
+  async submitOptIn(data: { businessId: string; name: string; email: string; phone: string; rating?: number }): Promise<boolean> {
+    await railsApi.createOptIn({
+      location_id: data.businessId,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      rating: data.rating,
+    });
+    return true;
   },
 
-  async getOptIns(businessId: string) {
-    return [];
+  async getOptIns(locationId?: string) {
+    const items = await railsApi.getOptIns(locationId);
+    return items.map((o) => ({
+      id: String(o.id),
+      locationId: String(o.location_id),
+      name: o.name,
+      email: o.email,
+      phone: o.phone ?? undefined,
+      rating: o.rating ?? undefined,
+      createdAt: o.created_at,
+    }));
   },
 };

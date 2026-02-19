@@ -23,29 +23,20 @@ export function SuggestionForm() {
       api.getLocation(locationIdFromState).then((loc) => {
         setBusiness({ name: loc.name, logoUrl: loc.logoUrl } as Business);
       }).catch(() => {
-        loadBusiness();
+        setBusiness({ name: 'Feedback Page', logoUrl: undefined } as Business);
       });
     } else {
-      loadBusiness();
+      // Standalone visit: use fallback (getBusiness requires auth)
+      setBusiness({ name: 'Feedback Page', logoUrl: undefined } as Business);
     }
   }, [locationIdFromState]);
-
-  const loadBusiness = async () => {
-    try {
-      await api.initDemo();
-      const businessData = await api.getBusiness('demo-business');
-      setBusiness(businessData);
-    } catch (error) {
-      console.error('Failed to load business:', error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const businessId = locationIdFromState || 'demo-business';
+      const businessId = locationIdFromState || '';
       
       await api.submitFeedback({
         businessId,
@@ -56,7 +47,7 @@ export function SuggestionForm() {
         type: 'suggestion'
       });
 
-      navigate('/suggestion-submitted', { state: { locationId: businessId, locationName: business?.name, logoUrl: business?.logoUrl } });
+      navigate('/suggestion-submitted', { state: { locationId: businessId || undefined, locationName: business?.name, logoUrl: business?.logoUrl } });
     } catch (error) {
       console.error('Error submitting suggestion:', error);
       alert('Failed to submit suggestion. Please try again.');

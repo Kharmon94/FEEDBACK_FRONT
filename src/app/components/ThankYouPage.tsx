@@ -183,7 +183,7 @@ export function ThankYouPage() {
           {/* Opt-In Button */}
           <div className="mb-8">
             <button
-              onClick={() => navigate('/opt-in')}
+              onClick={() => navigate('/opt-in', { state: { locationId, locationName: business?.name, rating } })}
               className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 border-2 border-black bg-white rounded-lg hover:bg-black hover:text-white transition-all group"
             >
               <Gift className="w-4 h-4" strokeWidth={2} />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router';
 import { LayoutDashboard, MessageSquare, LogOut, Menu, X, MapPin, CreditCard, Gift, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -10,6 +10,14 @@ export function DashboardLayout() {
   const location = useLocation();
   const { user, signOut, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Redirect unauthenticated users to login
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      navigate('/login', { replace: true, state: { from: { pathname: location.pathname } } });
+    }
+  }, [user, loading, navigate, location.pathname]);
 
   // Trial data from backend: trial starts at signup, 30 days for free plan
   const trialEndsAt = user?.trial_ends_at ? new Date(user.trial_ends_at) : null;
@@ -34,6 +42,15 @@ export function DashboardLayout() {
 
   if (shouldRedirectToTrialExpired && location.pathname !== '/dashboard/trial-expired') {
     navigate('/dashboard/trial-expired', { replace: true });
+  }
+
+  // Show loading while checking auth; don't render dashboard for unauthenticated users
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-slate-500">Loading...</div>
+      </div>
+    );
   }
 
   const handleSignOut = async () => {

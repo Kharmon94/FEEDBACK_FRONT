@@ -1,19 +1,23 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
 import { api } from '../../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
   const token = searchParams.get('token');
   const error = searchParams.get('error');
 
   useEffect(() => {
     if (token) {
       api.setToken(token);
-      navigate('/dashboard', { replace: true });
+      refreshUser().then(() => {
+        navigate('/dashboard', { replace: true });
+      });
     }
-  }, [token, navigate]);
+  }, [token, refreshUser, navigate]);
 
   if (error) {
     return (

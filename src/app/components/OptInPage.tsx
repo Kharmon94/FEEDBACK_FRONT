@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { ArrowLeft, User, Mail, Phone, CheckCircle2 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router';
+import { ArrowLeft, User, Mail, Phone, CheckCircle2, Info } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
 import { Checkbox } from './ui/checkbox';
 
 export function OptInPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { locationId?: string; locationName?: string; rating?: number } | null;
+  const locationId = state?.locationId ?? '';
+  const rating = state?.rating;
+  const hasLocation = !!locationId;
   const [optInName, setOptInName] = useState('');
   const [optInEmail, setOptInEmail] = useState('');
   const [optInPhone, setOptInPhone] = useState('');
@@ -15,15 +20,15 @@ export function OptInPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const handleOptInSubmit = async () => {
-    if (!optInChecked || submitting || !optInName.trim() || !optInEmail.trim() || !optInPhone.trim()) return;
-    
+    if (!optInChecked || submitting || !optInName.trim() || !optInEmail.trim() || !optInPhone.trim() || !locationId) return;
     setSubmitting(true);
     try {
       await api.submitOptIn({
-        businessId: 'demo-business',
+        businessId: locationId,
         name: optInName,
         email: optInEmail,
         phone: optInPhone,
+        rating,
       });
       setSubmitted(true);
     } catch (error) {
@@ -107,9 +112,18 @@ export function OptInPage() {
             Join Our Newsletter & Rewards Program
           </h1>
           
-          <p className="text-sm text-gray-600 mb-8 text-center">
+          <p className="text-sm text-gray-600 mb-4 text-center">
             Get exclusive offers, early access to new features, and earn rewards for your loyalty!
           </p>
+
+          {!hasLocation && (
+            <div className="mb-6 flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <Info className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <p className="text-sm text-amber-800">
+                Please use the link from your thank-you page to join our newsletter and rewards program.
+              </p>
+            </div>
+          )}
 
           {/* Opt-In Form */}
           <div className="space-y-6">
@@ -133,7 +147,7 @@ export function OptInPage() {
                   value={optInName}
                   onChange={(e) => setOptInName(e.target.value)}
                   placeholder="John Doe"
-                  disabled={!optInChecked}
+                  disabled={!optInChecked || !hasLocation}
                   className="w-full pl-12 pr-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
@@ -151,7 +165,7 @@ export function OptInPage() {
                   value={optInEmail}
                   onChange={(e) => setOptInEmail(e.target.value)}
                   placeholder="your.email@example.com"
-                  disabled={!optInChecked}
+                  disabled={!optInChecked || !hasLocation}
                   className="w-full pl-12 pr-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
@@ -169,19 +183,18 @@ export function OptInPage() {
                   value={optInPhone}
                   onChange={(e) => setOptInPhone(e.target.value)}
                   placeholder="(555) 123-4567"
-                  disabled={!optInChecked}
+                  disabled={!optInChecked || !hasLocation}
                   className="w-full pl-12 pr-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               onClick={handleOptInSubmit}
-              disabled={submitting || !optInChecked || !optInName.trim() || !optInEmail.trim() || !optInPhone.trim()}
-              className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black shadow-sm"
+              disabled={!optInChecked || !hasLocation || submitting}
+              className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
-              {submitting ? 'Submitting...' : 'Join Now'}
+              {submitting ? 'Joining...' : 'Join Now'}
             </button>
           </div>
         </div>

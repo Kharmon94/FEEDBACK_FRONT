@@ -414,6 +414,22 @@ export const api = {
   async exportAdminSuggestions(): Promise<Blob> {
     return adminExport('/admin/suggestions/export');
   },
+
+  // Opt-ins (create is public, index requires auth)
+  async createOptIn(params: { location_id: string; name: string; email: string; phone?: string; rating?: number }): Promise<{ id: number; location_id: number; name: string; email: string; phone: string | null; rating: number | null; created_at: string }> {
+    const { opt_in } = await request<{ opt_in: { id: number; location_id: number; name: string; email: string; phone: string | null; rating: number | null; created_at: string } }>('/opt_ins', {
+      method: 'POST',
+      body: JSON.stringify(params),
+      skipAuth: true,
+    });
+    return opt_in;
+  },
+
+  async getOptIns(locationId?: string): Promise<{ id: number; location_id: number; name: string; email: string; phone: string | null; rating: number | null; created_at: string }[]> {
+    const qs = locationId ? `?location_id=${encodeURIComponent(locationId)}` : '';
+    const { opt_ins } = await request<{ opt_ins: { id: number; location_id: number; name: string; email: string; phone: string | null; rating: number | null; created_at: string }[] }>(`/opt_ins${qs}`);
+    return opt_ins;
+  },
 };
 
 /** Fetch admin CSV export with auth; returns blob for download. */

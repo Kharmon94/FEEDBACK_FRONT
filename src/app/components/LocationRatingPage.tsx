@@ -36,9 +36,20 @@ export function LocationRatingPage() {
 
   useEffect(() => {
     if (rating > 0 && locationId) {
-      const timer = setTimeout(() => {
+      const timer = setTimeout(async () => {
         const search = `?locationId=${encodeURIComponent(locationId)}&rating=${rating}`;
         if (rating >= 4) {
+          // Submit 4-5 star feedback to backend before redirecting
+          try {
+            await api.submitFeedback({
+              businessId: locationId,
+              rating,
+              comment,
+              type: 'feedback'
+            });
+          } catch (err) {
+            console.error('Failed to save feedback:', err);
+          }
           const platforms = (location?.reviewPlatforms || []).filter((p: { url?: string }) => p?.url);
           if (platforms.length >= 1) {
             window.location.href = platforms[0].url;

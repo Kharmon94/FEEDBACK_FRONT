@@ -9,6 +9,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string, businessName?: string) => Promise<{ error: unknown }>;
   signIn: (email: string, password: string) => Promise<{ error: unknown }>;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -67,6 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   };
 
+  const refreshUser = async () => {
+    const u = await api.getCurrentUser();
+    setUser(u);
+    setSession(api.getToken() ? { access_token: api.getToken() ?? undefined } : null);
+  };
+
   const value = {
     user,
     session,
@@ -74,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signIn,
     signOut,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
