@@ -20,9 +20,13 @@ export function AuthCallbackPage() {
   }, [token, refreshUser, navigate]);
 
   if (error) {
+    const errorDesc = searchParams.get('error_description') || error;
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
         <p className="text-slate-700 mb-4">Sign-in failed. Please try again.</p>
+        {import.meta.env.DEV && (
+          <p className="text-sm text-slate-500 mb-4 font-mono max-w-md break-all">{errorDesc}</p>
+        )}
         <Link
           to="/login"
           className="text-slate-900 font-medium underline hover:no-underline"
