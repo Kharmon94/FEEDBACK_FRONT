@@ -64,18 +64,19 @@ export function LocationStatsPage() {
 
   const calculateStats = () => {
     const totalFeedback = feedback.length;
-    const positiveFeedback = feedback.filter(f => f.rating >= 4).length;
-    const negativeFeedback = feedback.filter(f => f.rating <= 3).length;
+    const r = (f: Feedback) => Number(f.rating);
+    const positiveFeedback = feedback.filter(f => r(f) >= 4).length;
+    const negativeFeedback = feedback.filter(f => r(f) <= 3).length;
     const averageRating = totalFeedback > 0
-      ? feedback.reduce((acc, f) => acc + f.rating, 0) / totalFeedback
+      ? feedback.reduce((acc, f) => acc + r(f), 0) / totalFeedback
       : 0;
 
     const ratingDistribution = {
-      5: feedback.filter(f => f.rating === 5).length,
-      4: feedback.filter(f => f.rating === 4).length,
-      3: feedback.filter(f => f.rating === 3).length,
-      2: feedback.filter(f => f.rating === 2).length,
-      1: feedback.filter(f => f.rating === 1).length,
+      5: feedback.filter(f => r(f) === 5).length,
+      4: feedback.filter(f => r(f) === 4).length,
+      3: feedback.filter(f => r(f) === 3).length,
+      2: feedback.filter(f => r(f) === 2).length,
+      1: feedback.filter(f => r(f) === 1).length,
     };
 
     return {
@@ -222,7 +223,11 @@ export function LocationStatsPage() {
             </div>
             <h3 className="text-xs sm:text-sm font-medium text-slate-600">Average Rating</h3>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-slate-900">{stats.averageRating.toFixed(1)}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-900">
+            {typeof stats.averageRating === 'number' && !isNaN(stats.averageRating)
+              ? stats.averageRating.toFixed(1)
+              : '0.0'}
+          </p>
         </div>
       </div>
 
@@ -295,7 +300,9 @@ export function LocationStatsPage() {
                   />
                 </div>
                 <span className="text-sm font-medium text-slate-600 w-20 text-right">
-                  {count} ({percentage.toFixed(0)}%)
+                  {count} ({typeof percentage === 'number' && !isNaN(percentage)
+                    ? percentage.toFixed(0)
+                    : 0}%)
                 </span>
               </div>
             );

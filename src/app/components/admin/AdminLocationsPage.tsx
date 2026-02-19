@@ -288,7 +288,7 @@ export function AdminLocationsPage() {
                     <td className="px-6 py-4">
                       <div className={`flex items-center gap-1 text-sm font-medium ${getRatingColor(loc.avg_rating)}`}>
                         <Star className="w-4 h-4 fill-current" />
-                        {loc.avg_rating != null ? loc.avg_rating.toFixed(1) : '—'}
+                        {loc.avg_rating != null ? Number(loc.avg_rating).toFixed(1) : '—'}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">

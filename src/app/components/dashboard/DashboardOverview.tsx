@@ -35,10 +35,10 @@ export function DashboardOverview() {
       const feedback = await api.getFeedback();
       
       const totalFeedback = feedback.length;
-      const positiveCount = feedback.filter((f: any) => f.rating >= 4).length;
-      const negativeCount = feedback.filter((f: any) => f.rating <= 3).length;
+      const positiveCount = feedback.filter((f: any) => Number(f.rating) >= 4).length;
+      const negativeCount = feedback.filter((f: any) => Number(f.rating) <= 3).length;
       const averageRating = totalFeedback > 0
-        ? feedback.reduce((sum: number, f: any) => sum + f.rating, 0) / totalFeedback
+        ? feedback.reduce((sum: number, f: any) => sum + Number(f.rating), 0) / totalFeedback
         : 0;
 
       setStats({
@@ -78,7 +78,9 @@ export function DashboardOverview() {
         <StatCard
           icon={Star}
           label="Average Rating"
-          value={stats.averageRating.toFixed(1)}
+          value={typeof stats.averageRating === 'number' && !isNaN(stats.averageRating)
+            ? stats.averageRating.toFixed(1)
+            : '0.0'}
           color="yellow"
         />
         <StatCard

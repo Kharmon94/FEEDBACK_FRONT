@@ -128,7 +128,7 @@ export function AdminAnalyticsPage() {
             <Star className="w-5 h-5 text-yellow-600" />
           </div>
           <div className="text-3xl font-bold text-slate-900 mb-1">
-            {feedback.avg_rating != null ? feedback.avg_rating.toFixed(1) : '—'}
+            {feedback.avg_rating != null ? Number(feedback.avg_rating).toFixed(1) : '—'}
           </div>
           <div className="text-sm text-slate-500">Out of 5.0</div>
         </div>
@@ -215,7 +215,7 @@ export function AdminAnalyticsPage() {
                       </div>
                       <div className="flex items-center gap-1 text-sm text-slate-600">
                         <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        {location.avg_rating != null ? location.avg_rating.toFixed(1) : '—'}
+                        {location.avg_rating != null ? Number(location.avg_rating).toFixed(1) : '—'}
                       </div>
                     </div>
                   </div>

@@ -50,7 +50,7 @@ export function AdminDashboard() {
     {
       label: 'Active Users',
       value: activeUsers.toLocaleString(),
-      subtext: totalUsers > 0 ? `${((activeUsers / totalUsers) * 100).toFixed(0)}% of total` : 'Not suspended',
+      subtext: totalUsers > 0 ? `${(Number(activeUsers) / Number(totalUsers) * 100).toFixed(0)}% of total` : 'Not suspended',
       icon: Activity,
       color: 'bg-green-500',
     },
@@ -70,7 +70,7 @@ export function AdminDashboard() {
     },
     {
       label: 'Avg Rating',
-      value: avgRating != null ? avgRating.toFixed(1) : '—',
+      value: avgRating != null ? Number(avgRating).toFixed(1) : '—',
       subtext: 'System-wide average',
       icon: Star,
       color: 'bg-yellow-500',

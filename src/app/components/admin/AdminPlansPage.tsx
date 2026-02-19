@@ -4,7 +4,7 @@ import { api, type AdminPlan, type AdminPlanUpsertPayload } from '../../../servi
 
 function formatCents(cents: number | null): string {
   if (cents == null) return 'Custom';
-  return `$${(cents / 100).toFixed(0)}`;
+  return `$${(Number(cents) / 100).toFixed(0)}`;
 }
 
 function parseDollarsToCents(value: string): number | null {

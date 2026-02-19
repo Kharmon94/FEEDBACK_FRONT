@@ -116,7 +116,7 @@ export function AdminLocationDetail() {
             <span className="text-sm font-medium text-slate-600">Avg Rating</span>
           </div>
           <p className={`text-3xl font-bold ${getRatingColor(location.avg_rating)}`}>
-            {location.avg_rating != null ? location.avg_rating.toFixed(1) : '—'}
+            {location.avg_rating != null ? Number(location.avg_rating).toFixed(1) : '—'}
           </p>
         </div>
       </div>

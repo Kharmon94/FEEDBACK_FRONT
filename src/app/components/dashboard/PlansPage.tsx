@@ -150,7 +150,7 @@ export function PlansPage() {
                     </div>
                     {billingPeriod === 'yearly' && (
                       <p className="text-xs text-slate-500 mt-1">
-                        ${(price / 12).toFixed(0)}/mo billed annually
+                        ${(Number(price) / 12).toFixed(0)}/mo billed annually
                       </p>
                     )}
                   </>
