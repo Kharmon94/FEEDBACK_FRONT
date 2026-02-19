@@ -1,18 +1,32 @@
 /**
- * Rails API client. Base URL from VITE_API_URL; token in localStorage.
- * All requests use Authorization: Bearer <token> when token is set.
+ * Rails API client. Base URL from VITE_API_URL, meta tag api-url, or relative (same-origin).
+ * Token in localStorage. All requests use Authorization: Bearer <token> when token is set.
  */
 
 import type { User, AuthResponse, Location, FeedbackSubmission, Suggestion, ApiError } from '../types';
 
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
-const BASE_URL = API_BASE + '/api/v1';
-
 const TOKEN_KEY = 'authToken';
+
+/** Resolve API base URL at runtime: build-time env, then meta tag, then empty for same-origin. */
+function getApiBase(): string {
+  const fromEnv = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  if (fromEnv) return fromEnv;
+  if (typeof document !== 'undefined') {
+    const meta = document.querySelector('meta[name="api-url"]');
+    const content = meta?.getAttribute('content')?.trim();
+    if (content) return content.replace(/\/$/, '');
+  }
+  return '';
+}
+
+function getBaseUrlInternal(): string {
+  const base = getApiBase();
+  return base ? `${base}/api/v1` : '/api/v1';
+}
 
 /** URL to start Google OAuth (redirect the browser here). Must be absolute so production hits the API, not the frontend. */
 export function getGoogleOAuthUrl(): string {
-  const base = API_BASE || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+  const base = getApiBase() || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
   return `${base}/api/v1/auth/google_oauth2`;
 }
 
@@ -30,7 +44,7 @@ function clearToken(): void {
 
 /** Base URL for API requests (exported for FormData uploads that cannot use request()). */
 export function getBaseUrl(): string {
-  return BASE_URL;
+  return getBaseUrlInternal();
 }
 
 export async function request<T>(
@@ -46,9 +60,10 @@ export async function request<T>(
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
+  const baseUrl = getBaseUrlInternal();
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, { ...init, headers });
+    res = await fetch(`${baseUrl}${path}`, { ...init, headers });
   } catch (e) {
     const errMsg = e instanceof Error ? e.message : '';
     const isNetworkError =
@@ -56,7 +71,7 @@ export async function request<T>(
       errMsg.toLowerCase().includes('load failed') ||
       errMsg.toLowerCase().includes('networkerror');
     const msg = isNetworkError
-      ? 'Cannot reach the API. Ensure the Rails server is running (rails server) and VITE_API_URL points to it.'
+      ? `Cannot reach the API at ${baseUrl}. Check VITE_API_URL (or meta api-url) and that the Rails server is running.`
       : errMsg || 'Network error';
     throw new Error(msg);
   }
@@ -78,8 +93,8 @@ export async function request<T>(
       if (hasJsonError) {
         throw new Error(msg);
       }
-      const apiUrl = import.meta.env.VITE_API_URL || '(same origin)';
-      throw new Error(`${msg} — ensure the Rails API is running and VITE_API_URL (${apiUrl}) points to it.`);
+      const apiBase = getApiBase() || '(same origin)';
+      throw new Error(`${msg} — ensure the Rails API is running and VITE_API_URL or meta api-url (${apiBase}) points to it.`);
     }
     throw new Error(msg);
   }
@@ -435,7 +450,7 @@ export const api = {
 /** Fetch admin CSV export with auth; returns blob for download. */
 async function adminExport(path: string): Promise<Blob> {
   const token = getToken();
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${getBaseUrlInternal()}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (res.status === 401 || res.status === 403) {
