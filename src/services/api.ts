@@ -21,10 +21,12 @@ function getApiBase(): string {
   return '';
 }
 
-/** Base URL for API requests. Use VITE_API_URL as-is (include /api/v1 in env if needed). */
+/** Base URL for API requests. Always ends with /api/v1 so paths like /auth/me resolve correctly. */
 function getBaseUrlInternal(): string {
   const base = getApiBase();
-  return base ? base : API_PATH;
+  if (!base) return API_PATH;
+  const host = base.replace(/\/(api\/v1?)?\/?$/, '').replace(/\/$/, '');
+  return host ? `${host}/api/v1` : API_PATH;
 }
 
 /** API host (origin) without path. Used for OAuth which must hit /api/v1. */
