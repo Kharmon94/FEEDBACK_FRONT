@@ -389,7 +389,7 @@ export function AdminUsersPage() {
                       {user.locations_count}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-900">
-                      {user.feedback_count.toLocaleString()}
+                      {Number(user.feedback_count ?? 0).toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500">
                       {user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}

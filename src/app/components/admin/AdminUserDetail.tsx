@@ -264,7 +264,7 @@ export function AdminUserDetail() {
             </div>
             <span className="text-sm font-medium text-slate-600">Feedback</span>
           </div>
-          <p className="text-3xl font-bold text-slate-900">{user.feedback_count.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-slate-900">{Number(user.feedback_count ?? 0).toLocaleString()}</p>
           <Link
             to={`/admin/feedback?user_id=${user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"

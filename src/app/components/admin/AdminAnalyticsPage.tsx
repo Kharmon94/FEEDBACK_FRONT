@@ -89,7 +89,7 @@ export function AdminAnalyticsPage() {
             <DollarSign className="w-5 h-5 text-green-600" />
           </div>
           <div className="text-3xl font-bold text-slate-900 mb-1">
-            {rev.total > 0 ? `$${rev.total.toLocaleString()}` : 'N/A'}
+            {Number(rev.total) > 0 ? `$${Number(rev.total).toLocaleString()}` : 'N/A'}
           </div>
           <div className="flex items-center gap-1 text-sm text-slate-500">
             {rev.total > 0 ? `+${rev.growth}% vs last period` : 'Billing not configured'}
@@ -102,7 +102,7 @@ export function AdminAnalyticsPage() {
             <Users className="w-5 h-5 text-blue-600" />
           </div>
           <div className="text-3xl font-bold text-slate-900 mb-1">
-            {users.total.toLocaleString()}
+            {Number(users.total ?? 0).toLocaleString()}
           </div>
           <div className="flex items-center gap-1 text-sm text-slate-500">
             {users.new_this_month} new this month
@@ -115,7 +115,7 @@ export function AdminAnalyticsPage() {
             <MessageSquare className="w-5 h-5 text-purple-600" />
           </div>
           <div className="text-3xl font-bold text-slate-900 mb-1">
-            {feedback.total.toLocaleString()}
+            {Number(feedback.total ?? 0).toLocaleString()}
           </div>
           <div className="flex items-center gap-1 text-sm text-slate-500">
             {feedback.growth !== 0 ? `+${feedback.growth}% vs last period` : 'All time'}
@@ -144,7 +144,7 @@ export function AdminAnalyticsPage() {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-slate-900">{item.plan ?? '—'}</span>
                     <span className="text-sm text-slate-600">
-                      ${(item.amount ?? 0).toLocaleString()} ({(item.percentage ?? 0)}%)
+                      ${Number(item.amount ?? 0).toLocaleString()} ({Number(item.percentage ?? 0)}%)
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2">
@@ -172,7 +172,7 @@ export function AdminAnalyticsPage() {
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   </div>
                   <span className="text-sm text-slate-600">
-                    {item.count.toLocaleString()} ({item.percentage}%)
+                    {Number(item.count ?? 0).toLocaleString()} ({Number(item.percentage ?? 0)}%)
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">

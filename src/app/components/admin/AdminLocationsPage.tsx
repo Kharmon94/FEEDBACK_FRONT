@@ -282,7 +282,7 @@ export function AdminLocationsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1 text-sm text-slate-900">
                         <MessageSquare className="w-4 h-4 text-slate-400" />
-                        {loc.feedback_count.toLocaleString()}
+                        {Number(loc.feedback_count ?? 0).toLocaleString()}
                       </div>
                     </td>
                     <td className="px-6 py-4">

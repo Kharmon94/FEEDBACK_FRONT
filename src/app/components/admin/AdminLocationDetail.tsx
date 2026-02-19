@@ -99,7 +99,7 @@ export function AdminLocationDetail() {
             </div>
             <span className="text-sm font-medium text-slate-600">Feedback</span>
           </div>
-          <p className="text-3xl font-bold text-slate-900">{location.feedback_count.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-slate-900">{Number(location.feedback_count ?? 0).toLocaleString()}</p>
           <a
             href={`/admin/feedback?location_id=${location.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-flex items-center gap-1"

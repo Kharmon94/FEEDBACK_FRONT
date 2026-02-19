@@ -26,11 +26,11 @@ export function AdminDashboard() {
   const loadDashboardData = async () => {
     try {
       const data = await api.getAdminDashboard();
-      setTotalUsers(data.total_users);
-      setActiveUsers(data.active_users);
-      setTotalLocations(data.total_locations);
-      setTotalFeedback(data.total_feedback);
-      setAvgRating(data.avg_rating);
+      setTotalUsers(Number(data.total_users) || 0);
+      setActiveUsers(Number(data.active_users) || 0);
+      setTotalLocations(Number(data.total_locations) || 0);
+      setTotalFeedback(Number(data.total_feedback) || 0);
+      setAvgRating(data.avg_rating != null ? Number(data.avg_rating) : null);
       setRecentActivity(data.recent_activity || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -42,28 +42,28 @@ export function AdminDashboard() {
   const statCards = [
     {
       label: 'Total Users',
-      value: totalUsers.toLocaleString(),
+      value: (typeof totalUsers === 'number' ? totalUsers : 0).toLocaleString(),
       subtext: 'Registered accounts',
       icon: Users,
       color: 'bg-blue-500',
     },
     {
       label: 'Active Users',
-      value: activeUsers.toLocaleString(),
+      value: (typeof activeUsers === 'number' ? activeUsers : 0).toLocaleString(),
       subtext: totalUsers > 0 ? `${(Number(activeUsers) / Number(totalUsers) * 100).toFixed(0)}% of total` : 'Not suspended',
       icon: Activity,
       color: 'bg-green-500',
     },
     {
       label: 'Total Locations',
-      value: totalLocations.toLocaleString(),
+      value: (typeof totalLocations === 'number' ? totalLocations : 0).toLocaleString(),
       subtext: 'Across all users',
       icon: MapPin,
       color: 'bg-purple-500',
     },
     {
       label: 'Total Feedback',
-      value: totalFeedback.toLocaleString(),
+      value: (typeof totalFeedback === 'number' ? totalFeedback : 0).toLocaleString(),
       subtext: 'Submissions',
       icon: MessageSquare,
       color: 'bg-orange-500',
