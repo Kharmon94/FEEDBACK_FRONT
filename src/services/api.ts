@@ -1,6 +1,6 @@
 /**
  * Rails API client. Base URL from VITE_API_URL, meta tag api-url, or relative (same-origin).
- * Use VITE_API_URL as-is (include /api/v1 in env if needed). No appending.
+ * When VITE_API_URL is host-only (e.g. https://api.example.com), /api/v1 is appended so all routes resolve.
  */
 
 import type { User, AuthResponse, Location, FeedbackSubmission, Suggestion, ApiError } from '../types';
@@ -21,10 +21,15 @@ function getApiBase(): string {
   return '';
 }
 
-/** Base URL for API requests. Use VITE_API_URL as-is (host-only works; root routes + /api/v1 duplicates exist). */
+/** Base URL for API requests. Ensures /api/v1 so all Rails API routes (auth, locations, admin, etc.) resolve correctly. */
 function getBaseUrlInternal(): string {
   const base = getApiBase();
-  return base ? base : API_PATH;
+  if (!base) return API_PATH;
+  const trimmed = base.replace(/\/$/, '');
+  if (trimmed.endsWith('/api/v1')) return trimmed;
+  // Host-only or /api: strip any trailing /api or /api/v1 and append /api/v1
+  const host = trimmed.replace(/\/api(\/v1)?\/?$/, '');
+  return `${host.replace(/\/$/, '')}/api/v1`;
 }
 
 /** API host (origin) without path. Used for OAuth which must hit /api/v1. */
