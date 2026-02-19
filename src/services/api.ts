@@ -319,6 +319,14 @@ export const api = {
     return suggestions;
   },
 
+  async getEmailPreferences(): Promise<{ email_notifications_enabled: boolean; email_marketing_opt_out: boolean }> {
+    return request('/email-preferences');
+  },
+
+  async updateEmailPreferences(data: { email_notifications_enabled?: boolean; email_marketing_opt_out?: boolean }): Promise<{ email_notifications_enabled: boolean; email_marketing_opt_out: boolean }> {
+    return request('/email-preferences', { method: 'PATCH', body: JSON.stringify(data) });
+  },
+
   async getOnboarding(): Promise<{ business_name?: string; name?: string; logo_url?: string; review_platforms?: Record<string, string> }> {
     return request('/onboarding');
   },

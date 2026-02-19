@@ -15,6 +15,7 @@ import { DashboardLayout } from './components/dashboard/DashboardLayout';
 import { PricingPage } from './components/PricingPage';
 import { FeaturesPage } from './components/FeaturesPage';
 import { HowItWorksPage } from './components/HowItWorksPage';
+import { HelpCenter } from './components/HelpCenter';
 import { ContactUsPage } from './components/ContactUsPage';
 import { PrivacyPage } from './components/PrivacyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
@@ -41,6 +42,8 @@ import { AdminPlansPage } from './components/admin/AdminPlansPage';
 import { ForgotPasswordPage } from './components/ForgotPasswordPage';
 import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { VerifyEmailPage } from './components/VerifyEmailPage';
+import { EmailPreferencesPage } from './components/EmailPreferencesPage';
+import { EmailPreferencesUnsubscribePage } from './components/EmailPreferencesUnsubscribePage';
 
 export const router = createBrowserRouter([
   {
@@ -95,6 +98,14 @@ export const router = createBrowserRouter([
   {
     path: '/verify-email',
     Component: VerifyEmailPage,
+  },
+  {
+    path: '/email-preferences',
+    Component: EmailPreferencesPage,
+  },
+  {
+    path: '/email-preferences/unsubscribe',
+    Component: EmailPreferencesUnsubscribePage,
   },
   {
     path: '/auth/callback',
@@ -153,6 +164,10 @@ export const router = createBrowserRouter([
   {
     path: '/how-it-works',
     Component: HowItWorksPage,
+  },
+  {
+    path: '/help',
+    Component: HelpCenter,
   },
   {
     path: '/contact-us',
