@@ -7,6 +7,8 @@ import type { User, AuthResponse, Location, FeedbackSubmission, Suggestion, ApiE
 
 const TOKEN_KEY = 'authToken';
 
+const API_PATH = '/api/v1';
+
 /** Resolve API base URL at runtime: build-time env, then meta tag, then empty for same-origin. */
 function getApiBase(): string {
   const fromEnv = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
@@ -19,15 +21,24 @@ function getApiBase(): string {
   return '';
 }
 
+/** Normalize base: remove trailing /api/v1 if present so we never double the path. */
+function normalizeBase(base: string): string {
+  const stripped = base.replace(new RegExp(`${API_PATH}/?$`), '').replace(/\/$/, '');
+  return stripped;
+}
+
 function getBaseUrlInternal(): string {
-  const base = getApiBase();
-  return base ? `${base}/api/v1` : '/api/v1';
+  const raw = getApiBase();
+  if (!raw) return API_PATH;
+  const base = normalizeBase(raw);
+  return base ? `${base}${API_PATH}` : API_PATH;
 }
 
 /** URL to start Google OAuth (redirect the browser here). Must be absolute so production hits the API, not the frontend. */
 export function getGoogleOAuthUrl(): string {
-  const base = getApiBase() || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-  return `${base}/api/v1/auth/google_oauth2`;
+  const raw = getApiBase() || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+  const base = normalizeBase(raw);
+  return `${base}${API_PATH}/auth/google_oauth2`;
 }
 
 export function getToken(): string | null {
