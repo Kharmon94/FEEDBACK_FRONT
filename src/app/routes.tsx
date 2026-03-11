@@ -60,6 +60,10 @@ export const router = createBrowserRouter([
     Component: LocationRatingPage,
   },
   {
+    path: '/l/:locationId/suggestions',
+    Component: SuggestionForm,
+  },
+  {
     path: '/feedback',
     Component: FeedbackForm,
   },

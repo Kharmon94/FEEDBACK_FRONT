@@ -4,6 +4,12 @@ import { Star, ExternalLink, CheckCircle2, ArrowLeft, Gift, Copy, Check } from '
 const logo = "/logo.png";
 import { api } from '../api/client';
 
+const defaultDemoPlatforms = [
+  { name: 'Google Reviews', url: 'https://g.page/r/demo' },
+  { name: 'Yelp', url: 'https://www.yelp.com/biz/demo' },
+  { name: 'Facebook', url: 'https://www.facebook.com/demo' },
+];
+
 export function ThankYouPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -68,16 +74,18 @@ export function ThankYouPage() {
     }
   };
 
+  const platformsToShow = locationId ? (business?.reviewPlatforms || []) : defaultDemoPlatforms;
+
   return (
     <div className="min-h-screen bg-white relative">
-      {/* Back to Home Button - Fixed to top-left */}
+      {/* Back Button - Returns to location rating page when available */}
       <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => (locationId ? navigate(`/l/${locationId}`) : navigate(-1))}
           className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-xs font-medium">Back to Home</span>
+          <span className="text-xs font-medium">Back</span>
         </button>
       </div>
 
@@ -127,7 +135,7 @@ export function ThankYouPage() {
 
           {/* Review Platform Links */}
           <div className="space-y-3 mb-6">
-            {business?.reviewPlatforms?.map((platform: any, index: number) => (
+            {platformsToShow.map((platform: { name: string; url: string }, index: number) => (
               <a
                 key={index}
                 href={platform.url}

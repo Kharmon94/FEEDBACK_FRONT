@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
-import { Star, Upload, X, ArrowLeft } from 'lucide-react';
+import { Star, Upload, X, ArrowLeft, Lightbulb } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
 import { Checkbox } from './ui/checkbox';
@@ -97,7 +97,7 @@ export function FeedbackForm() {
       {/* Back Button - Fixed to top-left */}
       <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => (locationId ? navigate(`/l/${locationId}`) : navigate(-1))}
           className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -181,12 +181,16 @@ export function FeedbackForm() {
             </div>
 
             {/* Contact Me Checkbox */}
-            <Checkbox
-              id="contact-me"
-              checked={contactMe}
-              onChange={setContactMe}
-              label="I would like to be contacted to resolve this issue"
-            />
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <Checkbox
+                id="contact-me"
+                checked={contactMe}
+                onCheckedChange={(checked) => setContactMe(!!checked)}
+              />
+              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                I would like to be contacted regarding this feedback so we can resolve this issue
+              </span>
+            </label>
 
             {/* Submit Button */}
             <button
@@ -196,6 +200,20 @@ export function FeedbackForm() {
             >
               {submitting ? 'Submitting...' : 'Submit Feedback'}
             </button>
+
+            {/* Suggestion Link */}
+            {locationId && (
+              <div className="text-center pt-6 border-t border-gray-200 mt-6">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/l/${locationId}/suggestions`)}
+                  className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors group"
+                >
+                  <Lightbulb className="w-4 h-4 group-hover:text-yellow-500 transition-colors" />
+                  <span>Have a suggestion instead?</span>
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router';
+import { useNavigate, Link, useLocation, useParams, useSearchParams } from 'react-router';
 import { Sparkles, User, Mail, MessageSquare, ArrowRight } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
@@ -8,8 +8,12 @@ import { Business } from '../types';
 export function SuggestionForm() {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams<{ locationId?: string }>();
+  const [searchParams] = useSearchParams();
   const locationIdFromState = (location.state as { locationId?: string })?.locationId;
+  const locationId = params.locationId || searchParams.get('locationId') || locationIdFromState || '';
   const [business, setBusiness] = useState<Business | null>(null);
+  const [locationNotFound, setLocationNotFound] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -19,24 +23,26 @@ export function SuggestionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (locationIdFromState) {
-      api.getLocation(locationIdFromState).then((loc) => {
+    if (locationId) {
+      api.getLocation(locationId).then((loc) => {
         setBusiness({ name: loc.name, logoUrl: loc.logoUrl } as Business);
+        setLocationNotFound(false);
       }).catch(() => {
-        setBusiness({ name: 'Feedback Page', logoUrl: undefined } as Business);
+        setLocationNotFound(true);
+        setBusiness(null);
       });
     } else {
-      // Standalone visit: use fallback (getBusiness requires auth)
       setBusiness({ name: 'Feedback Page', logoUrl: undefined } as Business);
+      setLocationNotFound(false);
     }
-  }, [locationIdFromState]);
+  }, [locationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const businessId = locationIdFromState || '';
+      const businessId = locationId || '';
       
       await api.submitFeedback({
         businessId,
@@ -55,6 +61,18 @@ export function SuggestionForm() {
       setIsSubmitting(false);
     }
   };
+
+  if (locationNotFound) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Location not found</h1>
+          <p className="text-slate-600 mb-4">The suggestion page link may be invalid or expired.</p>
+          <Link to="/" className="text-blue-600 hover:underline">Go to home</Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!business) {
     return (
@@ -164,7 +182,7 @@ export function SuggestionForm() {
         {/* Back Link */}
         <div className="text-center mt-6">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(locationId ? `/l/${locationId}` : '/')}
             className="text-sm text-gray-600 hover:text-black transition-colors"
           >
             ← Back to rating

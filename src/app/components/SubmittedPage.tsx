@@ -49,7 +49,7 @@ export function SubmittedPage() {
       <div className="w-full max-w-xl">
         {/* Logo */}
         <div className="text-center mb-8 md:mb-10">
-          <Link to="/" className="inline-block">
+          <Link to={locationId ? `/l/${locationId}` : '/'} className="inline-block">
             <img 
               src={logoUrl || logo} 
               alt={businessName || 'Feedback Page'} 
@@ -82,7 +82,7 @@ export function SubmittedPage() {
           </p>
 
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(locationId ? `/l/${locationId}` : '/')}
             className="w-full bg-black text-white py-3.5 rounded-lg font-medium text-sm hover:bg-gray-800 transition-all"
           >
             Done

@@ -50,11 +50,6 @@ export function LocationRatingPage() {
           } catch (err) {
             console.error('Failed to save feedback:', err);
           }
-          const platforms = (location?.reviewPlatforms || []).filter((p: { url?: string }) => p?.url);
-          if (platforms.length >= 1) {
-            window.location.href = platforms[0].url;
-            return;
-          }
           navigate(`/thank-you${search}`, {
             state: {
               rating,
@@ -170,7 +165,7 @@ export function LocationRatingPage() {
           {/* Suggestion Button */}
           <div className="text-center pt-6 md:pt-8 border-t border-slate-200">
             <button
-              onClick={() => navigate('/suggestion', { state: { locationId } })}
+              onClick={() => navigate(`/l/${locationId}/suggestions`)}
               className="inline-flex items-center gap-2 text-sm md:text-base text-slate-600 hover:text-blue-600 transition-colors group"
             >
               <Lightbulb className="w-4 h-4 md:w-5 md:h-5 group-hover:text-yellow-500 transition-colors" />

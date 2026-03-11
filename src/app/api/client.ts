@@ -285,4 +285,29 @@ export const api = {
       createdAt: o.created_at,
     }));
   },
+
+  async getSuggestions(locationId?: string): Promise<{ id: string; content: string; submitterEmail: string | null; locationId: string | null; createdAt: string; locationName?: string }[]> {
+    try {
+      const items = await railsApi.getSuggestions();
+      const filtered = locationId != null
+        ? items.filter((s) => s.location_id != null && String(s.location_id) === locationId)
+        : items;
+      const locations = await railsApi.getLocations();
+      return filtered.map((s) => {
+        const locId = s.location_id != null ? String(s.location_id) : null;
+        const loc = locId ? locations.find((l) => String(l.id) === locId) : null;
+        return {
+          id: String(s.id),
+          content: s.content,
+          submitterEmail: s.submitter_email ?? null,
+          locationId: locId,
+          createdAt: s.created_at,
+          locationName: loc?.name,
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      return [];
+    }
+  },
 };
