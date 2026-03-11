@@ -68,7 +68,7 @@ export function DashboardOverview() {
       <h2 className="text-2xl text-slate-900 text-center">Overview</h2>
 
       {/* Stats Grid - 2 columns on mobile, 2 on tablet, 4 on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6" data-tour="stats-overview">
         <StatCard
           icon={MessageSquare}
           label="Total Feedback"
@@ -98,7 +98,7 @@ export function DashboardOverview() {
       </div>
 
       {/* Recent Feedback */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-6" data-tour="recent-feedback">
         <h3 className="text-lg font-semibold text-slate-900 mb-4">Recent Feedback</h3>
         
         {stats.recentFeedback.length === 0 ? (

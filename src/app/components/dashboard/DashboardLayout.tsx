@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router';
-import { LayoutDashboard, MessageSquare, LogOut, Menu, X, MapPin, CreditCard, Gift, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, LogOut, Menu, X, MapPin, CreditCard, Gift, HelpCircle, Settings } from 'lucide-react';
+import { UserGuideButton, UserGuideTour } from './UserGuideTour';
 import { useAuth } from '../../contexts/AuthContext';
 const logo = "/logo.png";
 import { TrialBanner } from './TrialBanner';
@@ -10,6 +11,14 @@ export function DashboardLayout() {
   const location = useLocation();
   const { user, signOut, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [runTour, setRunTour] = useState(false);
+
+  // Auto-start tour for first-time users
+  useEffect(() => {
+    if (!localStorage.getItem('feedback-page-tour-completed')) {
+      setRunTour(true);
+    }
+  }, []);
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -64,6 +73,7 @@ export function DashboardLayout() {
     { id: 'locations', label: 'Locations', icon: MapPin, path: '/dashboard?tab=locations' },
     { id: 'opt-ins', label: 'Opt-Ins', icon: Gift, path: '/dashboard?tab=opt-ins' },
     { id: 'billing', label: 'Billing', icon: CreditCard, path: '/dashboard?tab=billing' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard?tab=settings' },
     { id: 'help', label: 'Help', icon: HelpCircle, path: '/dashboard?tab=help' },
   ];
 
@@ -94,12 +104,16 @@ export function DashboardLayout() {
                     navigate(tab.path);
                     setMobileMenuOpen(false);
                   }}
+                  data-tour={['settings', 'feedback', 'opt-ins'].includes(tab.id) ? `sidebar-${tab.id}` : undefined}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left text-slate-600 hover:bg-slate-50"
                 >
                   <tab.icon className="w-5 h-5" />
                   <span className="font-medium">{tab.label}</span>
                 </button>
               ))}
+              <div className="py-2 border-t border-slate-200 mt-2">
+                <UserGuideButton onOpen={() => setMobileMenuOpen(false)} onStartTour={() => setRunTour(true)} />
+              </div>
               
               {/* Sign Out in Mobile Menu */}
               <button
@@ -132,12 +146,16 @@ export function DashboardLayout() {
                 <button
                   key={tab.id}
                   onClick={() => navigate(tab.path)}
+                  data-tour={['settings', 'feedback', 'opt-ins'].includes(tab.id) ? `sidebar-${tab.id}` : undefined}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-slate-600 hover:bg-slate-50"
                 >
                   <tab.icon className="w-5 h-5" />
                   <span className="font-medium">{tab.label}</span>
                 </button>
               ))}
+              <div className="pt-2">
+                <UserGuideButton onStartTour={() => setRunTour(true)} />
+              </div>
             </nav>
 
             {/* User & Logout */}
@@ -160,6 +178,7 @@ export function DashboardLayout() {
 
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+          <UserGuideTour run={runTour} onComplete={() => setRunTour(false)} />
           {showTrialBanner && <TrialBanner daysRemaining={daysRemaining} />}
           <Outlet />
           

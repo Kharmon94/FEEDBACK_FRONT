@@ -150,7 +150,7 @@ export function LocationsManager() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" data-tour="locations">
           {locations.map((location) => (
             <div
               key={location.id}
@@ -225,10 +225,10 @@ export function LocationsManager() {
                 </div>
               </div>
 
-              {/* Feedback URL */}
-              <div className="pt-4 border-t border-slate-200">
+              {/* Feedback URL - Copy link and QR (feedback link can be used for QR generation) */}
+              <div className="pt-4 border-t border-slate-200" data-tour="feedback-link">
                 <p className="text-xs font-medium text-slate-700 mb-2">Feedback Page:</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" data-tour="qr-code">
                   <button
                     onClick={(e) => copyFeedbackUrl(location.id, e)}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
