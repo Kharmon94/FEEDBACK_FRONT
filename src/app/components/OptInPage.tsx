@@ -12,7 +12,7 @@ export function OptInPage() {
   const params = useParams<{ locationId?: string }>();
   const [searchParams] = useSearchParams();
   const state = location.state as { locationId?: string; locationName?: string; rating?: number } | null;
-  const locationId = params.locationId || searchParams.get('locationId') || state?.locationId ?? '';
+  const locationId = (params.locationId || searchParams.get('locationId') || state?.locationId) ?? '';
   const rating = state?.rating;
   const hasLocation = !!locationId;
 
