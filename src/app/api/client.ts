@@ -310,4 +310,12 @@ export const api = {
       return [];
     }
   },
+
+  async deleteSuggestion(id: string): Promise<void> {
+    await railsApi.deleteSuggestion(id);
+  },
+
+  async deleteOptIn(id: string): Promise<void> {
+    await railsApi.deleteOptIn(id);
+  },
 };

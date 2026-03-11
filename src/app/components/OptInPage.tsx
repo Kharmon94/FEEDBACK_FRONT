@@ -1,17 +1,39 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useParams, useSearchParams, Link } from 'react-router';
 import { ArrowLeft, User, Mail, Phone, CheckCircle2, Info } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
 import { Checkbox } from './ui/checkbox';
+import type { Business } from '../types';
 
 export function OptInPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams<{ locationId?: string }>();
+  const [searchParams] = useSearchParams();
   const state = location.state as { locationId?: string; locationName?: string; rating?: number } | null;
-  const locationId = state?.locationId ?? '';
+  const locationId = params.locationId || searchParams.get('locationId') || state?.locationId ?? '';
   const rating = state?.rating;
   const hasLocation = !!locationId;
+
+  const [business, setBusiness] = useState<Business | null>(null);
+  const [locationNotFound, setLocationNotFound] = useState(false);
+
+  useEffect(() => {
+    if (locationId) {
+      api.getLocation(locationId).then((loc) => {
+        setBusiness({ name: loc.name, logoUrl: loc.logoUrl } as Business);
+        setLocationNotFound(false);
+      }).catch(() => {
+        setLocationNotFound(true);
+        setBusiness(null);
+      });
+    } else {
+      setBusiness(null);
+      setLocationNotFound(false);
+    }
+  }, [locationId]);
+
   const [optInName, setOptInName] = useState('');
   const [optInEmail, setOptInEmail] = useState('');
   const [optInPhone, setOptInPhone] = useState('');
@@ -38,6 +60,26 @@ export function OptInPage() {
       setSubmitting(false);
     }
   };
+
+  if (locationNotFound) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Location not found</h1>
+          <p className="text-slate-600 mb-4">The opt-in page link may be invalid or expired.</p>
+          <Link to="/" className="text-blue-600 hover:underline">Go to home</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasLocation && !business) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
@@ -92,11 +134,11 @@ export function OptInPage() {
       {/* Back Button */}
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(locationId ? `/l/${locationId}` : -1)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-sm font-medium">Back</span>
+          <span className="text-sm font-medium">{locationId ? 'Back to rating' : 'Back'}</span>
         </button>
       </div>
 
@@ -105,7 +147,7 @@ export function OptInPage() {
         <div className="w-full max-w-xl">
           {/* Logo */}
           <div className="flex justify-center mb-8 sm:mb-10">
-            <img src={logo} alt="Logo" className="h-20 sm:h-24" />
+            <img src={business?.logoUrl || logo} alt={business?.name || 'Logo'} className="h-20 sm:h-24 object-contain" />
           </div>
 
           <h1 className="text-2xl md:text-3xl font-semibold text-black mb-3 text-center tracking-tight">
@@ -113,7 +155,9 @@ export function OptInPage() {
           </h1>
           
           <p className="text-sm text-gray-600 mb-4 text-center">
-            Get exclusive offers, early access to new features, and earn rewards for your loyalty!
+            {business?.name
+              ? `Get exclusive offers from ${business.name}, early access to new features, and earn rewards for your loyalty!`
+              : 'Get exclusive offers, early access to new features, and earn rewards for your loyalty!'}
           </p>
 
           {!hasLocation && (
@@ -128,12 +172,16 @@ export function OptInPage() {
           {/* Opt-In Form */}
           <div className="space-y-6">
             {/* Checkbox */}
-            <Checkbox
-              id="opt-in-checkbox"
-              checked={optInChecked}
-              onChange={setOptInChecked}
-              label="I agree to receive promotional emails, SMS messages, and exclusive offers. I understand I can unsubscribe at any time."
-            />
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <Checkbox
+                id="opt-in-checkbox"
+                checked={optInChecked}
+                onCheckedChange={(checked) => setOptInChecked(!!checked)}
+              />
+              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                I agree to receive promotional emails, SMS messages, and exclusive offers. I understand I can unsubscribe at any time.
+              </span>
+            </label>
 
             {/* Name Input */}
             <div>

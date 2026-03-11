@@ -24,6 +24,7 @@ export function LocationsManager() {
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedSuggestionId, setCopiedSuggestionId] = useState<string | null>(null);
+  const [copiedOptInId, setCopiedOptInId] = useState<string | null>(null);
 
   const [currentPlan, setCurrentPlan] = useState<{ slug: string; name: string; locationLimit: number | null }>({
     slug: user?.plan || 'free',
@@ -94,6 +95,15 @@ export function LocationsManager() {
     navigator.clipboard.writeText(url);
     setCopiedSuggestionId(locationId);
     setTimeout(() => setCopiedSuggestionId(null), 2000);
+  };
+
+  const copyOptInUrl = (locationId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    const url = `${window.location.origin}/l/${locationId}/opt-in`;
+    navigator.clipboard.writeText(url);
+    setCopiedOptInId(locationId);
+    setTimeout(() => setCopiedOptInId(null), 2000);
   };
 
   const handleEdit = (locationId: string, e: React.MouseEvent) => {
@@ -290,6 +300,39 @@ export function LocationsManager() {
                   </button>
                   <a
                     href={`/l/${location.id}/suggestions`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    View Page
+                  </a>
+                </div>
+              </div>
+
+              {/* Opt-In Page - Shareable newsletter/rewards signup link */}
+              <div className="pt-4 border-t border-slate-200 mt-4">
+                <p className="text-xs font-medium text-slate-700 mb-2">Opt-In Page:</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => copyOptInUrl(location.id, e)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    {copiedOptInId === location.id ? (
+                      <>
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span className="text-green-600">Link Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy Link
+                      </>
+                    )}
+                  </button>
+                  <a
+                    href={`/l/${location.id}/opt-in`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}

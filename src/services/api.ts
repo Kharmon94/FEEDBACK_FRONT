@@ -319,6 +319,10 @@ export const api = {
     return suggestions;
   },
 
+  async deleteSuggestion(id: string): Promise<void> {
+    await request(`/suggestions/${id}`, { method: 'DELETE' });
+  },
+
   async getEmailPreferences(): Promise<{ email_notifications_enabled: boolean; email_marketing_opt_out: boolean }> {
     return request('/email-preferences');
   },
@@ -494,6 +498,10 @@ export const api = {
     const qs = locationId ? `?location_id=${encodeURIComponent(locationId)}` : '';
     const { opt_ins } = await request<{ opt_ins: { id: number; location_id: number; name: string; email: string; phone: string | null; rating: number | null; created_at: string }[] }>(`/opt_ins${qs}`);
     return opt_ins;
+  },
+
+  async deleteOptIn(id: string): Promise<void> {
+    await request(`/opt_ins/${id}`, { method: 'DELETE' });
   },
 };
 

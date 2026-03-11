@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lightbulb, Mail, Calendar, MessageSquare, Download, MapPin, Filter, X, Search } from 'lucide-react';
+import { Lightbulb, Mail, Calendar, MessageSquare, Download, MapPin, Filter, X, Search, Trash2 } from 'lucide-react';
 import { api } from '../../api/client';
 
 interface Suggestion {
@@ -24,6 +24,8 @@ export function SuggestionsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +51,21 @@ export function SuggestionsList() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this suggestion? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await api.deleteSuggestion(id);
+      setSuggestions((prev) => prev.filter((s) => s.id !== id));
+      setDetailId(null);
+    } catch (e) {
+      console.error('Failed to delete suggestion:', e);
+      alert('Failed to delete suggestion. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -241,7 +258,11 @@ export function SuggestionsList() {
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {filteredSuggestions.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                    <tr
+                      key={s.id}
+                      className="hover:bg-slate-50 transition-colors cursor-pointer"
+                      onClick={() => setDetailId(s.id)}
+                    >
                       <td className="px-6 py-4">
                         <div className="flex items-start gap-3">
                           <MessageSquare className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
@@ -276,7 +297,14 @@ export function SuggestionsList() {
           {/* Mobile Card View */}
           <div className="md:hidden space-y-3">
             {filteredSuggestions.map((s) => (
-              <div key={s.id} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div
+                key={s.id}
+                className="bg-white rounded-xl border border-slate-200 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
+                onClick={() => setDetailId(s.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && setDetailId(s.id)}
+              >
                 <div className="flex items-start gap-3 mb-3">
                   <MessageSquare className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
                   <p className="text-slate-700 flex-1">{s.content}</p>
@@ -299,6 +327,85 @@ export function SuggestionsList() {
             ))}
           </div>
         </>
+      )}
+
+      {/* Detail modal */}
+      {detailId != null && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => !deleting && setDetailId(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="suggestion-detail-title"
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(() => {
+              const item = suggestions.find((s) => s.id === detailId);
+              if (!item) {
+                return (
+                  <div className="p-6">
+                    <p className="text-slate-500">Suggestion not found.</p>
+                    <button
+                      type="button"
+                      className="mt-4 px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+                      onClick={() => setDetailId(null)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <div className="p-6">
+                  <h3 id="suggestion-detail-title" className="sr-only">
+                    Suggestion details
+                  </h3>
+                  <p className="text-slate-900 mb-4 whitespace-pre-wrap">{item.content}</p>
+                  <div className="text-sm text-slate-600 space-y-2 mb-6">
+                    {item.submitterEmail && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 flex-shrink-0" />
+                        {item.submitterEmail}
+                      </div>
+                    )}
+                    {item.locationName && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                        {item.locationName}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 flex-shrink-0" />
+                      {formatDate(item.createdAt)}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+                      onClick={() => setDetailId(null)}
+                      disabled={deleting}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                      onClick={() => handleDelete(item.id)}
+                      disabled={deleting}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {deleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
       )}
     </div>
   );

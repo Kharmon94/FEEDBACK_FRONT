@@ -64,6 +64,10 @@ export const router = createBrowserRouter([
     Component: SuggestionForm,
   },
   {
+    path: '/l/:locationId/opt-in',
+    Component: OptInPage,
+  },
+  {
     path: '/feedback',
     Component: FeedbackForm,
   },
