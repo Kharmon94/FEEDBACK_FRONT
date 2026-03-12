@@ -25,11 +25,13 @@ export interface Feedback {
   deviceType?: string;
   country?: string;
   region?: string;
+  locationName?: string;
 }
 
 export interface FeedbackSubmission {
   id: number;
   location_id: number;
+  location_name?: string | null;
   rating: number;
   comment: string | null;
   customer_name: string | null;

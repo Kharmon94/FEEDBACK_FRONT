@@ -254,6 +254,7 @@ export const api = {
           deviceType: item.device_type ?? undefined,
           country: item.country ?? undefined,
           region: item.region ?? undefined,
+          locationName: item.location_name ?? undefined,
         };
       }) as Feedback[];
     } catch (error) {

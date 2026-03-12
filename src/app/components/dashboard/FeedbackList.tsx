@@ -1,20 +1,41 @@
 import { useState, useEffect } from 'react';
-import { Star, Download, Search, Filter, X, MessageSquare, ThumbsUp, ThumbsDown, BarChart3, Smartphone, Globe } from 'lucide-react';
+import { Star, Download, Search, Filter, X, MessageSquare, ThumbsUp, ThumbsDown, BarChart3, Smartphone, Globe, MapPin, Calendar, Mail } from 'lucide-react';
 import { api } from '../../api/client';
 
 interface Feedback {
   id: string;
   businessId: string;
   locationId?: string;
+  locationName?: string;
   rating: number;
   name?: string;
   email?: string;
   comment: string;
   type: 'feedback' | 'suggestion';
-  createdAt: string;
+  createdAt: Date | string;
   deviceType?: string;
   country?: string;
   region?: string;
+}
+
+function getSentimentLabel(rating: number): string {
+  if (rating >= 4) return `Positive (${rating}★)`;
+  return `Needs attention (${rating}★)`;
+}
+
+function formatRelative(date: Date | string): string {
+  const d = new Date(date);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return d.toLocaleDateString();
 }
 
 function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: string | number; color: string }) {
@@ -43,7 +64,9 @@ export function FeedbackList() {
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [filterDevice, setFilterDevice] = useState<string>('');
   const [filterCountry, setFilterCountry] = useState<string>('');
+  const [filterLocation, setFilterLocation] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<{
     funnel: { page_views: number; star_clicks: number; submissions: number };
     device_breakdown: Record<string, number>;
@@ -60,7 +83,7 @@ export function FeedbackList() {
 
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, filterRating, filterDevice, filterCountry, feedback]);
+  }, [searchTerm, filterRating, filterDevice, filterCountry, filterLocation, feedback]);
 
   const loadFeedback = async () => {
     try {
@@ -101,17 +124,23 @@ export function FeedbackList() {
       filtered = filtered.filter(f => (f.country || '') === filterCountry);
     }
 
+    // Location filter
+    if (filterLocation) {
+      filtered = filtered.filter(f => String(f.locationId || f.businessId) === filterLocation);
+    }
+
     setFilteredFeedback(filtered);
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Rating', 'Name', 'Email', 'Comment', 'Device', 'Country', 'Region'];
+    const headers = ['Date', 'Rating', 'Name', 'Email', 'Comment', 'Location', 'Device', 'Country', 'Region'];
     const rows = filteredFeedback.map(f => [
       new Date(f.createdAt).toLocaleDateString(),
       f.rating,
       f.name || '',
       f.email || '',
       f.comment || '',
+      f.locationName || '',
       f.deviceType || '',
       f.country || '',
       f.region || ''
@@ -264,7 +293,7 @@ export function FeedbackList() {
       {/* Collapsible Filters */}
       {showFilters && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -317,10 +346,30 @@ export function FeedbackList() {
                   <option key={c} value={c}>{c}</option>
                 ))}
             </select>
+
+            {/* Location Filter */}
+            <select
+              value={filterLocation}
+              onChange={(e) => setFilterLocation(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+            >
+              <option value="">All Locations</option>
+              {Array.from(
+                new Map(
+                  feedback
+                    .filter(f => f.locationName || f.locationId)
+                    .map(f => [f.locationId || f.businessId, f.locationName || 'Unknown'])
+                ).entries()
+              )
+                .sort((a, b) => (a[1] || '').localeCompare(b[1] || ''))
+                .map(([id, name]) => (
+                  <option key={id} value={id}>{name}</option>
+                ))}
+            </select>
           </div>
 
           {/* Active Filters */}
-          {(searchTerm || filterRating !== null || filterDevice || filterCountry) && (
+          {(searchTerm || filterRating !== null || filterDevice || filterCountry || filterLocation) && (
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 flex-wrap">
               <span className="text-sm text-gray-600">Active filters:</span>
               {searchTerm && (
@@ -359,60 +408,241 @@ export function FeedbackList() {
                   <X className="w-3 h-3" />
                 </button>
               )}
+              {filterLocation && (
+                <button
+                  onClick={() => setFilterLocation('')}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
+                >
+                  Location
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
           )}
         </div>
       )}
 
       {/* Feedback List */}
-      <div className="space-y-4" data-tour="recent-feedback">
+      <div data-tour="recent-feedback">
         {filteredFeedback.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
             <p className="text-gray-600">No feedback found</p>
           </div>
         ) : (
-          filteredFeedback.map((item) => (
-            <div key={item.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`w-5 h-5 ${
-                          star <= item.rating
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
-                      />
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Rating</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Comment / Sentiment</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Customer</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Location</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredFeedback.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-0"
+                        onClick={() => setDetailId(item.id)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {item.comment ? (
+                            <p className="text-slate-700 line-clamp-2">{item.comment}</p>
+                          ) : (
+                            <span className={item.rating >= 4 ? 'text-green-600' : 'text-amber-600'}>
+                              {getSentimentLabel(item.rating)}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-0.5 text-sm text-slate-600">
+                            {item.name && <span>{item.name}</span>}
+                            {item.email && <span className="text-slate-500 truncate max-w-[180px]">{item.email}</span>}
+                            {!item.name && !item.email && <span className="text-slate-400">—</span>}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <MapPin className="w-4 h-4 flex-shrink-0 text-slate-400" />
+                            <span>{item.locationName || '—'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-slate-600 text-sm">
+                            <Calendar className="w-4 h-4 flex-shrink-0 text-slate-400" />
+                            {formatRelative(item.createdAt)}
+                          </div>
+                        </td>
+                      </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-3">
+              {filteredFeedback.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
+                  onClick={() => setDetailId(item.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && setDetailId(item.id)}
+                >
+                  <div className="flex items-start gap-3 mb-2">
+                    <div className="flex flex-shrink-0 mt-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 ${
+                            star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {item.comment ? (
+                        <p className="text-slate-700 line-clamp-2">{item.comment}</p>
+                      ) : (
+                        <span className={item.rating >= 4 ? 'text-green-600 text-sm font-medium' : 'text-amber-600 text-sm font-medium'}>
+                          {getSentimentLabel(item.rating)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4 flex-shrink-0 text-slate-400" />
+                      {formatRelative(item.createdAt)}
+                    </span>
+                    {item.locationName && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4 flex-shrink-0 text-slate-400" />
+                        {item.locationName}
+                      </span>
+                    )}
+                    {item.deviceType && (
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{item.deviceType}</span>
+                    )}
+                    {(item.country || item.region) && (
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">
+                        {[item.region, item.country].filter(Boolean).join(', ')}
+                      </span>
+                    )}
+                  </div>
+                  {(item.name || item.email) && (
+                    <div className="flex items-center gap-2 mt-2 text-sm text-slate-600">
+                      <Mail className="w-4 h-4 flex-shrink-0 text-slate-400" />
+                      <span className="truncate">{item.name || item.email}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Detail Modal */}
+            {detailId && (() => {
+              const item = filteredFeedback.find((f) => f.id === detailId);
+              if (!item) return null;
+              return (
+                <div
+                  className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                  onClick={() => setDetailId(null)}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="feedback-detail-title"
+                >
+                  <div
+                    className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-6">
+                      <h3 id="feedback-detail-title" className="sr-only">
+                        Feedback details
+                      </h3>
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-5 h-5 ${
+                                star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className={item.rating >= 4 ? 'text-green-600 font-medium' : 'text-amber-600 font-medium'}>
+                          {getSentimentLabel(item.rating)}
+                        </span>
+                      </div>
+                      {item.comment ? (
+                        <p className="text-slate-900 mb-4 whitespace-pre-wrap">{item.comment}</p>
+                      ) : (
+                        <p className="text-slate-500 mb-4 italic">No comment provided</p>
+                      )}
+                      <div className="text-sm text-slate-600 space-y-2 mb-6">
+                        {(item.name || item.email) && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 flex-shrink-0" />
+                            {item.name && <span>{item.name}</span>}
+                            {item.email && <span>{item.email}</span>}
+                          </div>
+                        )}
+                        {item.locationName && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 flex-shrink-0" />
+                            {item.locationName}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 flex-shrink-0" />
+                          {new Date(item.createdAt).toLocaleString()}
+                        </div>
+                        {(item.deviceType || item.country || item.region) && (
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            {item.deviceType && (
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{item.deviceType}</span>
+                            )}
+                            {(item.country || item.region) && (
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">
+                                {[item.region, item.country].filter(Boolean).join(', ')}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+                        onClick={() => setDetailId(null)}
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <span className="text-sm text-gray-500">
-                  {new Date(item.createdAt).toLocaleString()}
-                </span>
-              </div>
-
-              {item.comment && (
-                <p className="text-gray-700 mb-3">{item.comment}</p>
-              )}
-
-              {(item.name || item.email || item.deviceType || item.country) && (
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-gray-600">
-                  {item.name && <span>👤 {item.name}</span>}
-                  {item.email && <span>✉️ {item.email}</span>}
-                  {item.deviceType && (
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{item.deviceType}</span>
-                  )}
-                  {(item.country || item.region) && (
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">
-                      {[item.region, item.country].filter(Boolean).join(', ')}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          ))
+              );
+            })()}
+          </>
         )}
       </div>
     </div>
