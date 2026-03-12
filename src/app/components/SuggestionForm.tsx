@@ -22,17 +22,22 @@ export function SuggestionForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [publicId, setPublicId] = useState<string | null>(null);
+
   useEffect(() => {
     if (locationId) {
       api.getLocation(locationId).then((loc) => {
         setBusiness({ name: loc.name, logoUrl: loc.logoUrl } as Business);
+        setPublicId(loc.publicId || locationId);
         setLocationNotFound(false);
       }).catch(() => {
         setLocationNotFound(true);
         setBusiness(null);
+        setPublicId(null);
       });
     } else {
       setBusiness({ name: 'Feedback Page', logoUrl: undefined } as Business);
+      setPublicId(null);
       setLocationNotFound(false);
     }
   }, [locationId]);
@@ -53,7 +58,7 @@ export function SuggestionForm() {
         type: 'suggestion'
       });
 
-      navigate('/suggestion-submitted', { state: { locationId: businessId || undefined, locationName: business?.name, logoUrl: business?.logoUrl } });
+      navigate('/suggestion-submitted', { state: { locationId: (publicId || businessId) || undefined, locationName: business?.name, logoUrl: business?.logoUrl } });
     } catch (error) {
       console.error('Error submitting suggestion:', error);
       alert('Failed to submit suggestion. Please try again.');
@@ -87,7 +92,7 @@ export function SuggestionForm() {
       <div className="w-full max-w-xl">
         {/* Logo */}
         <div className="text-center mb-6 md:mb-8">
-          <Link to={locationId ? `/l/${locationId}` : '/'} className="inline-block">
+          <Link to={(publicId || locationId) ? `/l/${publicId || locationId}` : '/'} className="inline-block">
             <img 
               src={business?.logoUrl || logo} 
               alt={business?.name || 'Feedback Page'} 
@@ -182,7 +187,7 @@ export function SuggestionForm() {
         {/* Back Link */}
         <div className="text-center mt-6">
           <button
-            onClick={() => navigate(locationId ? `/l/${locationId}` : '/')}
+            onClick={() => navigate((publicId || locationId) ? `/l/${publicId || locationId}` : '/')}
             className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
           >
             ← Back to rating

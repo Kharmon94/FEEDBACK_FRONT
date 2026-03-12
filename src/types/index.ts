@@ -22,6 +22,7 @@ export interface AuthResponse {
 
 export interface Location {
   id: number;
+  public_id?: string;
   name: string;
   slug?: string;
   address?: string | null;

@@ -7,6 +7,7 @@ import { api as railsApi, type Plan } from '../../../services/api';
 
 interface Location {
   id: string;
+  publicId?: string;
   name: string;
   address: string;
   phone?: string;
@@ -144,7 +145,7 @@ export function LocationsManager() {
           {locations.map((location) => (
             <div
               key={location.id}
-              onClick={() => navigate(`/dashboard/locations/${location.id}`)}
+              onClick={() => navigate(`/dashboard/locations/${location.publicId || location.id}`)}
               className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-lg transition-all cursor-pointer group"
             >
               {/* Location Header */}
@@ -171,7 +172,7 @@ export function LocationsManager() {
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
-                    onClick={(e) => handleEdit(location.id, e)}
+                    onClick={(e) => handleEdit(location.publicId || location.id, e)}
                     className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />

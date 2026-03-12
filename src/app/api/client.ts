@@ -36,6 +36,7 @@ function reviewPlatformsToHash(platforms?: Array<{ name: string; url: string; cu
 
 function mapLocationFromApi(l: {
   id: number;
+  public_id?: string;
   name: string;
   slug?: string;
   address?: string | null;
@@ -51,6 +52,7 @@ function mapLocationFromApi(l: {
   const rp = l.review_platforms ?? {};
   return {
     id: String(l.id),
+    publicId: l.public_id,
     name: l.name,
     slug: l.slug,
     address: l.address ?? '',
@@ -194,7 +196,7 @@ export const api = {
         const s = await railsApi.createSuggestion({
           content: data.comment,
           submitter_email: data.email,
-          location_id: data.businessId ? Number(data.businessId) || undefined : undefined,
+          location_id: data.businessId || undefined,
         });
         return {
           id: String(s.id),

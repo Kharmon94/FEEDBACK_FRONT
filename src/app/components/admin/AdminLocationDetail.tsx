@@ -103,7 +103,7 @@ export function AdminLocationDetail() {
           </div>
           <p className="text-3xl font-bold text-slate-900">{Number(location.feedback_count ?? 0).toLocaleString()}</p>
           <a
-            href={`/admin/feedback?location_id=${location.id}`}
+            href={`/admin/feedback?location_id=${location.public_id || location.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-flex items-center gap-1"
           >
             View feedback for this location
@@ -118,7 +118,7 @@ export function AdminLocationDetail() {
             <span className="text-sm font-medium text-slate-600">Suggestions</span>
           </div>
           <a
-            href={`/admin/suggestions?location_id=${location.id}`}
+            href={`/admin/suggestions?location_id=${location.public_id || location.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-flex items-center gap-1"
           >
             View suggestions for this location
@@ -133,7 +133,7 @@ export function AdminLocationDetail() {
             <span className="text-sm font-medium text-slate-600">Opt-Ins</span>
           </div>
           <a
-            href={`/admin/opt-ins?location_id=${location.id}`}
+            href={`/admin/opt-ins?location_id=${location.public_id || location.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-flex items-center gap-1"
           >
             View opt-ins for this location
@@ -167,7 +167,7 @@ export function AdminLocationDetail() {
             </div>
           </div>
           <button
-            onClick={() => navigate(`/admin/users/${location.user_id}`)}
+            onClick={() => navigate(`/admin/users/${location.user_public_id || location.user_id}`)}
             className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
           >
             View user
@@ -177,19 +177,19 @@ export function AdminLocationDetail() {
 
       <div className="flex flex-wrap gap-3">
         <button
-          onClick={() => navigate(`/admin/feedback?location_id=${location.id}`)}
+          onClick={() => navigate(`/admin/feedback?location_id=${location.public_id || location.id}`)}
           className="px-4 py-3 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
         >
           View all feedback for this location
         </button>
         <button
-          onClick={() => navigate(`/admin/suggestions?location_id=${location.id}`)}
+          onClick={() => navigate(`/admin/suggestions?location_id=${location.public_id || location.id}`)}
           className="px-4 py-3 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
         >
           View suggestions for this location
         </button>
         <button
-          onClick={() => navigate(`/admin/opt-ins?location_id=${location.id}`)}
+          onClick={() => navigate(`/admin/opt-ins?location_id=${location.public_id || location.id}`)}
           className="px-4 py-3 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
         >
           View opt-ins for this location

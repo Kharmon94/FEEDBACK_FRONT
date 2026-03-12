@@ -5,6 +5,7 @@ import { api } from '../../api/client';
 
 interface Location {
   id: string;
+  publicId?: string;
   name: string;
   address: string;
   phone?: string;
@@ -57,7 +58,7 @@ export function LocationStatsPage() {
     try {
       // Load location details
       const locations = await api.getLocations();
-      const loc = locations.find(l => l.id === locationId);
+      const loc = locations.find(l => l.id === locationId || l.publicId === locationId);
       
       if (!loc) {
         alert('Location not found');
@@ -68,7 +69,7 @@ export function LocationStatsPage() {
       setLocation(loc);
 
       const since = timeRange === 'all' ? undefined : timeRange;
-      const locationFeedback = await api.getFeedback(locationId, since, locationId);
+      const locationFeedback = await api.getFeedback(loc.id, since, loc.id);
       setFeedback(locationFeedback);
     } catch (error) {
       console.error('Failed to load location data:', error);
@@ -157,6 +158,7 @@ export function LocationStatsPage() {
     return null;
   }
 
+  const publicId = location.publicId || location.id;
   const stats = calculateStats();
 
   return (
@@ -219,7 +221,7 @@ export function LocationStatsPage() {
               <Download className="w-5 h-5" />
             </button>
             <button
-              onClick={() => navigate(`/dashboard/locations/edit/${locationId}`)}
+              onClick={() => navigate(`/dashboard/locations/edit/${publicId}`)}
               className="p-3 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               title="Edit Location"
             >
@@ -235,7 +237,7 @@ export function LocationStatsPage() {
         <p className="text-xs font-medium text-slate-700 mb-2">Feedback Page:</p>
         <div className="flex items-center gap-2 mb-4" data-tour="qr-code">
           <button
-            onClick={(e) => copyPageUrl(locationId!, 'feedback', e)}
+            onClick={(e) => copyPageUrl(publicId, 'feedback', e)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
           >
             {copiedFor === 'feedback' ? (
@@ -251,7 +253,7 @@ export function LocationStatsPage() {
             )}
           </button>
           <a
-            href={getPagePath(locationId!, 'feedback')}
+            href={getPagePath(publicId, 'feedback')}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
@@ -263,7 +265,7 @@ export function LocationStatsPage() {
         <p className="text-xs font-medium text-slate-700 mb-2">Suggestion Page:</p>
         <div className="flex items-center gap-2 mb-4">
           <button
-            onClick={(e) => copyPageUrl(locationId!, 'suggestions', e)}
+            onClick={(e) => copyPageUrl(publicId, 'suggestions', e)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
           >
             {copiedFor === 'suggestions' ? (
@@ -279,7 +281,7 @@ export function LocationStatsPage() {
             )}
           </button>
           <a
-            href={getPagePath(locationId!, 'suggestions')}
+            href={getPagePath(publicId, 'suggestions')}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
@@ -291,7 +293,7 @@ export function LocationStatsPage() {
         <p className="text-xs font-medium text-slate-700 mb-2">Opt-In Page:</p>
         <div className="flex items-center gap-2">
           <button
-            onClick={(e) => copyPageUrl(locationId!, 'opt-in', e)}
+            onClick={(e) => copyPageUrl(publicId, 'opt-in', e)}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
           >
             {copiedFor === 'opt-in' ? (
@@ -307,7 +309,7 @@ export function LocationStatsPage() {
             )}
           </button>
           <a
-            href={getPagePath(locationId!, 'opt-in')}
+            href={getPagePath(publicId, 'opt-in')}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"

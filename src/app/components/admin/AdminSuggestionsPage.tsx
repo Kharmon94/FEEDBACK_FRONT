@@ -188,7 +188,7 @@ export function AdminSuggestionsPage() {
                           <button
                             type="button"
                             className="text-blue-600 hover:underline"
-                            onClick={() => navigate(`/admin/locations/${detailItem.location_id}`)}
+                            onClick={() => navigate(`/admin/locations/${detailItem.location_public_id || detailItem.location_id}`)}
                           >
                             View location
                           </button>
@@ -203,7 +203,7 @@ export function AdminSuggestionsPage() {
                           <button
                             type="button"
                             className="text-blue-600 hover:underline"
-                            onClick={() => navigate(`/admin/users/${detailItem.user_id}`)}
+                            onClick={() => navigate(`/admin/users/${detailItem.user_public_id || detailItem.user_id}`)}
                           >
                             View user
                           </button>

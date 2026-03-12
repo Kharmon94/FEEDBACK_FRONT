@@ -198,7 +198,7 @@ export function AdminAnalyticsPage() {
               analytics.top_locations.map((location, index) => (
                 <div
                   key={location.id}
-                  onClick={() => navigate(`/admin/locations/${location.id}`)}
+                  onClick={() => navigate(`/admin/locations/${location.public_id || location.id}`)}
                   className="p-4 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
@@ -237,7 +237,7 @@ export function AdminAnalyticsPage() {
               analytics.top_users.map((user, index) => (
                 <div
                   key={user.id}
-                  onClick={() => navigate(`/admin/users/${user.id}`)}
+                  onClick={() => navigate(`/admin/users/${user.public_id || user.id}`)}
                   className="p-4 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-3">

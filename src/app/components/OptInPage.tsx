@@ -17,19 +17,23 @@ export function OptInPage() {
   const hasLocation = !!locationId;
 
   const [business, setBusiness] = useState<Business | null>(null);
+  const [publicId, setPublicId] = useState<string | null>(null);
   const [locationNotFound, setLocationNotFound] = useState(false);
 
   useEffect(() => {
     if (locationId) {
       api.getLocation(locationId).then((loc) => {
         setBusiness({ name: loc.name, logoUrl: loc.logoUrl } as Business);
+        setPublicId(loc.publicId || locationId);
         setLocationNotFound(false);
       }).catch(() => {
         setLocationNotFound(true);
         setBusiness(null);
+        setPublicId(null);
       });
     } else {
       setBusiness(null);
+      setPublicId(null);
       setLocationNotFound(false);
     }
   }, [locationId]);
@@ -137,7 +141,7 @@ export function OptInPage() {
       {/* Back Button */}
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
         <button
-          onClick={() => navigate(locationId ? `/l/${locationId}` : -1)}
+          onClick={() => navigate((publicId || locationId) ? `/l/${publicId || locationId}` : -1)}
           className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />

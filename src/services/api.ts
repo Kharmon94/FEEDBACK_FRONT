@@ -304,7 +304,7 @@ export const api = {
     return feedback;
   },
 
-  async createSuggestion(params: { content: string; submitter_email?: string; location_id?: number | null }): Promise<Suggestion> {
+  async createSuggestion(params: { content: string; submitter_email?: string; location_id?: string | number | null }): Promise<Suggestion> {
     const { suggestion } = await request<{ suggestion: Suggestion }>('/suggestions', {
       method: 'POST',
       body: JSON.stringify(params),
@@ -631,6 +631,7 @@ export type AdminPlanUpsertPayload = {
 
 export interface AdminUser {
   id: string;
+  public_id?: string;
   name: string | null;
   email: string;
   plan: string;
@@ -648,7 +649,9 @@ export interface AdminUsersResponse {
 
 export interface AdminLocation {
   id: string;
+  public_id?: string;
   name: string;
+  user_public_id?: string;
   user_id: string;
   user_name: string | null;
   user_email: string;
@@ -667,8 +670,10 @@ export interface AdminFeedbackItem {
   rating: number;
   comment: string | null;
   location_id: string;
+  location_public_id?: string;
   location_name: string;
   user_id: string;
+  user_public_id?: string;
   user_name: string | null;
   user_email: string;
   created_at: string;
@@ -690,8 +695,8 @@ export interface AdminAnalyticsResponse {
     avg_rating: number | null;
     rating_distribution: { rating: number; count: number }[];
   };
-  top_locations: { id: string; name: string; owner?: string; feedback_count?: number; avg_rating?: number }[];
-  top_users: { id: string; name: string; plan?: string; locations_count?: number }[];
+  top_locations: { id: string; public_id?: string; name: string; owner?: string; feedback_count?: number; avg_rating?: number }[];
+  top_users: { id: string; public_id?: string; name: string; plan?: string; locations_count?: number }[];
 }
 
 export interface AdminSettings {
@@ -711,8 +716,10 @@ export interface AdminSuggestion {
   content: string;
   submitter_email: string | null;
   location_id: string | null;
+  location_public_id?: string | null;
   location_name: string | null;
   user_id: string | null;
+  user_public_id?: string | null;
   user_name: string | null;
   user_email: string | null;
   created_at: string;
@@ -730,8 +737,10 @@ export interface AdminOptIn {
   phone: string | null;
   rating: number | null;
   location_id: string | null;
+  location_public_id?: string | null;
   location_name: string | null;
   user_id: string | null;
+  user_public_id?: string | null;
   user_name: string | null;
   user_email: string | null;
   created_at: string;

@@ -368,7 +368,7 @@ export function AdminUsersPage() {
                 users.map((user) => (
                   <tr 
                     key={user.id} 
-                    onClick={() => navigate(`/admin/users/${user.id}`)}
+                    onClick={() => navigate(`/admin/users/${user.public_id || user.id}`)}
                     className="hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     <td className="px-6 py-4">
@@ -398,7 +398,7 @@ export function AdminUsersPage() {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/admin/users/${user.id}`);
+                          navigate(`/admin/users/${user.public_id || user.id}`);
                         }}
                         className="text-slate-400 hover:text-slate-600 transition-colors"
                       >

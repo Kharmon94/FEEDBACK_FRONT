@@ -253,7 +253,7 @@ export function AdminUserDetail() {
           </div>
           <p className="text-3xl font-bold text-slate-900">{user.locations_count}</p>
           <Link
-            to={`/admin/locations?user_id=${user.id}`}
+            to={`/admin/locations?user_id=${user.public_id || user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
           >
             View locations →
@@ -268,7 +268,7 @@ export function AdminUserDetail() {
           </div>
           <p className="text-3xl font-bold text-slate-900">{Number(user.feedback_count ?? 0).toLocaleString()}</p>
           <Link
-            to={`/admin/feedback?user_id=${user.id}`}
+            to={`/admin/feedback?user_id=${user.public_id || user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
           >
             View feedback →
@@ -282,7 +282,7 @@ export function AdminUserDetail() {
             <span className="text-sm font-medium text-slate-600">Suggestions</span>
           </div>
           <Link
-            to={`/admin/suggestions?user_id=${user.id}`}
+            to={`/admin/suggestions?user_id=${user.public_id || user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
           >
             View suggestions →
@@ -296,7 +296,7 @@ export function AdminUserDetail() {
             <span className="text-sm font-medium text-slate-600">Opt-Ins</span>
           </div>
           <Link
-            to={`/admin/opt-ins?user_id=${user.id}`}
+            to={`/admin/opt-ins?user_id=${user.public_id || user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
           >
             View opt-ins →

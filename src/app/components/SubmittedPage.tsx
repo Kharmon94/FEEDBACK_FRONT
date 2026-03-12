@@ -18,6 +18,7 @@ export function SubmittedPage() {
 
   const [businessName, setBusinessName] = useState<string>(stateLocationName || '');
   const [logoUrl, setLogoUrl] = useState<string | null>(stateLogoUrl ?? null);
+  const [publicId, setPublicId] = useState<string | null>(null);
   const [loading, setLoading] = useState(!stateLocationName && !!locationId);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export function SubmittedPage() {
       api.getLocation(locationId).then((loc) => {
         setBusinessName(loc.name);
         if (!stateLogoUrl) setLogoUrl(loc.logoUrl || null);
+        setPublicId(loc.publicId || locationId);
       }).catch(() => {}).finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -49,7 +51,7 @@ export function SubmittedPage() {
       <div className="w-full max-w-xl">
         {/* Logo */}
         <div className="text-center mb-6 md:mb-8">
-          <Link to={locationId ? `/l/${locationId}` : '/'} className="inline-block">
+          <Link to={(publicId || locationId) ? `/l/${publicId || locationId}` : '/'} className="inline-block">
             <img 
               src={logoUrl || logo} 
               alt={businessName || 'Feedback Page'} 
@@ -82,7 +84,7 @@ export function SubmittedPage() {
           </p>
 
           <button
-            onClick={() => navigate(locationId ? `/l/${locationId}` : '/')}
+            onClick={() => navigate((publicId || locationId) ? `/l/${publicId || locationId}` : '/')}
             className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-slate-800 transition-all shadow-sm"
           >
             Done

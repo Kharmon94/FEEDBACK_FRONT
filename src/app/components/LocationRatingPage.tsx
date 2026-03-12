@@ -36,10 +36,13 @@ export function LocationRatingPage() {
     loadLocation();
   }, [locationId, navigate]);
 
+  const publicId = location?.publicId || locationId;
+
   useEffect(() => {
     if (rating > 0 && locationId) {
       const timer = setTimeout(async () => {
-        const search = `?locationId=${encodeURIComponent(locationId)}&rating=${rating}`;
+        const idForUrl = publicId || locationId;
+        const search = `?locationId=${encodeURIComponent(idForUrl)}&rating=${rating}`;
         if (rating >= 4) {
           // Submit 4-5 star feedback to backend before redirecting
           try {
@@ -56,7 +59,7 @@ export function LocationRatingPage() {
             state: {
               rating,
               comment,
-              locationId,
+              locationId: idForUrl,
               locationName: location?.name,
               logoUrl: location?.logoUrl,
               reviewPlatforms: location?.reviewPlatforms || []
@@ -67,7 +70,7 @@ export function LocationRatingPage() {
             state: {
               rating,
               comment,
-              locationId,
+              locationId: idForUrl,
               locationName: location?.name,
               logoUrl: location?.logoUrl
             }
@@ -76,7 +79,7 @@ export function LocationRatingPage() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [rating, comment, navigate, location, locationId]);
+  }, [rating, comment, navigate, location, locationId, publicId]);
 
   if (loading) {
     return (
@@ -170,7 +173,7 @@ export function LocationRatingPage() {
           {/* Suggestion Button */}
           <div className="text-center pt-6 md:pt-8 border-t border-slate-200">
             <button
-              onClick={() => navigate(`/l/${locationId}/suggestions`)}
+              onClick={() => navigate(`/l/${publicId || locationId}/suggestions`)}
               className="inline-flex items-center gap-2 text-sm md:text-base text-slate-600 hover:text-blue-600 transition-colors group"
             >
               <Lightbulb className="w-4 h-4 md:w-5 md:h-5 group-hover:text-yellow-500 transition-colors" />

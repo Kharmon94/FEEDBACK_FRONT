@@ -30,7 +30,7 @@ export function FeedbackForm() {
   const [comment, setComment] = useState(initialComment);
   const [contactMe, setContactMe] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [business, setBusiness] = useState<{ logoUrl?: string; name?: string }>(() => ({
+  const [business, setBusiness] = useState<{ logoUrl?: string; name?: string; publicId?: string }>(() => ({
     logoUrl: stateLogoUrl,
     name: stateLocationName
   }));
@@ -44,7 +44,7 @@ export function FeedbackForm() {
   useEffect(() => {
     if (locationId && !stateLocationName && !stateLogoUrl) {
       api.getLocation(locationId).then((loc) => {
-        setBusiness({ logoUrl: loc.logoUrl, name: loc.name });
+        setBusiness({ logoUrl: loc.logoUrl, name: loc.name, publicId: loc.publicId });
       }).catch(() => {});
     }
   }, [locationId, stateLocationName, stateLogoUrl]);
@@ -79,9 +79,10 @@ export function FeedbackForm() {
       localStorage.removeItem('feedbackImages');
 
       const locationName = business?.name || stateLocationName;
-      navigate(`/feedback-submitted?locationId=${encodeURIComponent(locationId)}`, {
+      const idForUrl = business?.publicId || locationId;
+      navigate(`/feedback-submitted?locationId=${encodeURIComponent(idForUrl)}`, {
         state: {
-          locationId,
+          locationId: idForUrl,
           locationName,
           logoUrl: business?.logoUrl || stateLogoUrl
         }
@@ -99,7 +100,7 @@ export function FeedbackForm() {
       {/* Back Button - Fixed to top-left */}
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
         <button
-          onClick={() => (locationId ? navigate(`/l/${locationId}`) : navigate(-1))}
+          onClick={() => ((business?.publicId || locationId) ? navigate(`/l/${business?.publicId || locationId}`) : navigate(-1))}
           className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -210,7 +211,7 @@ export function FeedbackForm() {
               <div className="text-center pt-6 border-t border-slate-200 mt-6">
                 <button
                   type="button"
-                  onClick={() => navigate(`/l/${locationId}/suggestions`)}
+                  onClick={() => navigate(`/l/${business?.publicId || locationId}/suggestions`)}
                   className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600 transition-colors group"
                 >
                   <Lightbulb className="w-4 h-4 group-hover:text-yellow-500 transition-colors" />

@@ -82,7 +82,7 @@ export function AdminLocationsPage() {
         const data = await api.getAdminUsers({ per_page: 500 });
         setUsersForSelect(data.users);
         if (data.users.length > 0) {
-          setCreateLocationForm((f) => ({ ...f, user_id: data.users[0].id }));
+          setCreateLocationForm((f) => ({ ...f, user_id: data.users[0].public_id || data.users[0].id }));
         }
       } catch (e) {
         console.error('Failed to load users:', e);
@@ -173,7 +173,7 @@ export function AdminLocationsPage() {
                     >
                       <option value="">Select user</option>
                       {usersForSelect.map((u) => (
-                        <option key={u.id} value={u.id}>
+                        <option key={u.id} value={u.public_id || u.id}>
                           {u.name ?? u.email} ({u.email})
                         </option>
                       ))}
@@ -264,7 +264,7 @@ export function AdminLocationsPage() {
                 locations.map((loc) => (
                   <tr
                     key={loc.id}
-                    onClick={() => navigate(`/admin/locations/${loc.id}`)}
+                    onClick={() => navigate(`/admin/locations/${loc.public_id || loc.id}`)}
                     className="hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     <td className="px-6 py-4">
@@ -298,7 +298,7 @@ export function AdminLocationsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/admin/locations/${loc.id}`);
+                          navigate(`/admin/locations/${loc.public_id || loc.id}`);
                         }}
                         className="text-slate-400 hover:text-slate-600 transition-colors"
                       >

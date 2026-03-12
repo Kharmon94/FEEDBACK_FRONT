@@ -7,6 +7,7 @@ import { FeedbackPagePreview } from './FeedbackPagePreview';
 
 interface Location {
   id: string;
+  publicId?: string;
   name: string;
   address: string;
   phone?: string;
@@ -72,7 +73,7 @@ export function EditLocationPage() {
     
     try {
       const locations = await api.getLocations();
-      const loc = locations.find(l => l.id === locationId);
+      const loc = locations.find(l => l.id === locationId || l.publicId === locationId);
       
       if (loc) {
         setLocation(loc);

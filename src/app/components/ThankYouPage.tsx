@@ -30,6 +30,7 @@ export function ThankYouPage() {
     logoUrl?: string;
     name?: string;
     reviewPlatforms?: Array<{ name: string; url: string }>;
+    publicId?: string;
   } | null>(() => {
     if (stateReviewPlatforms.length > 0 || stateLocationName || stateLogoUrl) {
       return {
@@ -54,7 +55,8 @@ export function ThankYouPage() {
         setBusiness({
           logoUrl: loc.logoUrl,
           name: loc.name,
-          reviewPlatforms: loc.reviewPlatforms || []
+          reviewPlatforms: loc.reviewPlatforms || [],
+          publicId: loc.publicId
         });
       }).catch(() => {
         setBusiness({ name: 'Business', reviewPlatforms: [] });
@@ -81,6 +83,7 @@ export function ThankYouPage() {
     }
   };
 
+  const publicId = business?.publicId || locationId;
   const platformsToShow = locationId ? (business?.reviewPlatforms || []) : defaultDemoPlatforms;
 
   return (
@@ -88,7 +91,7 @@ export function ThankYouPage() {
       {/* Back Button - Returns to location rating page when available */}
       <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
         <button
-          onClick={() => (locationId ? navigate(`/l/${locationId}`) : navigate(-1))}
+          onClick={() => (publicId ? navigate(`/l/${publicId}`) : navigate(-1))}
           className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -198,7 +201,7 @@ export function ThankYouPage() {
           {/* Opt-In Button */}
           <div className="mb-8">
             <button
-              onClick={() => navigate(`/l/${locationId}/opt-in`, { state: { rating } })}
+              onClick={() => navigate(`/l/${publicId}/opt-in`, { state: { rating } })}
               className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 border-2 border-black bg-white rounded-lg hover:bg-black hover:text-white transition-all group"
             >
               <Gift className="w-4 h-4" strokeWidth={2} />
