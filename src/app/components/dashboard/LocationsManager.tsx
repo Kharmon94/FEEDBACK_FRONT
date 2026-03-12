@@ -22,9 +22,8 @@ export function LocationsManager() {
   const { user } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [copiedSuggestionId, setCopiedSuggestionId] = useState<string | null>(null);
-  const [copiedOptInId, setCopiedOptInId] = useState<string | null>(null);
+  const [copiedFor, setCopiedFor] = useState<string | null>(null);
+  const [selectedPageType, setSelectedPageType] = useState<Record<string, 'feedback' | 'suggestions' | 'opt-in'>>({});
 
   const [currentPlan, setCurrentPlan] = useState<{ slug: string; name: string; locationLimit: number | null }>({
     slug: user?.plan || 'free',
@@ -79,31 +78,28 @@ export function LocationsManager() {
     }
   };
 
-  const copyFeedbackUrl = (locationId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigation when copying URL
+  type PageType = 'feedback' | 'suggestions' | 'opt-in';
 
-    const url = `${window.location.origin}/l/${locationId}`;
-    navigator.clipboard.writeText(url);
-    setCopiedId(locationId);
-    setTimeout(() => setCopiedId(null), 2000);
+  const getPageUrl = (locationId: string, pageType: PageType) => {
+    const base = `${window.location.origin}/l/${locationId}`;
+    if (pageType === 'feedback') return base;
+    if (pageType === 'suggestions') return `${base}/suggestions`;
+    return `${base}/opt-in`;
   };
 
-  const copySuggestionUrl = (locationId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    const url = `${window.location.origin}/l/${locationId}/suggestions`;
-    navigator.clipboard.writeText(url);
-    setCopiedSuggestionId(locationId);
-    setTimeout(() => setCopiedSuggestionId(null), 2000);
+  const getPagePath = (locationId: string, pageType: PageType) => {
+    const base = `/l/${locationId}`;
+    if (pageType === 'feedback') return base;
+    if (pageType === 'suggestions') return `${base}/suggestions`;
+    return `${base}/opt-in`;
   };
 
-  const copyOptInUrl = (locationId: string, e: React.MouseEvent) => {
+  const copyPageUrl = (locationId: string, pageType: PageType, e: React.MouseEvent) => {
     e.stopPropagation();
-
-    const url = `${window.location.origin}/l/${locationId}/opt-in`;
+    const url = getPageUrl(locationId, pageType);
     navigator.clipboard.writeText(url);
-    setCopiedOptInId(locationId);
-    setTimeout(() => setCopiedOptInId(null), 2000);
+    setCopiedFor(`${locationId}-${pageType}`);
+    setTimeout(() => setCopiedFor(null), 2000);
   };
 
   const handleEdit = (locationId: string, e: React.MouseEvent) => {
@@ -245,102 +241,51 @@ export function LocationsManager() {
                 </div>
               </div>
 
-              {/* Feedback URL - Copy link and QR (feedback link can be used for QR generation) */}
+              {/* Copy link and View page - dropdown to select page type */}
               <div className="pt-4 border-t border-slate-200" data-tour="feedback-link">
-                <p className="text-xs font-medium text-slate-700 mb-2">Feedback Page:</p>
-                <div className="flex items-center gap-2" data-tour="qr-code">
-                  <button
-                    onClick={(e) => copyFeedbackUrl(location.id, e)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    {copiedId === location.id ? (
-                      <>
-                        <Check className="w-4 h-4 text-green-600" />
-                        <span className="text-green-600">Link Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy Link
-                      </>
-                    )}
-                  </button>
-                  <a
-                    href={`/l/${location.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <p className="text-xs font-medium text-slate-700 mb-2">Copy & View:</p>
+                <div className="flex flex-col sm:flex-row gap-2" data-tour="qr-code">
+                  <select
+                    value={selectedPageType[location.id] ?? 'feedback'}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setSelectedPageType((prev) => ({ ...prev, [location.id]: e.target.value as PageType }));
+                    }}
                     onClick={(e) => e.stopPropagation()}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
                   >
-                    <ExternalLink className="w-4 h-4" />
-                    View Page
-                  </a>
-                </div>
-              </div>
-
-              {/* Suggestion Page - Shareable suggestion-only link */}
-              <div className="pt-4 border-t border-slate-200 mt-4">
-                <p className="text-xs font-medium text-slate-700 mb-2">Suggestion Page:</p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => copySuggestionUrl(location.id, e)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    {copiedSuggestionId === location.id ? (
-                      <>
-                        <Check className="w-4 h-4 text-green-600" />
-                        <span className="text-green-600">Link Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy Link
-                      </>
-                    )}
-                  </button>
-                  <a
-                    href={`/l/${location.id}/suggestions`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    View Page
-                  </a>
-                </div>
-              </div>
-
-              {/* Opt-In Page - Shareable newsletter/rewards signup link */}
-              <div className="pt-4 border-t border-slate-200 mt-4">
-                <p className="text-xs font-medium text-slate-700 mb-2">Opt-In Page:</p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => copyOptInUrl(location.id, e)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    {copiedOptInId === location.id ? (
-                      <>
-                        <Check className="w-4 h-4 text-green-600" />
-                        <span className="text-green-600">Link Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy Link
-                      </>
-                    )}
-                  </button>
-                  <a
-                    href={`/l/${location.id}/opt-in`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    View Page
-                  </a>
+                    <option value="feedback">Feedback Page</option>
+                    <option value="suggestions">Suggestion Page</option>
+                    <option value="opt-in">Opt-In Page</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => copyPageUrl(location.id, (selectedPageType[location.id] ?? 'feedback') as PageType, e)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                      {copiedFor === `${location.id}-${selectedPageType[location.id] ?? 'feedback'}` ? (
+                        <>
+                          <Check className="w-4 h-4 text-green-600" />
+                          <span className="text-green-600">Link Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy Link
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href={getPagePath(location.id, (selectedPageType[location.id] ?? 'feedback') as PageType)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      View Page
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
