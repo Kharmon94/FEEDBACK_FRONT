@@ -92,7 +92,7 @@ export function EditLocationPage() {
         });
       } else {
         alert('Location not found');
-        navigate('/dashboard');
+        navigate('/dashboard?tab=locations');
       }
     } catch (error) {
       console.error('Failed to load location:', error);
@@ -149,7 +149,7 @@ export function EditLocationPage() {
           body: formData,
         });
         if (res.ok) {
-          navigate('/dashboard');
+          navigate('/dashboard?tab=locations');
           return;
         }
         const errText = await res.text();
@@ -183,7 +183,7 @@ export function EditLocationPage() {
       };
 
       await api.updateLocation(locationId, locationData);
-      navigate('/dashboard');
+      navigate('/dashboard?tab=locations');
     } catch (error) {
       console.error('Failed to update location:', error);
       const message = error instanceof Error ? error.message : 'Failed to update location. Please try again.';
@@ -677,7 +677,7 @@ export function EditLocationPage() {
                       if (confirm(`Are you sure you want to delete "${name}"? This will permanently delete the location and all associated feedback. This action cannot be undone.`)) {
                         try {
                           await api.deleteLocation(locationId!);
-                          navigate('/dashboard');
+                          navigate('/dashboard?tab=locations');
                         } catch (error) {
                           console.error('Failed to delete location:', error);
                           alert('Failed to delete location. Please try again.');
@@ -697,7 +697,7 @@ export function EditLocationPage() {
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-slate-200">
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/dashboard?tab=locations')}
               className="w-full sm:w-auto px-6 py-2.5 text-base text-slate-700 hover:bg-slate-100 rounded-lg transition-colors font-medium"
               disabled={saving}
             >

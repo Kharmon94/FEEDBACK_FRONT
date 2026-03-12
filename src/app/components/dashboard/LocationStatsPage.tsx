@@ -61,7 +61,7 @@ export function LocationStatsPage() {
       
       if (!loc) {
         alert('Location not found');
-        navigate('/dashboard');
+        navigate('/dashboard?tab=locations');
         return;
       }
 
@@ -164,7 +164,7 @@ export function LocationStatsPage() {
       {/* Header */}
       <div>
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/dashboard?tab=locations')}
           className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
         >
           <ArrowLeft className="w-5 h-5" />
