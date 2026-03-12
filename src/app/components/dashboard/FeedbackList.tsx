@@ -455,11 +455,6 @@ export function FeedbackList() {
                   <span className="text-slate-600">Opt-ins</span>
                   <span className="font-semibold">{analytics.funnel.opt_ins_count ?? 0}</span>
                 </div>
-                {analytics.funnel.page_views > 0 && (
-                  <div className="pt-2 border-t border-slate-200 text-xs text-slate-500">
-                    Conversion: {((analytics.funnel.submissions / analytics.funnel.page_views) * 100).toFixed(1)}%
-                  </div>
-                )}
               </div>
             </div>
             {/* Device breakdown */}
