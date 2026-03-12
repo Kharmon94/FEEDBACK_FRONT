@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router';
 import { Check, ChevronRight, ChevronLeft, Eye, EyeOff, Menu, X, Upload } from 'lucide-react';
 import { api } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
-import { api, signInWithGooglePopup } from '../../services/api';
+import { signInWithGooglePopup } from '../../services/api';
 import { Footer } from './Footer';
 const logo = "/logo.png";
 import { Checkbox } from './ui/checkbox';

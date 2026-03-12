@@ -22,4 +22,20 @@ export interface Feedback {
   images?: string[];
   type: 'feedback' | 'suggestion';
   createdAt: Date;
+  deviceType?: string;
+  country?: string;
+  region?: string;
+}
+
+export interface FeedbackSubmission {
+  id: number;
+  location_id: number;
+  rating: number;
+  comment: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
+  created_at: string;
+  device_type?: string | null;
+  country?: string | null;
+  region?: string | null;
 }

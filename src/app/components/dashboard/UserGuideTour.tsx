@@ -37,7 +37,7 @@ export function UserGuideTour({ run = false, onComplete }: UserGuideTourProps) {
         <div className="p-2">
           <h3 className="text-lg font-bold text-slate-900 mb-2">Your Stats at a Glance</h3>
           <p className="text-slate-700">
-            Here you can see your total feedback, average rating, and response rate. These update in real-time as customers submit feedback.
+            Here you can see your total feedback, average rating, and positive vs. negative counts. These update in real-time as customers submit feedback.
           </p>
         </div>
       ),
@@ -47,12 +47,12 @@ export function UserGuideTour({ run = false, onComplete }: UserGuideTourProps) {
       target: '[data-tour="recent-feedback"]',
       content: (
         <div className="p-2">
-          <h3 className="text-lg font-bold text-slate-900 mb-2">Recent Feedback</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">Feedback List</h3>
           <p className="text-slate-700 mb-2">
-            See the latest feedback from your customers. Low ratings (1-3 stars) come to you privately, while high ratings (4-5 stars) are directed to public review sites.
+            See all feedback from your customers. Low ratings (1-3 stars) come to you privately, while high ratings (4-5 stars) are directed to public review sites.
           </p>
           <p className="text-sm text-slate-600">
-            Go to the Feedback tab for the full list, filters, and export.
+            Use filters and export to manage your feedback.
           </p>
         </div>
       ),

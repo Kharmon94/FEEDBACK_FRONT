@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router';
-import { LayoutDashboard, MessageSquare, LogOut, Menu, X, MapPin, CreditCard, Gift, HelpCircle, Settings, Lightbulb } from 'lucide-react';
+import { MessageSquare, LogOut, Menu, X, MapPin, CreditCard, Gift, HelpCircle, Settings, Lightbulb } from 'lucide-react';
 import { UserGuideButton, UserGuideTour } from './UserGuideTour';
 import { useAuth } from '../../contexts/AuthContext';
 const logo = "/logo.png";
@@ -68,7 +68,6 @@ export function DashboardLayout() {
   };
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard, path: '/dashboard?tab=overview' },
     { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/dashboard?tab=feedback' },
     { id: 'suggestions', label: 'Suggestions', icon: Lightbulb, path: '/dashboard?tab=suggestions' },
     { id: 'locations', label: 'Locations', icon: MapPin, path: '/dashboard?tab=locations' },

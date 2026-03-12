@@ -95,6 +95,18 @@ export function getBaseUrl(): string {
   return getBaseUrlInternal();
 }
 
+/** Fire-and-forget track feedback page event. No auth. Does not block UI. */
+export function trackFeedbackEvent(locationId: string, eventType: string, rating?: number): void {
+  const url = `${getBaseUrlInternal().replace(/\/$/, '')}/feedback/events`;
+  const body = JSON.stringify({ location_id: locationId, event_type: eventType, rating: rating ?? null });
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+    keepalive: true,
+  }).catch(() => { /* ignore */ });
+}
+
 export async function request<T>(
   path: string,
   options: RequestInit & { skipAuth?: boolean } = {}
@@ -312,6 +324,14 @@ export const api = {
   async getFeedback(): Promise<FeedbackSubmission[]> {
     const { feedback } = await request<{ feedback: FeedbackSubmission[] }>('/feedback');
     return feedback;
+  },
+
+  async getFeedbackAnalytics(): Promise<{
+    funnel: { page_views: number; star_clicks: number; submissions: number };
+    device_breakdown: Record<string, number>;
+    top_countries: Record<string, number>;
+  }> {
+    return request('/feedback/analytics');
   },
 
   async getSuggestions(): Promise<Suggestion[]> {

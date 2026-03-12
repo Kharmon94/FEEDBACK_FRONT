@@ -4,7 +4,7 @@
  */
 
 import { api as railsApi } from '../../services/api';
-import type { Business, Feedback } from '../types';
+import type { Business, Feedback, FeedbackSubmission } from '../types';
 
 function mapReviewPlatforms(platforms: Record<string, string>): { name: string; url: string; icon: 'google' | 'yelp' | 'facebook' | 'tripadvisor' | 'other' }[] {
   const icons: Record<string, 'google' | 'yelp' | 'facebook' | 'tripadvisor' | 'other'> = {
@@ -240,6 +240,7 @@ export const api = {
         : items;
       return filtered.map((f) => {
         const locId = String(f.location_id);
+        const item = f as FeedbackSubmission;
         return {
           id: String(f.id),
           businessId: locId,
@@ -250,6 +251,9 @@ export const api = {
           comment: f.comment ?? '',
           type: 'feedback' as const,
           createdAt: new Date(f.created_at),
+          deviceType: item.device_type ?? undefined,
+          country: item.country ?? undefined,
+          region: item.region ?? undefined,
         };
       }) as Feedback[];
     } catch (error) {
@@ -329,5 +333,9 @@ export const api = {
 
   async changePassword(data: { current_password: string; password: string }) {
     return railsApi.changePassword(data);
+  },
+
+  async getFeedbackAnalytics() {
+    return railsApi.getFeedbackAnalytics();
   },
 };

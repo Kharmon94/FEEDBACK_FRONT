@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { Star, Upload, X, ArrowLeft, Lightbulb } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
+import { trackFeedbackEvent } from '../../services/api';
 import { Checkbox } from './ui/checkbox';
 
 export function FeedbackForm() {
@@ -59,6 +60,7 @@ export function FeedbackForm() {
       return;
     }
     setSubmitting(true);
+    trackFeedbackEvent(locationId, 'feedback_submit', rating);
 
     try {
       await api.submitFeedback({

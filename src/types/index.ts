@@ -43,6 +43,9 @@ export interface FeedbackSubmission {
   customer_name: string | null;
   customer_email: string | null;
   created_at: string;
+  device_type?: string | null;
+  country?: string | null;
+  region?: string | null;
 }
 
 export interface Suggestion {

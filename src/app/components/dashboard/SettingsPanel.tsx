@@ -24,7 +24,6 @@ export function SettingsPanel() {
 
   // Profile form state
   const [name, setName] = useState('');
-  const [businessName, setBusinessName] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState('');
@@ -58,7 +57,6 @@ export function SettingsPanel() {
       ]);
       setProfile(profileData);
       setName(profileData.name ?? '');
-      setBusinessName(profileData.business_name ?? '');
       setNewEmail(profileData.email ?? '');
       setLocations(locsData);
       setEmailPrefsSummary(emailData ? { enabled: emailData.email_notifications_enabled } : null);
@@ -75,7 +73,7 @@ export function SettingsPanel() {
     setProfileSaving(true);
     setProfileSaved(false);
     try {
-      const res = await api.updateProfile({ name: name || undefined, business_name: businessName || undefined });
+      const res = await api.updateProfile({ name: name || undefined });
       setProfile(res.profile as Profile);
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 3000);
@@ -162,16 +160,6 @@ export function SettingsPanel() {
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
               placeholder="Your name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Business name</label>
-            <input
-              type="text"
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
-              placeholder="Your business name"
             />
           </div>
           <button

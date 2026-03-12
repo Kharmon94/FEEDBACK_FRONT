@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
-import { LayoutDashboard, MessageSquare, MapPin, CreditCard, Gift, HelpCircle, Settings, Lightbulb } from 'lucide-react';
-import { DashboardOverview } from './dashboard/DashboardOverview';
+import { useSearchParams, useNavigate } from 'react-router';
+import { MessageSquare, MapPin, CreditCard, Gift, HelpCircle, Settings, Lightbulb } from 'lucide-react';
 import { FeedbackList } from './dashboard/FeedbackList';
 import { LocationsManager } from './dashboard/LocationsManager';
 import { BillingPanel } from './dashboard/BillingPanel';
@@ -12,31 +11,32 @@ import { SuggestionsList } from './dashboard/SuggestionsList';
 
 export function Dashboard() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const tabFromUrl = searchParams.get('tab');
 
-  // Valid tabs list
-  const validTabs = ['overview', 'feedback', 'suggestions', 'locations', 'opt-ins', 'billing', 'settings', 'help'];
+  // Valid tabs list (no overview)
+  const validTabs = ['feedback', 'suggestions', 'locations', 'opt-ins', 'billing', 'settings', 'help'];
 
-  type TabId = 'overview' | 'feedback' | 'suggestions' | 'locations' | 'opt-ins' | 'billing' | 'settings' | 'help';
+  type TabId = 'feedback' | 'suggestions' | 'locations' | 'opt-ins' | 'billing' | 'settings' | 'help';
 
-  // Default to overview if tab is invalid or missing
+  // Default to feedback if tab is invalid or missing
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     if (tabFromUrl && validTabs.includes(tabFromUrl)) {
       return tabFromUrl as TabId;
     }
-    return 'overview';
+    return 'feedback';
   });
 
   useEffect(() => {
     if (tabFromUrl && validTabs.includes(tabFromUrl)) {
       setActiveTab(tabFromUrl as TabId);
-    } else if (tabFromUrl) {
-      setActiveTab('overview');
+    } else if (!tabFromUrl || tabFromUrl === 'overview') {
+      navigate('/dashboard?tab=feedback', { replace: true });
+      setActiveTab('feedback');
     }
-  }, [tabFromUrl]);
+  }, [tabFromUrl, navigate]);
 
   const tabs = [
-    { id: 'overview' as const, label: 'Overview', icon: LayoutDashboard },
     { id: 'feedback' as const, label: 'Feedback', icon: MessageSquare },
     { id: 'suggestions' as const, label: 'Suggestions', icon: Lightbulb },
     { id: 'locations' as const, label: 'Locations', icon: MapPin },
@@ -50,7 +50,6 @@ export function Dashboard() {
     <div className="space-y-6">
       {/* Tab Content */}
       <div>
-        {activeTab === 'overview' && <DashboardOverview />}
         {activeTab === 'feedback' && <FeedbackList />}
         {activeTab === 'suggestions' && <SuggestionsList />}
         {activeTab === 'locations' && <LocationsManager />}

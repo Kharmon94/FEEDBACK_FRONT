@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Star, Download, Search, Filter, X } from 'lucide-react';
+import { Star, Download, Search, Filter, X, MessageSquare, ThumbsUp, ThumbsDown, BarChart3, Smartphone, Globe } from 'lucide-react';
 import { api } from '../../api/client';
 
 interface Feedback {
@@ -12,6 +12,27 @@ interface Feedback {
   comment: string;
   type: 'feedback' | 'suggestion';
   createdAt: string;
+  deviceType?: string;
+  country?: string;
+  region?: string;
+}
+
+function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: string | number; color: string }) {
+  const colorClasses: Record<string, string> = {
+    blue: 'bg-blue-100 text-blue-600',
+    yellow: 'bg-yellow-100 text-yellow-600',
+    green: 'bg-green-100 text-green-600',
+    red: 'bg-red-100 text-red-600',
+  };
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg ${colorClasses[color] || colorClasses.blue} flex items-center justify-center mb-3 sm:mb-4`}>
+        <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+      </div>
+      <p className="text-xs sm:text-sm text-slate-600 mb-1">{label}</p>
+      <p className="text-2xl sm:text-3xl font-bold text-slate-900">{value}</p>
+    </div>
+  );
 }
 
 export function FeedbackList() {
@@ -20,16 +41,26 @@ export function FeedbackList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRating, setFilterRating] = useState<number | null>(null);
-  const [filterType, setFilterType] = useState<'all' | 'feedback' | 'suggestion'>('all');
+  const [filterDevice, setFilterDevice] = useState<string>('');
+  const [filterCountry, setFilterCountry] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
+  const [analytics, setAnalytics] = useState<{
+    funnel: { page_views: number; star_clicks: number; submissions: number };
+    device_breakdown: Record<string, number>;
+    top_countries: Record<string, number>;
+  } | null>(null);
 
   useEffect(() => {
     loadFeedback();
   }, []);
 
   useEffect(() => {
+    api.getFeedbackAnalytics().then(setAnalytics).catch(() => setAnalytics(null));
+  }, []);
+
+  useEffect(() => {
     applyFilters();
-  }, [searchTerm, filterRating, filterType, feedback]);
+  }, [searchTerm, filterRating, filterDevice, filterCountry, feedback]);
 
   const loadFeedback = async () => {
     try {
@@ -60,23 +91,30 @@ export function FeedbackList() {
       filtered = filtered.filter(f => f.rating === filterRating);
     }
 
-    // Type filter
-    if (filterType !== 'all') {
-      filtered = filtered.filter(f => f.type === filterType);
+    // Device filter
+    if (filterDevice) {
+      filtered = filtered.filter(f => (f.deviceType || 'unknown') === filterDevice);
+    }
+
+    // Country filter
+    if (filterCountry) {
+      filtered = filtered.filter(f => (f.country || '') === filterCountry);
     }
 
     setFilteredFeedback(filtered);
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Rating', 'Name', 'Email', 'Comment', 'Type'];
+    const headers = ['Date', 'Rating', 'Name', 'Email', 'Comment', 'Device', 'Country', 'Region'];
     const rows = filteredFeedback.map(f => [
       new Date(f.createdAt).toLocaleDateString(),
       f.rating,
       f.name || '',
       f.email || '',
       f.comment || '',
-      f.type
+      f.deviceType || '',
+      f.country || '',
+      f.region || ''
     ]);
 
     const csv = [
@@ -92,6 +130,13 @@ export function FeedbackList() {
     a.click();
   };
 
+  const totalFeedback = feedback.length;
+  const positiveCount = feedback.filter(f => Number(f.rating) >= 4).length;
+  const negativeCount = feedback.filter(f => Number(f.rating) <= 3).length;
+  const averageRating = totalFeedback > 0
+    ? (feedback.reduce((sum, f) => sum + Number(f.rating), 0) / totalFeedback)
+    : 0;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -102,6 +147,90 @@ export function FeedbackList() {
 
   return (
     <div className="space-y-6">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6" data-tour="stats-overview">
+        <StatCard icon={MessageSquare} label="Total Feedback" value={totalFeedback} color="blue" />
+        <StatCard
+          icon={Star}
+          label="Average Rating"
+          value={typeof averageRating === 'number' && !isNaN(averageRating) ? averageRating.toFixed(1) : '0.0'}
+          color="yellow"
+        />
+        <StatCard icon={ThumbsUp} label="Positive (4-5★)" value={positiveCount} color="green" />
+        <StatCard icon={ThumbsDown} label="Needs Attention (1-3★)" value={negativeCount} color="red" />
+      </div>
+
+      {/* Analytics Section */}
+      {analytics && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Funnel & Analytics
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Funnel */}
+            <div>
+              <h4 className="text-sm font-medium text-slate-700 mb-3">Feedback Funnel</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Page views</span>
+                  <span className="font-semibold">{analytics.funnel.page_views}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Star clicks</span>
+                  <span className="font-semibold">{analytics.funnel.star_clicks}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Submissions</span>
+                  <span className="font-semibold">{analytics.funnel.submissions}</span>
+                </div>
+                {analytics.funnel.page_views > 0 && (
+                  <div className="pt-2 border-t border-slate-200 text-xs text-slate-500">
+                    Conversion: {((analytics.funnel.submissions / analytics.funnel.page_views) * 100).toFixed(1)}%
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Device breakdown */}
+            <div>
+              <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-1">
+                <Smartphone className="w-4 h-4" /> Devices
+              </h4>
+              {Object.keys(analytics.device_breakdown).length === 0 ? (
+                <p className="text-sm text-slate-500">No device data yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {Object.entries(analytics.device_breakdown).map(([device, count]) => (
+                    <div key={device} className="flex justify-between text-sm">
+                      <span className="text-slate-600 capitalize">{device}</span>
+                      <span className="font-semibold">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Top countries */}
+            <div>
+              <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-1">
+                <Globe className="w-4 h-4" /> Top Countries
+              </h4>
+              {Object.keys(analytics.top_countries).length === 0 ? (
+                <p className="text-sm text-slate-500">No location data yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {Object.entries(analytics.top_countries).slice(0, 5).map(([country, count]) => (
+                    <div key={country} className="flex justify-between text-sm">
+                      <span className="text-slate-600">{country}</span>
+                      <span className="font-semibold">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header with Action Icons */}
       <div className="flex flex-col items-center gap-4">
         <div className="text-center">
@@ -135,7 +264,7 @@ export function FeedbackList() {
       {/* Collapsible Filters */}
       {showFilters && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -162,20 +291,36 @@ export function FeedbackList() {
               <option value="1">1 Star</option>
             </select>
 
-            {/* Type Filter */}
+            {/* Device Filter */}
             <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as any)}
+              value={filterDevice}
+              onChange={(e) => setFilterDevice(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
             >
-              <option value="all">All Types</option>
-              <option value="feedback">Feedback</option>
-              <option value="suggestion">Suggestions</option>
+              <option value="">All Devices</option>
+              <option value="mobile">Mobile</option>
+              <option value="desktop">Desktop</option>
+              <option value="tablet">Tablet</option>
+              <option value="unknown">Unknown</option>
+            </select>
+
+            {/* Country Filter */}
+            <select
+              value={filterCountry}
+              onChange={(e) => setFilterCountry(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+            >
+              <option value="">All Countries</option>
+              {Array.from(new Set(feedback.map(f => f.country).filter(Boolean) as string[]))
+                .sort()
+                .map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
             </select>
           </div>
 
           {/* Active Filters */}
-          {(searchTerm || filterRating !== null || filterType !== 'all') && (
+          {(searchTerm || filterRating !== null || filterDevice || filterCountry) && (
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 flex-wrap">
               <span className="text-sm text-gray-600">Active filters:</span>
               {searchTerm && (
@@ -196,12 +341,21 @@ export function FeedbackList() {
                   <X className="w-3 h-3" />
                 </button>
               )}
-              {filterType !== 'all' && (
+              {filterDevice && (
                 <button
-                  onClick={() => setFilterType('all')}
+                  onClick={() => setFilterDevice('')}
                   className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
                 >
-                  {filterType}
+                  Device: {filterDevice}
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {filterCountry && (
+                <button
+                  onClick={() => setFilterCountry('')}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
+                >
+                  Country: {filterCountry}
                   <X className="w-3 h-3" />
                 </button>
               )}
@@ -211,7 +365,7 @@ export function FeedbackList() {
       )}
 
       {/* Feedback List */}
-      <div className="space-y-4">
+      <div className="space-y-4" data-tour="recent-feedback">
         {filteredFeedback.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
             <p className="text-gray-600">No feedback found</p>
@@ -233,13 +387,6 @@ export function FeedbackList() {
                       />
                     ))}
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    item.type === 'suggestion'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'bg-black text-white'
-                  }`}>
-                    {item.type}
-                  </span>
                 </div>
                 <span className="text-sm text-gray-500">
                   {new Date(item.createdAt).toLocaleString()}
@@ -250,10 +397,18 @@ export function FeedbackList() {
                 <p className="text-gray-700 mb-3">{item.comment}</p>
               )}
 
-              {(item.name || item.email) && (
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+              {(item.name || item.email || item.deviceType || item.country) && (
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-gray-600">
                   {item.name && <span>👤 {item.name}</span>}
                   {item.email && <span>✉️ {item.email}</span>}
+                  {item.deviceType && (
+                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{item.deviceType}</span>
+                  )}
+                  {(item.country || item.region) && (
+                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">
+                      {[item.region, item.country].filter(Boolean).join(', ')}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

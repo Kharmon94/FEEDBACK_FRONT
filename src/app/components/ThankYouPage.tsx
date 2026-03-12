@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link, useSearchParams } from 'react-router';
 import { Star, ExternalLink, CheckCircle2, ArrowLeft, Gift, Copy, Check } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
+import { trackFeedbackEvent } from '../../services/api';
 
 const defaultDemoPlatforms = [
   { name: 'Google Reviews', url: 'https://g.page/r/demo' },
@@ -40,6 +41,12 @@ export function ThankYouPage() {
     return null;
   });
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (locationId) {
+      trackFeedbackEvent(locationId, 'thankyou_view');
+    }
+  }, [locationId]);
 
   useEffect(() => {
     if (!business && locationId) {

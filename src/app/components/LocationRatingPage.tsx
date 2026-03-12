@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router';
 import { Star, Lightbulb } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
+import { trackFeedbackEvent } from '../../services/api';
 
 export function LocationRatingPage() {
   const { locationId } = useParams<{ locationId: string }>();
@@ -23,6 +24,7 @@ export function LocationRatingPage() {
       try {
         const data = await api.getLocation(locationId);
         setLocation(data);
+        trackFeedbackEvent(locationId, 'page_view');
       } catch (error) {
         console.error('Failed to load location:', error);
         navigate('/');
@@ -126,7 +128,10 @@ export function LocationRatingPage() {
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
-                onClick={() => setRating(star)}
+                onClick={() => {
+                  trackFeedbackEvent(locationId!, 'star_click', star);
+                  setRating(star);
+                }}
                 onMouseEnter={() => setHoveredRating(star)}
                 onMouseLeave={() => setHoveredRating(0)}
                 className="transition-all duration-200 hover:scale-110 active:scale-95"
