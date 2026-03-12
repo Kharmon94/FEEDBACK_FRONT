@@ -49,10 +49,10 @@ export function UserGuideTour({ run = false, onComplete }: UserGuideTourProps) {
         <div className="p-2">
           <h3 className="text-lg font-bold text-slate-900 mb-2">Feedback List</h3>
           <p className="text-slate-700 mb-2">
-            See all feedback from your customers. Low ratings (1-3 stars) come to you privately, while high ratings (4-5 stars) are directed to public review sites.
+            Use the View dropdown to see feedback, suggestions, or opt-ins. Low ratings (1-3 stars) come to you privately, while high ratings (4-5 stars) are directed to public review sites.
           </p>
           <p className="text-sm text-slate-600">
-            Use filters and export to manage your feedback.
+            Use filters and export to manage your data.
           </p>
         </div>
       ),
@@ -67,10 +67,9 @@ export function UserGuideTour({ run = false, onComplete }: UserGuideTourProps) {
             Use the sidebar to access:
           </p>
           <ul className="text-sm text-slate-600 space-y-1 mb-2">
-            <li><strong>Feedback</strong> – View all feedback and suggestions</li>
+            <li><strong>Feedback</strong> – View feedback, suggestions, and opt-ins (use the View dropdown to switch)</li>
             <li><strong>Locations</strong> – Manage locations, review platforms, branding, and get your feedback links</li>
             <li><strong>Settings</strong> – Manage your account, email, password, and preferences</li>
-            <li><strong>Opt-Ins</strong> – Newsletter and rewards sign-ups</li>
           </ul>
         </div>
       ),

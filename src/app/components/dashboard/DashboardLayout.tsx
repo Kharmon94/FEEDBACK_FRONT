@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router';
-import { MessageSquare, LogOut, Menu, X, MapPin, CreditCard, Gift, HelpCircle, Settings, Lightbulb } from 'lucide-react';
+import { MessageSquare, LogOut, Menu, X, MapPin, CreditCard, HelpCircle, Settings } from 'lucide-react';
 import { UserGuideButton, UserGuideTour } from './UserGuideTour';
 import { useAuth } from '../../contexts/AuthContext';
 const logo = "/logo.png";
@@ -69,9 +69,7 @@ export function DashboardLayout() {
 
   const tabs = [
     { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/dashboard?tab=feedback' },
-    { id: 'suggestions', label: 'Suggestions', icon: Lightbulb, path: '/dashboard?tab=suggestions' },
     { id: 'locations', label: 'Locations', icon: MapPin, path: '/dashboard?tab=locations' },
-    { id: 'opt-ins', label: 'Opt-Ins', icon: Gift, path: '/dashboard?tab=opt-ins' },
     { id: 'billing', label: 'Billing', icon: CreditCard, path: '/dashboard?tab=billing' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard?tab=settings' },
     { id: 'help', label: 'Help', icon: HelpCircle, path: '/dashboard?tab=help' },
@@ -104,7 +102,7 @@ export function DashboardLayout() {
                     navigate(tab.path);
                     setMobileMenuOpen(false);
                   }}
-                  data-tour={['settings', 'feedback', 'opt-ins'].includes(tab.id) ? `sidebar-${tab.id}` : undefined}
+                  data-tour={['settings', 'feedback'].includes(tab.id) ? `sidebar-${tab.id}` : undefined}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left text-slate-600 hover:bg-slate-50"
                 >
                   <tab.icon className="w-5 h-5" />
@@ -146,7 +144,7 @@ export function DashboardLayout() {
                 <button
                   key={tab.id}
                   onClick={() => navigate(tab.path)}
-                  data-tour={['settings', 'feedback', 'opt-ins'].includes(tab.id) ? `sidebar-${tab.id}` : undefined}
+                  data-tour={['settings', 'feedback'].includes(tab.id) ? `sidebar-${tab.id}` : undefined}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-slate-600 hover:bg-slate-50"
                 >
                   <tab.icon className="w-5 h-5" />

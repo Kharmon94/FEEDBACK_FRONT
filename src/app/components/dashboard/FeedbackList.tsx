@@ -1,6 +1,30 @@
 import { useState, useEffect } from 'react';
-import { Star, Download, Search, Filter, X, MessageSquare, ThumbsUp, ThumbsDown, BarChart3, Smartphone, Globe, MapPin, Calendar, Mail } from 'lucide-react';
+import { Star, Download, Search, Filter, X, MessageSquare, ThumbsUp, ThumbsDown, BarChart3, Smartphone, Globe, MapPin, Calendar, Mail, User, Trash2 } from 'lucide-react';
 import { api } from '../../api/client';
+
+interface Suggestion {
+  id: string;
+  content: string;
+  submitterEmail: string | null;
+  locationId: string | null;
+  createdAt: string;
+  locationName?: string;
+}
+
+interface OptIn {
+  id: string;
+  name?: string;
+  email: string;
+  phone?: string;
+  createdAt: string;
+  rating?: number;
+  locationId?: string;
+}
+
+interface Location {
+  id: string;
+  name: string;
+}
 
 interface Feedback {
   id: string;
@@ -38,6 +62,16 @@ function formatRelative(date: Date | string): string {
   return d.toLocaleDateString();
 }
 
+function formatDate(dateString: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(dateString));
+}
+
 function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: string | number; color: string }) {
   const colorClasses: Record<string, string> = {
     blue: 'bg-blue-100 text-blue-600',
@@ -67,9 +101,23 @@ const TIME_RANGE_LABELS: Record<TimeRange, string> = {
   all: 'All time',
 };
 
+type TableType = 'feedback' | 'suggestions' | 'opt-ins';
+
+const TABLE_TYPE_LABELS: Record<TableType, string> = {
+  feedback: 'Feedback',
+  suggestions: 'Suggestions',
+  opt-ins: 'Opt-Ins',
+};
+
 export function FeedbackList() {
+  const [tableType, setTableType] = useState<TableType>('feedback');
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [filteredFeedback, setFilteredFeedback] = useState<Feedback[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<Suggestion[]>([]);
+  const [optIns, setOptIns] = useState<OptIn[]>([]);
+  const [filteredOptIns, setFilteredOptIns] = useState<OptIn[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
   const [visibleCount, setVisibleCount] = useState(6);
@@ -78,8 +126,12 @@ export function FeedbackList() {
   const [filterDevice, setFilterDevice] = useState<string>('');
   const [filterCountry, setFilterCountry] = useState<string>('');
   const [filterLocation, setFilterLocation] = useState<string>('');
+  const [suggestionSearch, setSuggestionSearch] = useState('');
+  const [suggestionLocation, setSuggestionLocation] = useState<string>('all');
+  const [optInLocation, setOptInLocation] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [analytics, setAnalytics] = useState<{
     funnel: { page_views: number; star_clicks: number; submissions: number };
     device_breakdown: Record<string, number>;
@@ -87,21 +139,44 @@ export function FeedbackList() {
   } | null>(null);
 
   useEffect(() => {
-    loadFeedback();
-  }, [timeRange]);
+    if (tableType === 'feedback') loadFeedback();
+    else if (tableType === 'suggestions') loadSuggestions();
+    else loadOptIns();
+  }, [tableType, timeRange]);
 
   useEffect(() => {
-    const since = timeRange === 'all' ? undefined : timeRange;
-    api.getFeedbackAnalytics(since).then(setAnalytics).catch(() => setAnalytics(null));
-  }, [timeRange]);
+    if (tableType === 'feedback') {
+      const since = timeRange === 'all' ? undefined : timeRange;
+      api.getFeedbackAnalytics(since).then(setAnalytics).catch(() => setAnalytics(null));
+    }
+  }, [tableType, timeRange]);
 
   useEffect(() => {
     applyFilters();
   }, [searchTerm, filterRating, filterDevice, filterCountry, filterLocation, feedback]);
 
   useEffect(() => {
+    let filtered = suggestions;
+    if (suggestionSearch) {
+      filtered = filtered.filter(s =>
+        s.content?.toLowerCase().includes(suggestionSearch.toLowerCase()) ||
+        s.submitterEmail?.toLowerCase().includes(suggestionSearch.toLowerCase())
+      );
+    }
+    if (suggestionLocation !== 'all') {
+      filtered = filtered.filter(s => s.locationId === suggestionLocation);
+    }
+    setFilteredSuggestions(filtered);
+  }, [suggestionSearch, suggestionLocation, suggestions]);
+
+  useEffect(() => {
+    const filtered = optInLocation === 'all' ? optIns : optIns.filter(o => o.locationId === optInLocation);
+    setFilteredOptIns(filtered);
+  }, [optInLocation, optIns]);
+
+  useEffect(() => {
     setVisibleCount(6);
-  }, [filteredFeedback]);
+  }, [tableType, filteredFeedback, filteredSuggestions, filteredOptIns]);
 
   const loadFeedback = async () => {
     setLoading(true);
@@ -114,6 +189,64 @@ export function FeedbackList() {
       console.error('Failed to load feedback:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSuggestions = async () => {
+    setLoading(true);
+    try {
+      const [locsData, suggestionsData] = await Promise.all([api.getLocations(), api.getSuggestions()]);
+      setLocations(locsData);
+      setSuggestions(suggestionsData);
+      setFilteredSuggestions(suggestionsData);
+    } catch (error) {
+      console.error('Failed to load suggestions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadOptIns = async () => {
+    setLoading(true);
+    try {
+      const [locsData, optInsData] = await Promise.all([api.getLocations(), api.getOptIns()]);
+      setLocations(locsData);
+      setOptIns(optInsData);
+      setFilteredOptIns(optInsData);
+    } catch (error) {
+      console.error('Failed to load opt-ins:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSuggestion = async (id: string) => {
+    if (!confirm('Delete this suggestion? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await api.deleteSuggestion(id);
+      setSuggestions(prev => prev.filter(s => s.id !== id));
+      setDetailId(null);
+    } catch (e) {
+      console.error('Failed to delete suggestion:', e);
+      alert('Failed to delete suggestion. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteOptIn = async (id: string) => {
+    if (!confirm('Delete this opt-in? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await api.deleteOptIn(id);
+      setOptIns(prev => prev.filter(o => o.id !== id));
+      setDetailId(null);
+    } catch (e) {
+      console.error('Failed to delete opt-in:', e);
+      alert('Failed to delete opt-in. Please try again.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -153,30 +286,59 @@ export function FeedbackList() {
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Rating', 'Name', 'Email', 'Comment', 'Location', 'Device', 'Country', 'Region'];
-    const rows = filteredFeedback.map(f => [
-      new Date(f.createdAt).toLocaleDateString(),
-      f.rating,
-      f.name || '',
-      f.email || '',
-      f.comment || '',
-      f.locationName || '',
-      f.deviceType || '',
-      f.country || '',
-      f.region || ''
-    ]);
-
-    const csv = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `feedback-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+    if (tableType === 'feedback') {
+      const headers = ['Date', 'Rating', 'Name', 'Email', 'Comment', 'Location', 'Device', 'Country', 'Region'];
+      const rows = filteredFeedback.map(f => [
+        new Date(f.createdAt).toLocaleDateString(),
+        f.rating,
+        f.name || '',
+        f.email || '',
+        f.comment || '',
+        f.locationName || '',
+        f.deviceType || '',
+        f.country || '',
+        f.region || ''
+      ]);
+      const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${String(cell)}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `feedback-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    } else if (tableType === 'suggestions') {
+      const headers = ['Content', 'Email', 'Date', 'Location'];
+      const rows = filteredSuggestions.map(s => [
+        (s.content || '').replace(/"/g, '""'),
+        s.submitterEmail || '',
+        formatDate(s.createdAt),
+        s.locationName || 'N/A',
+      ]);
+      const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `suggestions-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    } else {
+      const headers = ['Name', 'Email', 'Phone', 'Rating', 'Date', 'Location'];
+      const rows = filteredOptIns.map(o => [
+        (o.name || 'Anonymous').replace(/"/g, '""'),
+        (o.email || '').replace(/"/g, '""'),
+        (o.phone || '').replace(/"/g, '""'),
+        String(o.rating ?? 'N/A'),
+        formatDate(o.createdAt),
+        (locations.find(l => l.id === o.locationId)?.name || 'N/A').replace(/"/g, '""'),
+      ]);
+      const csv = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `opt-ins-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    }
   };
 
   const totalFeedback = feedback.length;
@@ -194,29 +356,46 @@ export function FeedbackList() {
     );
   }
 
-  const visibleFeedback = filteredFeedback.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredFeedback.length;
+  const displayItems = tableType === 'feedback' ? filteredFeedback : tableType === 'suggestions' ? filteredSuggestions : filteredOptIns;
+  const visibleItems = displayItems.slice(0, visibleCount);
+  const hasMore = visibleCount < displayItems.length;
 
   return (
     <div className="space-y-6">
-      {/* Time Range Selector */}
-      <div className="flex flex-wrap gap-2">
-        {(Object.keys(TIME_RANGE_LABELS) as TimeRange[]).map((range) => (
-          <button
-            key={range}
-            onClick={() => setTimeRange(range)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              timeRange === range
-                ? 'bg-slate-900 text-white'
-                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
-            }`}
+      {/* Table Type & Time Range Selectors */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
+          <label htmlFor="table-type" className="text-sm font-medium text-slate-700">View:</label>
+          <select
+            id="table-type"
+            value={tableType}
+            onChange={(e) => setTableType(e.target.value as TableType)}
+            className="px-4 py-2 rounded-lg text-sm border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
           >
-            {TIME_RANGE_LABELS[range]}
-          </button>
-        ))}
+            {(Object.keys(TABLE_TYPE_LABELS) as TableType[]).map((t) => (
+              <option key={t} value={t}>{TABLE_TYPE_LABELS[t]}</option>
+            ))}
+          </select>
+        </div>
+        {tableType === 'feedback' && (
+          <div className="flex items-center gap-2">
+            <label htmlFor="time-range" className="text-sm font-medium text-slate-700">Time range:</label>
+            <select
+              id="time-range"
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              className="px-4 py-2 rounded-lg text-sm border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+            >
+              {(Object.keys(TIME_RANGE_LABELS) as TimeRange[]).map((range) => (
+                <option key={range} value={range}>{TIME_RANGE_LABELS[range]}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Feedback only */}
+      {tableType === 'feedback' && (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6" data-tour="stats-overview">
         <StatCard icon={MessageSquare} label="Total Feedback" value={totalFeedback} color="blue" />
         <StatCard
@@ -228,9 +407,10 @@ export function FeedbackList() {
         <StatCard icon={ThumbsUp} label="Positive (4-5★)" value={positiveCount} color="green" />
         <StatCard icon={ThumbsDown} label="Needs Attention (1-3★)" value={negativeCount} color="red" />
       </div>
+      )}
 
-      {/* Analytics Section */}
-      {analytics && (
+      {/* Analytics Section - Feedback only */}
+      {tableType === 'feedback' && analytics && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
@@ -303,170 +483,172 @@ export function FeedbackList() {
       {/* Header with Action Icons */}
       <div className="flex flex-col items-center gap-4">
         <div className="text-center">
-          <h2 className="text-2xl text-black">All Feedback</h2>
-          <p className="text-gray-600 mt-1">{filteredFeedback.length} items</p>
+          <h2 className="text-2xl text-black">{TABLE_TYPE_LABELS[tableType]}</h2>
+          <p className="text-gray-600 mt-1">{displayItems.length} items</p>
         </div>
         
-        {/* Action Icons */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`p-3 rounded-lg transition-colors ${
-              showFilters 
-                ? 'bg-black text-white' 
-                : 'bg-white text-black border border-gray-300 hover:bg-gray-50'
+              showFilters ? 'bg-black text-white' : 'bg-white text-black border border-gray-300 hover:bg-gray-50'
             }`}
-            title="Filter Feedback"
+            title={`Filter ${TABLE_TYPE_LABELS[tableType]}`}
           >
             <Filter className="w-5 h-5" />
           </button>
-          <button
-            onClick={exportToCSV}
-            className="p-3 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            title="Export to CSV"
-          >
-            <Download className="w-5 h-5" />
-          </button>
+          {displayItems.length > 0 && (
+            <button
+              onClick={exportToCSV}
+              className="p-3 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              title="Export to CSV"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Collapsible Filters */}
       {showFilters && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search feedback..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-              />
-            </div>
-
-            {/* Rating Filter */}
-            <select
-              value={filterRating ?? ''}
-              onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : null)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-            >
-              <option value="">All Ratings</option>
-              <option value="5">5 Stars</option>
-              <option value="4">4 Stars</option>
-              <option value="3">3 Stars</option>
-              <option value="2">2 Stars</option>
-              <option value="1">1 Star</option>
-            </select>
-
-            {/* Device Filter */}
-            <select
-              value={filterDevice}
-              onChange={(e) => setFilterDevice(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-            >
-              <option value="">All Devices</option>
-              <option value="mobile">Mobile</option>
-              <option value="desktop">Desktop</option>
-              <option value="tablet">Tablet</option>
-              <option value="unknown">Unknown</option>
-            </select>
-
-            {/* Country Filter */}
-            <select
-              value={filterCountry}
-              onChange={(e) => setFilterCountry(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-            >
-              <option value="">All Countries</option>
-              {Array.from(new Set(feedback.map(f => f.country).filter(Boolean) as string[]))
-                .sort()
-                .map(c => (
+          {tableType === 'feedback' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search feedback..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                />
+              </div>
+              <select
+                value={filterRating ?? ''}
+                onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+              >
+                <option value="">All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+              <select
+                value={filterDevice}
+                onChange={(e) => setFilterDevice(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+              >
+                <option value="">All Devices</option>
+                <option value="mobile">Mobile</option>
+                <option value="desktop">Desktop</option>
+                <option value="tablet">Tablet</option>
+                <option value="unknown">Unknown</option>
+              </select>
+              <select
+                value={filterCountry}
+                onChange={(e) => setFilterCountry(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+              >
+                <option value="">All Countries</option>
+                {Array.from(new Set(feedback.map(f => f.country).filter(Boolean) as string[])).sort().map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-            </select>
-
-            {/* Location Filter */}
-            <select
-              value={filterLocation}
-              onChange={(e) => setFilterLocation(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-            >
-              <option value="">All Locations</option>
-              {Array.from(
-                new Map(
-                  feedback
-                    .filter(f => f.locationName || f.locationId)
-                    .map(f => [f.locationId || f.businessId, f.locationName || 'Unknown'])
-                ).entries()
-              )
-                .sort((a, b) => (a[1] || '').localeCompare(b[1] || ''))
-                .map(([id, name]) => (
-                  <option key={id} value={id}>{name}</option>
+              </select>
+              <select
+                value={filterLocation}
+                onChange={(e) => setFilterLocation(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+              >
+                <option value="">All Locations</option>
+                {Array.from(new Map(feedback.filter(f => f.locationName || f.locationId).map(f => [f.locationId || f.businessId, f.locationName || 'Unknown'])).entries())
+                  .sort((a, b) => (a[1] || '').localeCompare(b[1] || ''))
+                  .map(([id, name]) => (
+                    <option key={id} value={id}>{name}</option>
+                  ))}
+              </select>
+            </div>
+          )}
+          {tableType === 'suggestions' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={suggestionSearch}
+                  onChange={(e) => setSuggestionSearch(e.target.value)}
+                  placeholder="Search suggestions..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                />
+              </div>
+              <select
+                value={suggestionLocation}
+                onChange={(e) => setSuggestionLocation(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+              >
+                <option value="all">All Locations ({suggestions.length})</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>{loc.name} ({suggestions.filter(s => s.locationId === loc.id).length})</option>
                 ))}
-            </select>
-          </div>
+              </select>
+            </div>
+          )}
+          {tableType === 'opt-ins' && (
+            <div className="flex items-center gap-3">
+              <MapPin className="w-5 h-5 text-gray-600 flex-shrink-0" />
+              <label htmlFor="optin-location" className="text-sm font-medium text-gray-700 whitespace-nowrap">Filter by Location:</label>
+              <select
+                id="optin-location"
+                value={optInLocation}
+                onChange={(e) => setOptInLocation(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+              >
+                <option value="all">All Locations ({optIns.length})</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>{loc.name} ({optIns.filter(o => o.locationId === loc.id).length})</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Active Filters */}
-          {(searchTerm || filterRating !== null || filterDevice || filterCountry || filterLocation) && (
+          {tableType === 'feedback' && (searchTerm || filterRating !== null || filterDevice || filterCountry || filterLocation) && (
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 flex-wrap">
               <span className="text-sm text-gray-600">Active filters:</span>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
-                >
-                  Search: {searchTerm}
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-              {filterRating !== null && (
-                <button
-                  onClick={() => setFilterRating(null)}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
-                >
-                  {filterRating} Stars
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-              {filterDevice && (
-                <button
-                  onClick={() => setFilterDevice('')}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
-                >
-                  Device: {filterDevice}
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-              {filterCountry && (
-                <button
-                  onClick={() => setFilterCountry('')}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
-                >
-                  Country: {filterCountry}
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-              {filterLocation && (
-                <button
-                  onClick={() => setFilterLocation('')}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200"
-                >
-                  Location
-                  <X className="w-3 h-3" />
-                </button>
-              )}
+              {searchTerm && <button onClick={() => setSearchTerm('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Search: {searchTerm} <X className="w-3 h-3" /></button>}
+              {filterRating !== null && <button onClick={() => setFilterRating(null)} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">{filterRating} Stars <X className="w-3 h-3" /></button>}
+              {filterDevice && <button onClick={() => setFilterDevice('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Device: {filterDevice} <X className="w-3 h-3" /></button>}
+              {filterCountry && <button onClick={() => setFilterCountry('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Country: {filterCountry} <X className="w-3 h-3" /></button>}
+              {filterLocation && <button onClick={() => setFilterLocation('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Location <X className="w-3 h-3" /></button>}
+            </div>
+          )}
+          {tableType === 'suggestions' && (suggestionSearch || suggestionLocation !== 'all') && (
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 flex-wrap">
+              <span className="text-sm text-gray-600">Active filters:</span>
+              {suggestionSearch && <button onClick={() => setSuggestionSearch('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Search: {suggestionSearch} <X className="w-3 h-3" /></button>}
+              {suggestionLocation !== 'all' && <button onClick={() => setSuggestionLocation('all')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">{locations.find(l => l.id === suggestionLocation)?.name} <X className="w-3 h-3" /></button>}
+            </div>
+          )}
+          {tableType === 'opt-ins' && optInLocation !== 'all' && (
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+              <span className="text-sm text-gray-600">Active filter:</span>
+              <button onClick={() => setOptInLocation('all')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">{locations.find(l => l.id === optInLocation)?.name} <X className="w-3 h-3" /></button>
             </div>
           )}
         </div>
       )}
 
-      {/* Feedback List */}
+      {/* Data Table */}
       <div data-tour="recent-feedback">
-        {filteredFeedback.length === 0 ? (
+        {displayItems.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
-            <p className="text-gray-600">No feedback found</p>
+            <p className="text-gray-600">
+              {tableType === 'feedback' && 'No feedback found'}
+              {tableType === 'suggestions' && 'No suggestions yet'}
+              {tableType === 'opt-ins' && 'No opt-ins yet'}
+            </p>
           </div>
         ) : (
           <>
@@ -476,14 +658,34 @@ export function FeedbackList() {
                 <table className="w-full">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Rating</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Comment / Sentiment</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Location</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Date</th>
+                      {tableType === 'feedback' && (
+                        <>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Rating</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Comment / Sentiment</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Location</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Date</th>
+                        </>
+                      )}
+                      {tableType === 'suggestions' && (
+                        <>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Suggestion</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Email</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Location</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Date</th>
+                        </>
+                      )}
+                      {tableType === 'opt-ins' && (
+                        <>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Customer</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Email</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Location</th>
+                          <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Date</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleFeedback.map((item) => (
+                    {tableType === 'feedback' && (visibleItems as Feedback[]).map((item) => (
                       <tr
                         key={item.id}
                         className="hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-0"
@@ -492,12 +694,7 @@ export function FeedbackList() {
                         <td className="px-6 py-4">
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-4 h-4 ${
-                                  star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                                }`}
-                              />
+                              <Star key={star} className={`w-4 h-4 ${star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                             ))}
                           </div>
                         </td>
@@ -505,9 +702,7 @@ export function FeedbackList() {
                           {item.comment ? (
                             <p className="text-slate-700 line-clamp-2">{item.comment}</p>
                           ) : (
-                            <span className={item.rating >= 4 ? 'text-green-600' : 'text-amber-600'}>
-                              {getSentimentLabel(item.rating)}
-                            </span>
+                            <span className={item.rating >= 4 ? 'text-green-600' : 'text-amber-600'}>{getSentimentLabel(item.rating)}</span>
                           )}
                         </td>
                         <td className="px-6 py-4">
@@ -524,6 +719,64 @@ export function FeedbackList() {
                         </td>
                       </tr>
                     ))}
+                    {tableType === 'suggestions' && (visibleItems as Suggestion[]).map((s) => (
+                      <tr key={s.id} className="hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-0" onClick={() => setDetailId(s.id)}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-start gap-3">
+                            <MessageSquare className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-slate-700 line-clamp-2">{s.content}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <Mail className="w-4 h-4" />
+                            <span>{s.submitterEmail || '—'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <MapPin className="w-4 h-4" />
+                            <span>{s.locationName || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>{formatDate(s.createdAt)}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {tableType === 'opt-ins' && (visibleItems as OptIn[]).map((o) => (
+                      <tr key={o.id} className="hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-0" onClick={() => setDetailId(o.id)}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <User className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <span className="font-medium text-slate-900">{o.name || 'Anonymous'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <Mail className="w-4 h-4" />
+                            <span>{o.email}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <MapPin className="w-4 h-4" />
+                            <span>{locations.find(l => l.id === o.locationId)?.name || 'N/A'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>{formatDate(o.createdAt)}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -531,56 +784,52 @@ export function FeedbackList() {
 
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
-              {visibleFeedback.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
-                  onClick={() => setDetailId(item.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && setDetailId(item.id)}
-                >
+              {tableType === 'feedback' && (visibleItems as Feedback[]).map((item) => (
+                <div key={item.id} className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => setDetailId(item.id)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setDetailId(item.id)}>
                   <div className="flex items-start gap-3 mb-2">
                     <div className="flex flex-shrink-0 mt-0.5">
                       {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-4 h-4 ${
-                            star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                          }`}
-                        />
+                        <Star key={star} className={`w-4 h-4 ${star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                       ))}
                     </div>
                     <div className="flex-1 min-w-0">
-                      {item.comment ? (
-                        <p className="text-slate-700 line-clamp-2">{item.comment}</p>
-                      ) : (
-                        <span className={item.rating >= 4 ? 'text-green-600 text-sm font-medium' : 'text-amber-600 text-sm font-medium'}>
-                          {getSentimentLabel(item.rating)}
-                        </span>
+                      {item.comment ? <p className="text-slate-700 line-clamp-2">{item.comment}</p> : (
+                        <span className={item.rating >= 4 ? 'text-green-600 text-sm font-medium' : 'text-amber-600 text-sm font-medium'}>{getSentimentLabel(item.rating)}</span>
                       )}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4 flex-shrink-0 text-slate-400" />
-                      {formatRelative(item.createdAt)}
-                    </span>
-                    {item.locationName && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4 flex-shrink-0 text-slate-400" />
-                        {item.locationName}
-                      </span>
-                    )}
-                    {item.deviceType && (
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{item.deviceType}</span>
-                    )}
-                    {(item.country || item.region) && (
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">
-                        {[item.region, item.country].filter(Boolean).join(', ')}
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1"><Calendar className="w-4 h-4 flex-shrink-0 text-slate-400" />{formatRelative(item.createdAt)}</span>
+                    {item.locationName && <span className="flex items-center gap-1"><MapPin className="w-4 h-4 flex-shrink-0 text-slate-400" />{item.locationName}</span>}
+                    {item.deviceType && <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{item.deviceType}</span>}
+                    {(item.country || item.region) && <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{[item.region, item.country].filter(Boolean).join(', ')}</span>}
                   </div>
+                </div>
+              ))}
+              {tableType === 'suggestions' && (visibleItems as Suggestion[]).map((s) => (
+                <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => setDetailId(s.id)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setDetailId(s.id)}>
+                  <div className="flex items-start gap-3 mb-2">
+                    <MessageSquare className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-slate-700 flex-1">{s.content}</p>
+                  </div>
+                  {s.submitterEmail && <div className="flex items-center gap-2 text-slate-600 mb-2 text-sm"><Mail className="w-4 h-4 flex-shrink-0" /><span className="truncate">{s.submitterEmail}</span></div>}
+                  <div className="flex items-center gap-2 text-slate-600 text-sm mb-2"><Calendar className="w-4 h-4 flex-shrink-0" />{formatDate(s.createdAt)}</div>
+                  <div className="flex items-center gap-2 text-slate-600 text-sm"><MapPin className="w-4 h-4 flex-shrink-0" />{s.locationName || 'N/A'}</div>
+                </div>
+              ))}
+              {tableType === 'opt-ins' && (visibleItems as OptIn[]).map((o) => (
+                <div key={o.id} className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors" onClick={() => setDetailId(o.id)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setDetailId(o.id)}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <User className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-slate-900 truncate">{o.name || 'Anonymous'}</div>
+                      <div className="text-sm text-slate-600 truncate">{o.email}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600 text-sm"><Calendar className="w-4 h-4 flex-shrink-0" />{formatDate(o.createdAt)}</div>
+                  <div className="flex items-center gap-2 text-slate-600 text-sm mt-1"><MapPin className="w-4 h-4 flex-shrink-0" />{locations.find(l => l.id === o.locationId)?.name || 'N/A'}</div>
                 </div>
               ))}
             </div>
@@ -599,82 +848,87 @@ export function FeedbackList() {
 
             {/* Detail Modal */}
             {detailId && (() => {
-              const item = filteredFeedback.find((f) => f.id === detailId);
+              if (tableType === 'feedback') {
+                const item = filteredFeedback.find((f) => f.id === detailId);
+                if (!item) return null;
+                return (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setDetailId(null)} role="dialog" aria-modal="true" aria-labelledby="feedback-detail-title">
+                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                      <div className="p-6">
+                        <h3 id="feedback-detail-title" className="sr-only">Feedback details</h3>
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`w-5 h-5 ${star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                            ))}
+                          </div>
+                          <span className={item.rating >= 4 ? 'text-green-600 font-medium' : 'text-amber-600 font-medium'}>{getSentimentLabel(item.rating)}</span>
+                        </div>
+                        {item.comment ? <p className="text-slate-900 mb-4 whitespace-pre-wrap">{item.comment}</p> : <p className="text-slate-500 mb-4 italic">No comment provided</p>}
+                        <div className="text-sm text-slate-600 space-y-2 mb-6">
+                          {(item.name || item.email) && <div className="flex items-center gap-2"><Mail className="w-4 h-4 flex-shrink-0" />{item.name && <span>{item.name}</span>}{item.email && <span>{item.email}</span>}</div>}
+                          {item.locationName && <div className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" />{item.locationName}</div>}
+                          <div className="flex items-center gap-2"><Calendar className="w-4 h-4 flex-shrink-0" />{new Date(item.createdAt).toLocaleString()}</div>
+                          {(item.deviceType || item.country || item.region) && (
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              {item.deviceType && <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{item.deviceType}</span>}
+                              {(item.country || item.region) && <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{[item.region, item.country].filter(Boolean).join(', ')}</span>}
+                            </div>
+                          )}
+                        </div>
+                        <button type="button" className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50" onClick={() => setDetailId(null)}>Close</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              if (tableType === 'suggestions') {
+                const item = suggestions.find((s) => s.id === detailId);
+                if (!item) return null;
+                return (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !deleting && setDetailId(null)} role="dialog" aria-modal="true" aria-labelledby="suggestion-detail-title">
+                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                      <div className="p-6">
+                        <h3 id="suggestion-detail-title" className="sr-only">Suggestion details</h3>
+                        <p className="text-slate-900 mb-4 whitespace-pre-wrap">{item.content}</p>
+                        <div className="text-sm text-slate-600 space-y-2 mb-6">
+                          {item.submitterEmail && <div className="flex items-center gap-2"><Mail className="w-4 h-4 flex-shrink-0" />{item.submitterEmail}</div>}
+                          {item.locationName && <div className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" />{item.locationName}</div>}
+                          <div className="flex items-center gap-2"><Calendar className="w-4 h-4 flex-shrink-0" />{formatDate(item.createdAt)}</div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50" onClick={() => setDetailId(null)} disabled={deleting}>Close</button>
+                          <button type="button" className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50" onClick={() => handleDeleteSuggestion(item.id)} disabled={deleting}><Trash2 className="w-4 h-4" />{deleting ? 'Deleting...' : 'Delete'}</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              const item = optIns.find((o) => o.id === detailId);
               if (!item) return null;
+              const locName = locations.find((l) => l.id === item.locationId)?.name || 'N/A';
               return (
-                <div
-                  className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-                  onClick={() => setDetailId(null)}
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="feedback-detail-title"
-                >
-                  <div
-                    className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !deleting && setDetailId(null)} role="dialog" aria-modal="true" aria-labelledby="optin-detail-title">
+                  <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                     <div className="p-6">
-                      <h3 id="feedback-detail-title" className="sr-only">
-                        Feedback details
-                      </h3>
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-5 h-5 ${
-                                star <= item.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
+                      <h3 id="optin-detail-title" className="sr-only">Opt-in details</h3>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"><User className="w-6 h-6 text-blue-600" /></div>
+                        <div>
+                          <div className="font-semibold text-slate-900 text-lg">{item.name || 'Anonymous'}</div>
+                          <div className="text-sm text-slate-600">{item.email}</div>
                         </div>
-                        <span className={item.rating >= 4 ? 'text-green-600 font-medium' : 'text-amber-600 font-medium'}>
-                          {getSentimentLabel(item.rating)}
-                        </span>
                       </div>
-                      {item.comment ? (
-                        <p className="text-slate-900 mb-4 whitespace-pre-wrap">{item.comment}</p>
-                      ) : (
-                        <p className="text-slate-500 mb-4 italic">No comment provided</p>
-                      )}
                       <div className="text-sm text-slate-600 space-y-2 mb-6">
-                        {(item.name || item.email) && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 flex-shrink-0" />
-                            {item.name && <span>{item.name}</span>}
-                            {item.email && <span>{item.email}</span>}
-                          </div>
-                        )}
-                        {item.locationName && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 flex-shrink-0" />
-                            {item.locationName}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 flex-shrink-0" />
-                          {new Date(item.createdAt).toLocaleString()}
-                        </div>
-                        {(item.deviceType || item.country || item.region) && (
-                          <div className="flex flex-wrap gap-2 pt-2">
-                            {item.deviceType && (
-                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">{item.deviceType}</span>
-                            )}
-                            {(item.country || item.region) && (
-                              <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">
-                                {[item.region, item.country].filter(Boolean).join(', ')}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                        {item.phone && <div className="flex items-center gap-2"><span className="font-medium">Phone:</span>{item.phone}</div>}
+                        <div className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" />{locName}</div>
+                        <div className="flex items-center gap-2"><Calendar className="w-4 h-4 flex-shrink-0" />{formatDate(item.createdAt)}</div>
                       </div>
-                      <button
-                        type="button"
-                        className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
-                        onClick={() => setDetailId(null)}
-                      >
-                        Close
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50" onClick={() => setDetailId(null)} disabled={deleting}>Close</button>
+                        <button type="button" className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50" onClick={() => handleDeleteOptIn(item.id)} disabled={deleting}><Trash2 className="w-4 h-4" />{deleting ? 'Deleting...' : 'Delete'}</button>
+                      </div>
                     </div>
                   </div>
                 </div>
