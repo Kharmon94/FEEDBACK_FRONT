@@ -321,18 +321,24 @@ export const api = {
     return request<{ plans: Plan[] }>('/plans', { skipAuth: true });
   },
 
-  async getFeedback(since?: string): Promise<FeedbackSubmission[]> {
-    const q = since ? `?since=${encodeURIComponent(since)}` : '';
+  async getFeedback(since?: string, locationId?: string): Promise<FeedbackSubmission[]> {
+    const params = new URLSearchParams();
+    if (since) params.set('since', since);
+    if (locationId) params.set('location_id', locationId);
+    const q = params.toString() ? `?${params.toString()}` : '';
     const { feedback } = await request<{ feedback: FeedbackSubmission[] }>(`/feedback${q}`);
     return feedback;
   },
 
-  async getFeedbackAnalytics(since?: string): Promise<{
-    funnel: { page_views: number; star_clicks: number; submissions: number };
+  async getFeedbackAnalytics(since?: string, locationId?: string): Promise<{
+    funnel: { page_views: number; star_clicks_by_rating: Record<number, number>; submissions: number; opt_ins_count: number };
     device_breakdown: Record<string, number>;
     top_countries: Record<string, number>;
   }> {
-    const q = since ? `?since=${encodeURIComponent(since)}` : '';
+    const params = new URLSearchParams();
+    if (since) params.set('since', since);
+    if (locationId) params.set('location_id', locationId);
+    const q = params.toString() ? `?${params.toString()}` : '';
     return request(`/feedback/analytics${q}`);
   },
 

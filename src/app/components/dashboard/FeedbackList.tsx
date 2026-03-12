@@ -90,9 +90,10 @@ function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType
   );
 }
 
-type TimeRange = '7d' | '30d' | '90d' | '6m' | '1y' | 'all';
+type TimeRange = 'today' | '7d' | '30d' | '90d' | '6m' | '1y' | 'all';
 
 const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  today: 'Today',
   '7d': '7 days',
   '30d': '30 days',
   '90d': '90 days',
@@ -125,7 +126,7 @@ export function FeedbackList() {
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [filterDevice, setFilterDevice] = useState<string>('');
   const [filterCountry, setFilterCountry] = useState<string>('');
-  const [filterLocation, setFilterLocation] = useState<string>('');
+  const [feedbackLocation, setFeedbackLocation] = useState<string>('');
   const [suggestionSearch, setSuggestionSearch] = useState('');
   const [suggestionLocation, setSuggestionLocation] = useState<string>('all');
   const [optInLocation, setOptInLocation] = useState<string>('all');
@@ -133,7 +134,7 @@ export function FeedbackList() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [analytics, setAnalytics] = useState<{
-    funnel: { page_views: number; star_clicks: number; submissions: number };
+    funnel: { page_views: number; star_clicks_by_rating: Record<number, number>; submissions: number; opt_ins_count: number };
     device_breakdown: Record<string, number>;
     top_countries: Record<string, number>;
   } | null>(null);
@@ -142,18 +143,19 @@ export function FeedbackList() {
     if (tableType === 'feedback') loadFeedback();
     else if (tableType === 'suggestions') loadSuggestions();
     else loadOptIns();
-  }, [tableType, timeRange]);
+  }, [tableType, timeRange, feedbackLocation]);
 
   useEffect(() => {
     if (tableType === 'feedback') {
       const since = timeRange === 'all' ? undefined : timeRange;
-      api.getFeedbackAnalytics(since).then(setAnalytics).catch(() => setAnalytics(null));
+      const locId = feedbackLocation || undefined;
+      api.getFeedbackAnalytics(since, locId).then(setAnalytics).catch(() => setAnalytics(null));
     }
-  }, [tableType, timeRange]);
+  }, [tableType, timeRange, feedbackLocation]);
 
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, filterRating, filterDevice, filterCountry, filterLocation, feedback]);
+  }, [searchTerm, filterRating, filterDevice, filterCountry, feedback]);
 
   useEffect(() => {
     let filtered = suggestions;
@@ -181,10 +183,13 @@ export function FeedbackList() {
   const loadFeedback = async () => {
     setLoading(true);
     try {
-      const since = timeRange === 'all' ? undefined : timeRange;
-      const data = await api.getFeedback(undefined, since);
-      setFeedback(data);
-      setFilteredFeedback(data);
+      const [locsData, feedbackData] = await Promise.all([
+        api.getLocations(),
+        api.getFeedback(undefined, timeRange === 'all' ? undefined : timeRange, feedbackLocation || undefined),
+      ]);
+      setLocations(locsData);
+      setFeedback(feedbackData);
+      setFilteredFeedback(feedbackData);
     } catch (error) {
       console.error('Failed to load feedback:', error);
     } finally {
@@ -275,11 +280,6 @@ export function FeedbackList() {
     // Country filter
     if (filterCountry) {
       filtered = filtered.filter(f => (f.country || '') === filterCountry);
-    }
-
-    // Location filter
-    if (filterLocation) {
-      filtered = filtered.filter(f => String(f.locationId || f.businessId) === filterLocation);
     }
 
     setFilteredFeedback(filtered);
@@ -378,19 +378,35 @@ export function FeedbackList() {
           </select>
         </div>
         {tableType === 'feedback' && (
-          <div className="flex items-center gap-2">
-            <label htmlFor="time-range" className="text-sm font-medium text-slate-700">Time range:</label>
-            <select
-              id="time-range"
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="px-4 py-2 rounded-lg text-sm border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
-            >
-              {(Object.keys(TIME_RANGE_LABELS) as TimeRange[]).map((range) => (
-                <option key={range} value={range}>{TIME_RANGE_LABELS[range]}</option>
-              ))}
-            </select>
-          </div>
+          <>
+            <div className="flex items-center gap-2">
+              <label htmlFor="time-range" className="text-sm font-medium text-slate-700">Time range:</label>
+              <select
+                id="time-range"
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+                className="px-4 py-2 rounded-lg text-sm border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+              >
+                {(Object.keys(TIME_RANGE_LABELS) as TimeRange[]).map((range) => (
+                  <option key={range} value={range}>{TIME_RANGE_LABELS[range]}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="feedback-location" className="text-sm font-medium text-slate-700">Location:</label>
+              <select
+                id="feedback-location"
+                value={feedbackLocation}
+                onChange={(e) => setFeedbackLocation(e.target.value)}
+                className="px-4 py-2 rounded-lg text-sm border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+              >
+                <option value="">All locations</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                ))}
+              </select>
+            </div>
+          </>
         )}
       </div>
 
@@ -414,24 +430,30 @@ export function FeedbackList() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
-            Funnel & Analytics
+            Analytics
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Funnel */}
             <div>
-              <h4 className="text-sm font-medium text-slate-700 mb-3">Feedback Funnel</h4>
+              <h4 className="text-sm font-medium text-slate-700 mb-3">Feedback</h4>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Page views</span>
                   <span className="font-semibold">{analytics.funnel.page_views}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Star clicks</span>
-                  <span className="font-semibold">{analytics.funnel.star_clicks}</span>
-                </div>
+                {([1, 2, 3, 4, 5] as const).map((r) => (
+                  <div key={r} className="flex justify-between text-sm">
+                    <span className="text-slate-600">{r}★</span>
+                    <span className="font-semibold">{analytics.funnel.star_clicks_by_rating?.[r] ?? 0}</span>
+                  </div>
+                ))}
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Submissions</span>
                   <span className="font-semibold">{analytics.funnel.submissions}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Opt-ins</span>
+                  <span className="font-semibold">{analytics.funnel.opt_ins_count ?? 0}</span>
                 </div>
                 {analytics.funnel.page_views > 0 && (
                   <div className="pt-2 border-t border-slate-200 text-xs text-slate-500">
@@ -483,7 +505,11 @@ export function FeedbackList() {
       {/* Header with Action Icons */}
       <div className="flex flex-col items-center gap-4">
         <div className="text-center">
-          <h2 className="text-2xl text-black">{TABLE_TYPE_LABELS[tableType]}</h2>
+          <h2 className="text-2xl text-black">
+            {tableType === 'feedback' && feedbackLocation
+              ? (locations.find((l) => l.id === feedbackLocation)?.name ?? 'Feedback')
+              : TABLE_TYPE_LABELS[tableType]}
+          </h2>
           <p className="text-gray-600 mt-1">{displayItems.length} items</p>
         </div>
         
@@ -513,7 +539,7 @@ export function FeedbackList() {
       {showFilters && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
           {tableType === 'feedback' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -556,18 +582,6 @@ export function FeedbackList() {
                 {Array.from(new Set(feedback.map(f => f.country).filter(Boolean) as string[])).sort().map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
-              <select
-                value={filterLocation}
-                onChange={(e) => setFilterLocation(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-              >
-                <option value="">All Locations</option>
-                {Array.from(new Map(feedback.filter(f => f.locationName || f.locationId).map(f => [f.locationId || f.businessId, f.locationName || 'Unknown'])).entries())
-                  .sort((a, b) => (a[1] || '').localeCompare(b[1] || ''))
-                  .map(([id, name]) => (
-                    <option key={id} value={id}>{name}</option>
-                  ))}
               </select>
             </div>
           )}
@@ -614,14 +628,13 @@ export function FeedbackList() {
           )}
 
           {/* Active Filters */}
-          {tableType === 'feedback' && (searchTerm || filterRating !== null || filterDevice || filterCountry || filterLocation) && (
+          {tableType === 'feedback' && (searchTerm || filterRating !== null || filterDevice || filterCountry) && (
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 flex-wrap">
               <span className="text-sm text-gray-600">Active filters:</span>
               {searchTerm && <button onClick={() => setSearchTerm('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Search: {searchTerm} <X className="w-3 h-3" /></button>}
               {filterRating !== null && <button onClick={() => setFilterRating(null)} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">{filterRating} Stars <X className="w-3 h-3" /></button>}
               {filterDevice && <button onClick={() => setFilterDevice('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Device: {filterDevice} <X className="w-3 h-3" /></button>}
               {filterCountry && <button onClick={() => setFilterCountry('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Country: {filterCountry} <X className="w-3 h-3" /></button>}
-              {filterLocation && <button onClick={() => setFilterLocation('')} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">Location <X className="w-3 h-3" /></button>}
             </div>
           )}
           {tableType === 'suggestions' && (suggestionSearch || suggestionLocation !== 'all') && (
