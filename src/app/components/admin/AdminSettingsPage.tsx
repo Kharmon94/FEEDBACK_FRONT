@@ -235,6 +235,24 @@ export function AdminSettingsPage() {
               }`} />
             </div>
           </label>
+
+          <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+            <div>
+              <div className="font-medium text-slate-900">Email on New Opt-In</div>
+              <div className="text-sm text-slate-600">Email location owners when they receive new newsletter/rewards signups</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={settings.notify_on_new_optin ?? true}
+              onChange={(e) => update({ notify_on_new_optin: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="relative w-11 h-6 bg-slate-200 peer-checked:bg-slate-900 rounded-full peer-focus:ring-2 peer-focus:ring-slate-900/20 transition-colors">
+              <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full transition-transform ${
+                (settings.notify_on_new_optin ?? true) ? 'translate-x-5' : ''
+              }`} />
+            </div>
+          </label>
         </div>
       </div>
     </div>

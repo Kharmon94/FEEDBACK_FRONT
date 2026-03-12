@@ -61,8 +61,8 @@ export function HelpPanel() {
 
   const generalFAQs: FAQItem[] = [
     {
-      question: 'How do I add review platform links to my settings?',
-      answer: 'Navigate to the Settings tab in your dashboard, scroll to the "Review Platform Links" section, and paste the URLs you\'ve collected from each platform. Make sure to save your changes.'
+      question: 'How do I add review platform links?',
+      answer: 'Go to the Locations tab, click Edit on a location, then scroll to the "Review Platforms" section and paste the URLs you\'ve collected from each platform. Make sure to save your changes.'
     },
     {
       question: 'What happens when a customer gives a 4-5 star rating?',
@@ -74,7 +74,7 @@ export function HelpPanel() {
     },
     {
       question: 'Can I customize the feedback form?',
-      answer: 'Yes! In the Settings panel, you can customize your business name, logo, and which review platforms to display. You can also enable auto-reply messages for customers who submit feedback.'
+      answer: 'Yes! Go to Locations, click Edit on a location, and customize the business name, logo, review platforms, notification settings, and custom welcome message. Settings lets you manage your account (name, email, password) and email preferences.'
     },
     {
       question: 'How do I export my feedback data?',

@@ -1,220 +1,354 @@
 import { useState, useEffect } from 'react';
-import { Save, MapPin } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
+import { Save, MapPin, User, Mail, Lock, ExternalLink, Edit2, ChevronRight } from 'lucide-react';
 import { api } from '../../api/client';
+import { api as railsApi } from '../../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
-interface LocationSettings {
-  emailNotifications: boolean;
-  autoReplyEnabled: boolean;
-  autoReplyMessage: string;
-  customMessage: string;
+interface Profile {
+  id: number;
+  email: string;
+  unconfirmed_email?: string;
+  name?: string;
+  business_name?: string;
+  provider?: string;
 }
 
 export function SettingsPanel() {
+  const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [locations, setLocations] = useState<Array<{ id: string; name: string; address?: string }>>([]);
-  const [selectedLocationId, setSelectedLocationId] = useState<string>('');
-  const [settings, setSettings] = useState<LocationSettings>({
-    emailNotifications: true,
-    autoReplyEnabled: false,
-    autoReplyMessage: '',
-    customMessage: ''
-  });
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [emailPrefsSummary, setEmailPrefsSummary] = useState<{ enabled: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Profile form state
+  const [name, setName] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileError, setProfileError] = useState('');
+
+  // Email form state
+  const [newEmail, setNewEmail] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+
+  // Password form state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  const hasPassword = !profile?.provider;
+
   useEffect(() => {
-    loadLocations();
+    loadData();
   }, []);
 
-  useEffect(() => {
-    if (selectedLocationId) {
-      loadSettings();
-    }
-  }, [selectedLocationId]);
-
-  const loadLocations = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      const data = await api.getLocations();
-      setLocations(data);
-
-      if (data.length > 0) {
-        setSelectedLocationId(data[0].id);
-      }
+      const [profileData, locsData, emailData] = await Promise.all([
+        api.getProfile(),
+        api.getLocations(),
+        railsApi.getEmailPreferences().catch(() => null),
+      ]);
+      setProfile(profileData);
+      setName(profileData.name ?? '');
+      setBusinessName(profileData.business_name ?? '');
+      setNewEmail(profileData.email ?? '');
+      setLocations(locsData);
+      setEmailPrefsSummary(emailData ? { enabled: emailData.email_notifications_enabled } : null);
     } catch (error) {
-      console.error('Failed to load locations:', error);
+      console.error('Failed to load settings:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadSettings = async () => {
-    if (!selectedLocationId) return;
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileError('');
+    setProfileSaving(true);
+    setProfileSaved(false);
     try {
-      const location = await api.getLocation(selectedLocationId);
-      if (location) {
-        setSettings({
-          emailNotifications: (location as { emailNotifications?: boolean }).emailNotifications ?? true,
-          autoReplyEnabled: false,
-          autoReplyMessage: 'Thank you for your feedback! We appreciate you taking the time to share your experience with us.',
-          customMessage: (location as { customMessage?: string }).customMessage ?? ''
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load settings:', error);
+      const res = await api.updateProfile({ name: name || undefined, business_name: businessName || undefined });
+      setProfile(res.profile as Profile);
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 3000);
+      if (res.user) await refreshUser();
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setProfileSaving(false);
     }
   };
 
-  const handleSave = async () => {
-    if (!selectedLocationId) return;
-
-    setSaving(true);
-    setSaved(false);
-
+  const handleSaveEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newEmail.trim();
+    if (!trimmed || trimmed === profile?.email) return;
+    setEmailError('');
+    setEmailMessage('');
+    setEmailSaving(true);
     try {
-      await api.updateLocation(selectedLocationId, {
-        emailNotifications: settings.emailNotifications,
-        customMessage: settings.customMessage || undefined
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      alert('Failed to save settings. Please try again.');
+      const res = await api.updateProfile({ email: trimmed });
+      setProfile(res.profile as Profile);
+      setEmailMessage(res.message ?? 'Email updated successfully.');
+      if (res.user) await refreshUser();
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : 'Failed to update email');
     } finally {
-      setSaving(false);
+      setEmailSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword) return;
+    setPasswordError('');
+    setPasswordSuccess(false);
+    setPasswordSaving(true);
+    try {
+      await api.changePassword({ current_password: currentPassword, password: newPassword });
+      setCurrentPassword('');
+      setNewPassword('');
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'Failed to change password');
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
-      </div>
-    );
-  }
-
-  if (locations.length === 0) {
-    return (
-      <div className="bg-white rounded-xl border-2 border-dashed border-slate-300 p-12 text-center">
-        <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">No locations yet</h3>
-        <p className="text-slate-600">Create a location first to configure settings</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Settings</h2>
-          <p className="text-slate-600 mt-1">Configure location-specific settings</p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={saving || !selectedLocationId}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
-        >
-          <Save className="w-5 h-5" />
-          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Changes'}
-        </button>
+    <div className="space-y-6" data-tour="settings">
+      <div>
+        <h2 className="text-2xl font-bold text-slate-900">Settings</h2>
+        <p className="text-slate-600 mt-1">Manage your account, preferences, and locations</p>
       </div>
 
-      {/* Location Selector */}
+      {/* Account Section */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Select Location</h3>
-        <select
-          value={selectedLocationId}
-          onChange={(e) => setSelectedLocationId(e.target.value)}
-          className="w-full px-4 py-2.5 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
-        >
-          {locations.map((loc) => (
-            <option key={loc.id} value={loc.id}>
-              {loc.name} - {loc.address || 'No address'}
-            </option>
-          ))}
-        </select>
-      </div>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <User className="w-5 h-5" />
+          Account
+        </h3>
 
-      {/* Notification Settings */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Notification Settings</h3>
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="text-sm font-medium text-slate-900">Email Notifications</label>
-              <p className="text-sm text-slate-600 mt-1">Receive email alerts when new feedback is submitted</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.emailNotifications}
-                onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
-            </label>
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          {profileError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">{profileError}</div>
+          )}
+          {profileSaved && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">Profile saved</div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+              placeholder="Your name"
+            />
           </div>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Business name</label>
+            <input
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+              placeholder="Your business name"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={profileSaving}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+          >
+            <Save className="w-5 h-5" />
+            {profileSaving ? 'Saving...' : profileSaved ? 'Saved!' : 'Save profile'}
+          </button>
+        </form>
       </div>
 
-      {/* Auto-Reply Settings - Coming soon */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 opacity-75">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Auto-Reply Settings</h3>
+      {/* Change Email */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <Mail className="w-5 h-5" />
+          Email address
+        </h3>
+        {profile?.unconfirmed_email ? (
+          <p className="text-sm text-amber-800 bg-amber-50 p-3 rounded-lg mb-4">
+            A confirmation link was sent to {profile.unconfirmed_email}. Click it to complete the change.
+          </p>
+        ) : (
+          <form onSubmit={handleSaveEmail} className="space-y-4">
+            {emailError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">{emailError}</div>
+            )}
+            {emailMessage && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">{emailMessage}</div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">New email</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                placeholder="you@example.com"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={emailSaving || newEmail.trim() === profile?.email}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+            >
+              <Save className="w-5 h-5" />
+              {emailSaving ? 'Saving...' : 'Update email'}
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Change Password - only for non-OAuth users */}
+      {hasPassword && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <Lock className="w-5 h-5" />
+            Password
+          </h3>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            {passwordError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">{passwordError}</div>
+            )}
+            {passwordSuccess && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">Password updated</div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Current password</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                placeholder="••••••••"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">New password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={passwordSaving || !currentPassword || !newPassword}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+            >
+              <Save className="w-5 h-5" />
+              {passwordSaving ? 'Updating...' : 'Change password'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Preferences Section */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">Preferences</h3>
         <div className="flex items-center justify-between">
           <div>
-            <label className="text-sm font-medium text-slate-900">Enable Auto-Reply</label>
-            <p className="text-sm text-slate-600 mt-1">Automatically send a response email to customers who submit feedback</p>
+            <p className="font-medium text-slate-900">Email notifications</p>
+            <p className="text-sm text-slate-600 mt-1">
+              {emailPrefsSummary != null
+                ? emailPrefsSummary.enabled ? 'Notifications are on' : 'Notifications are off'
+                : 'Manage which emails you receive'}
+            </p>
           </div>
-          <span className="px-3 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded-full">Coming soon</span>
+          <Link
+            to="/email-preferences"
+            className="inline-flex items-center gap-2 px-4 py-2 text-slate-900 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Manage <ExternalLink className="w-4 h-4" />
+          </Link>
         </div>
       </div>
 
-      {/* Custom Feedback Page Message */}
+      {/* Quick links */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Feedback Page Customization</h3>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Custom Welcome Message (Optional)
-            </label>
-            <textarea
-              value={settings.customMessage}
-              onChange={(e) => setSettings({ ...settings, customMessage: e.target.value })}
-              rows={3}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
-              placeholder="Enter a custom welcome message for your feedback page..."
-            />
-            <p className="text-xs text-slate-500 mt-2">
-              This message will be displayed at the top of the feedback page for this location
-            </p>
-          </div>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">Quick links</h3>
+        <div className="space-y-2">
+          <button
+            onClick={() => navigate('/dashboard?tab=billing')}
+            className="w-full flex items-center justify-between px-4 py-3 text-left rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            <span className="font-medium text-slate-900">Billing & plan</span>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </button>
         </div>
       </div>
 
-      {/* Danger Zone */}
-      <div className="bg-white rounded-xl border border-red-200 p-6">
-        <h3 className="text-lg font-semibold text-red-600 mb-4">Danger Zone</h3>
-
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm text-slate-700 mb-3">
-              Delete all feedback data for this location. This action cannot be undone.
-            </p>
+      {/* Locations Section */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5" />
+          Locations
+        </h3>
+        {locations.length === 0 ? (
+          <div className="text-center py-6">
+            <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+            <p className="text-slate-600 mb-4">No locations yet. Create one to customize feedback pages, branding, and notifications.</p>
             <button
-              onClick={() => {
-                if (confirm('Are you sure you want to delete all feedback for this location? This action cannot be undone.')) {
-                  alert('Delete feedback functionality will be implemented');
-                }
-              }}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              onClick={() => navigate('/dashboard?tab=locations')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
             >
-              Delete All Feedback
+              Manage locations
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-2">
+            {locations.map((loc) => (
+              <div
+                key={loc.id}
+                className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                <span className="font-medium text-slate-900">{loc.name}</span>
+                <button
+                  onClick={() => navigate(`/dashboard/locations/edit/${loc.id}`)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => navigate('/dashboard?tab=locations')}
+              className="w-full mt-2 flex items-center justify-between px-4 py-3 text-left rounded-lg hover:bg-slate-50 transition-colors text-slate-600"
+            >
+              <span>View all locations</span>
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

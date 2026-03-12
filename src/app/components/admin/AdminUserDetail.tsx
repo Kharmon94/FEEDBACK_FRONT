@@ -12,7 +12,9 @@ import {
   User as UserIcon,
   Building,
   Shield,
-  ShieldOff
+  ShieldOff,
+  Lightbulb,
+  Gift
 } from 'lucide-react';
 import { api, type AdminUser, type Plan } from '../../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -241,7 +243,7 @@ export function AdminUserDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -270,6 +272,34 @@ export function AdminUserDetail() {
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
           >
             View feedback →
+          </Link>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+              <Lightbulb className="w-5 h-5 text-amber-700" />
+            </div>
+            <span className="text-sm font-medium text-slate-600">Suggestions</span>
+          </div>
+          <Link
+            to={`/admin/suggestions?user_id=${user.id}`}
+            className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
+          >
+            View suggestions →
+          </Link>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
+              <Gift className="w-5 h-5 text-rose-700" />
+            </div>
+            <span className="text-sm font-medium text-slate-600">Opt-Ins</span>
+          </div>
+          <Link
+            to={`/admin/opt-ins?user_id=${user.id}`}
+            className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
+          >
+            View opt-ins →
           </Link>
         </div>
       </div>

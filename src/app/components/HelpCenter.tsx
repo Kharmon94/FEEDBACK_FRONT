@@ -31,7 +31,7 @@ export function HelpCenter() {
       title: 'Setting up your first feedback page',
       description: 'Complete walkthrough of the onboarding process',
       category: 'Getting Started',
-      answer: 'After signing up, complete the onboarding flow to add your business name, logo, and review platform links. Then create a location. Share your feedback page URL (e.g. feedback-page.com/l/your-location-id) with customers. You can customize the page in Settings.',
+      answer: 'After signing up, complete the onboarding flow to add your business name, logo, and review platform links. Then create a location. Share your feedback page URL (e.g. feedback-page.com/l/your-location-id) with customers. Customize each location in Locations → Edit, and manage your account in Settings.',
     },
     {
       icon: BarChart,
@@ -45,7 +45,7 @@ export function HelpCenter() {
       title: 'Setting up email notifications',
       description: 'Get notified when you receive new feedback',
       category: 'Features',
-      answer: 'In your location settings, enable email notifications and add the addresses that should receive alerts. You can also manage your email preferences at any time to control which emails you receive from Feedback Page.',
+      answer: 'For each location, go to Locations → Edit and enable email notifications in the Notification Settings section. Manage your global email preferences (notifications, marketing) in Settings or at /email-preferences.',
     },
     {
       icon: CreditCard,

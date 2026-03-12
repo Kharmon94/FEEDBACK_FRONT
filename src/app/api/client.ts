@@ -318,4 +318,16 @@ export const api = {
   async deleteOptIn(id: string): Promise<void> {
     await railsApi.deleteOptIn(id);
   },
+
+  async getProfile() {
+    return railsApi.getProfile();
+  },
+
+  async updateProfile(data: { name?: string; business_name?: string; email?: string }) {
+    return railsApi.updateProfile(data);
+  },
+
+  async changePassword(data: { current_password: string; password: string }) {
+    return railsApi.changePassword(data);
+  },
 };

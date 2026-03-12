@@ -331,6 +331,22 @@ export const api = {
     return request('/email-preferences', { method: 'PATCH', body: JSON.stringify(data) });
   },
 
+  async getProfile(): Promise<{ id: number; email: string; unconfirmed_email?: string; name?: string; business_name?: string; provider?: string }> {
+    return request('/profile');
+  },
+
+  async updateProfile(data: { name?: string; business_name?: string; email?: string }): Promise<{
+    profile: { id: number; email: string; unconfirmed_email?: string; name?: string; business_name?: string; provider?: string };
+    user?: User;
+    message?: string;
+  }> {
+    return request('/profile', { method: 'PATCH', body: JSON.stringify(data) });
+  },
+
+  async changePassword(data: { current_password: string; password: string }): Promise<{ message: string }> {
+    return request('/profile/password', { method: 'PUT', body: JSON.stringify(data) });
+  },
+
   async getOnboarding(): Promise<{ business_name?: string; name?: string; logo_url?: string; review_platforms?: Record<string, string> }> {
     return request('/onboarding');
   },
@@ -485,6 +501,28 @@ export const api = {
     return adminExport('/admin/suggestions/export');
   },
 
+  async getAdminOptIns(params?: { page?: number; per_page?: number; location_id?: string; user_id?: string }): Promise<AdminOptInsResponse> {
+    const sp = new URLSearchParams();
+    if (params?.page != null) sp.set('page', String(params.page));
+    if (params?.per_page != null) sp.set('per_page', String(params.per_page));
+    if (params?.location_id) sp.set('location_id', params.location_id);
+    if (params?.user_id) sp.set('user_id', params.user_id);
+    const q = sp.toString();
+    return request<AdminOptInsResponse>(`/admin/opt-ins${q ? `?${q}` : ''}`);
+  },
+
+  async getAdminOptIn(id: string): Promise<AdminOptIn> {
+    return request<AdminOptIn>(`/admin/opt-ins/${id}`);
+  },
+
+  async exportAdminOptIns(params?: { location_id?: string; user_id?: string }): Promise<Blob> {
+    const sp = new URLSearchParams();
+    if (params?.location_id) sp.set('location_id', params.location_id);
+    if (params?.user_id) sp.set('user_id', params.user_id);
+    const q = sp.toString();
+    return adminExport(`/admin/opt-ins/export${q ? `?${q}` : ''}`);
+  },
+
   async createOptIn(params: { location_id: string; name: string; email: string; phone?: string; rating?: number }): Promise<{ id: number; location_id: number; name: string; email: string; phone: string | null; rating: number | null; created_at: string }> {
     const { opt_in } = await request<{ opt_in: { id: number; location_id: number; name: string; email: string; phone: string | null; rating: number | null; created_at: string } }>('/opt_ins', {
       method: 'POST',
@@ -637,6 +675,7 @@ export interface AdminSettings {
   enable_social_login: boolean;
   notify_on_new_feedback: boolean;
   notify_on_new_suggestion: boolean;
+  notify_on_new_optin?: boolean;
 }
 
 export interface AdminSuggestion {
@@ -656,17 +695,38 @@ export interface AdminSuggestionsResponse {
   pagination: { current_page: number; total_pages: number; total_count: number; per_page: number };
 }
 
+export interface AdminOptIn {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  rating: number | null;
+  location_id: string | null;
+  location_name: string | null;
+  user_id: string | null;
+  user_name: string | null;
+  user_email: string | null;
+  created_at: string;
+}
+
+export interface AdminOptInsResponse {
+  opt_ins: AdminOptIn[];
+  pagination: { current_page: number; total_pages: number; total_count: number; per_page: number };
+}
+
 export interface AdminDashboardResponse {
   total_users: number;
   active_users: number;
   total_locations: number;
   total_feedback: number;
+  total_opt_ins?: number;
+  total_suggestions?: number;
   avg_rating: number | null;
   recent_activity: AdminRecentActivityItem[];
 }
 
 export interface AdminRecentActivityItem {
-  type: 'user' | 'location' | 'feedback';
+  type: 'user' | 'location' | 'feedback' | 'optin' | 'suggestion';
   id: string;
   message: string;
   created_at: string;

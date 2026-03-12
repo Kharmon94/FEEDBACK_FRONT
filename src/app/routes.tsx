@@ -35,6 +35,7 @@ import { AdminLocationsPage } from './components/admin/AdminLocationsPage';
 import { AdminLocationDetail } from './components/admin/AdminLocationDetail';
 import { AdminFeedbackPage } from './components/admin/AdminFeedbackPage';
 import { AdminSuggestionsPage } from './components/admin/AdminSuggestionsPage';
+import { AdminOptInsPage } from './components/admin/AdminOptInsPage';
 import { AdminAnalyticsPage } from './components/admin/AdminAnalyticsPage';
 import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
 import { AdminLoginPage } from './components/admin/AdminLoginPage';
@@ -228,6 +229,10 @@ export const router = createBrowserRouter([
       {
         path: 'suggestions',
         Component: AdminSuggestionsPage,
+      },
+      {
+        path: 'opt-ins',
+        Component: AdminOptInsPage,
       },
       {
         path: 'analytics',

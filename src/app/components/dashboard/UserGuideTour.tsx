@@ -68,8 +68,8 @@ export function UserGuideTour({ run = false, onComplete }: UserGuideTourProps) {
           </p>
           <ul className="text-sm text-slate-600 space-y-1 mb-2">
             <li><strong>Feedback</strong> – View all feedback and suggestions</li>
-            <li><strong>Locations</strong> – Manage locations and get your feedback/suggestion links</li>
-            <li><strong>Settings</strong> – Add review platforms, branding, and notifications</li>
+            <li><strong>Locations</strong> – Manage locations, review platforms, branding, and get your feedback links</li>
+            <li><strong>Settings</strong> – Manage your account, email, password, and preferences</li>
             <li><strong>Opt-Ins</strong> – Newsletter and rewards sign-ups</li>
           </ul>
         </div>
@@ -82,7 +82,7 @@ export function UserGuideTour({ run = false, onComplete }: UserGuideTourProps) {
         <div className="p-2">
           <h3 className="text-xl font-bold text-slate-900 mb-3">You&apos;re All Set!</h3>
           <p className="text-slate-700 mb-2">
-            You can restart this tour anytime from the Help menu. Visit Settings to add your review platform links, then share your feedback link from Locations.
+            You can restart this tour anytime from the Help menu. Visit Locations and edit a location to add review platforms and branding, then share your feedback link.
           </p>
         </div>
       ),

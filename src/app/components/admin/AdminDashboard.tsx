@@ -5,7 +5,9 @@ import {
   MapPin, 
   MessageSquare, 
   Star,
-  Activity
+  Activity,
+  Gift,
+  Lightbulb
 } from 'lucide-react';
 import { api, type AdminRecentActivityItem } from '../../../services/api';
 
@@ -14,6 +16,8 @@ export function AdminDashboard() {
   const [activeUsers, setActiveUsers] = useState(0);
   const [totalLocations, setTotalLocations] = useState(0);
   const [totalFeedback, setTotalFeedback] = useState(0);
+  const [totalOptIns, setTotalOptIns] = useState(0);
+  const [totalSuggestions, setTotalSuggestions] = useState(0);
   const [avgRating, setAvgRating] = useState<number | null>(null);
   const [recentActivity, setRecentActivity] = useState<AdminRecentActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +34,8 @@ export function AdminDashboard() {
       setActiveUsers(Number(data.active_users) || 0);
       setTotalLocations(Number(data.total_locations) || 0);
       setTotalFeedback(Number(data.total_feedback) || 0);
+      setTotalOptIns(Number(data.total_opt_ins) || 0);
+      setTotalSuggestions(Number(data.total_suggestions) || 0);
       setAvgRating(data.avg_rating != null ? Number(data.avg_rating) : null);
       setRecentActivity(data.recent_activity || []);
     } catch (error) {
@@ -69,6 +75,20 @@ export function AdminDashboard() {
       color: 'bg-orange-500',
     },
     {
+      label: 'Total Opt-Ins',
+      value: (typeof totalOptIns === 'number' ? totalOptIns : 0).toLocaleString(),
+      subtext: 'Newsletter/rewards signups',
+      icon: Gift,
+      color: 'bg-rose-500',
+    },
+    {
+      label: 'Total Suggestions',
+      value: (typeof totalSuggestions === 'number' ? totalSuggestions : 0).toLocaleString(),
+      subtext: 'Customer suggestions',
+      icon: Lightbulb,
+      color: 'bg-amber-500',
+    },
+    {
       label: 'Avg Rating',
       value: avgRating != null ? Number(avgRating).toFixed(1) : '—',
       subtext: 'System-wide average',
@@ -85,6 +105,10 @@ export function AdminDashboard() {
         return <MapPin className="w-4 h-4" />;
       case 'feedback':
         return <MessageSquare className="w-4 h-4" />;
+      case 'optin':
+        return <Gift className="w-4 h-4" />;
+      case 'suggestion':
+        return <Lightbulb className="w-4 h-4" />;
       default:
         return <Activity className="w-4 h-4" />;
     }
@@ -98,6 +122,10 @@ export function AdminDashboard() {
         return 'bg-purple-100 text-purple-700';
       case 'feedback':
         return 'bg-orange-100 text-orange-700';
+      case 'optin':
+        return 'bg-rose-100 text-rose-700';
+      case 'suggestion':
+        return 'bg-amber-100 text-amber-700';
       default:
         return 'bg-slate-100 text-slate-700';
     }
@@ -132,7 +160,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -196,7 +224,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -248,6 +276,42 @@ export function AdminDashboard() {
             className="w-full py-2 px-4 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
           >
             View Feedback
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+              <Lightbulb className="w-5 h-5 text-amber-700" />
+            </div>
+            <h4 className="font-semibold text-slate-900">Suggestions</h4>
+          </div>
+          <p className="text-sm text-slate-600 mb-4">
+            View and manage customer suggestions
+          </p>
+          <button 
+            onClick={() => navigate('/admin/suggestions')}
+            className="w-full py-2 px-4 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
+          >
+            View Suggestions
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
+              <Gift className="w-5 h-5 text-rose-700" />
+            </div>
+            <h4 className="font-semibold text-slate-900">Opt-Ins</h4>
+          </div>
+          <p className="text-sm text-slate-600 mb-4">
+            View newsletter and rewards signups
+          </p>
+          <button 
+            onClick={() => navigate('/admin/opt-ins')}
+            className="w-full py-2 px-4 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
+          >
+            View Opt-Ins
           </button>
         </div>
       </div>
