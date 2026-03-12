@@ -26,6 +26,18 @@ interface Feedback {
   createdAt: string;
 }
 
+type TimeRange = 'today' | '7d' | '30d' | '90d' | '6m' | '1y' | 'all';
+
+const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  today: 'Today',
+  '7d': '7 days',
+  '30d': '30 days',
+  '90d': '90 days',
+  '6m': '6 months',
+  '1y': '1 year',
+  all: 'All time',
+};
+
 export function LocationStatsPage() {
   const navigate = useNavigate();
   const { locationId } = useParams<{ locationId: string }>();
@@ -33,10 +45,11 @@ export function LocationStatsPage() {
   const [location, setLocation] = useState<Location | null>(null);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [copiedFor, setCopiedFor] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   useEffect(() => {
     loadLocationData();
-  }, [locationId]);
+  }, [locationId, timeRange]);
 
   const loadLocationData = async () => {
     if (!locationId) return;
@@ -54,7 +67,8 @@ export function LocationStatsPage() {
 
       setLocation(loc);
 
-      const locationFeedback = await api.getFeedback(locationId);
+      const since = timeRange === 'all' ? undefined : timeRange;
+      const locationFeedback = await api.getFeedback(locationId, since, locationId);
       setFeedback(locationFeedback);
     } catch (error) {
       console.error('Failed to load location data:', error);
@@ -182,7 +196,21 @@ export function LocationStatsPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label htmlFor="time-range" className="text-sm font-medium text-slate-700">Time range:</label>
+              <select
+                id="time-range"
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-2 focus:ring-slate-900"
+              >
+                {(Object.keys(TIME_RANGE_LABELS) as TimeRange[]).map((range) => (
+                  <option key={range} value={range}>{TIME_RANGE_LABELS[range]}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
             <button
               onClick={exportCSV}
               className="p-3 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -197,6 +225,7 @@ export function LocationStatsPage() {
             >
               <Edit2 className="w-5 h-5" />
             </button>
+            </div>
           </div>
         </div>
       </div>
