@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { ArrowLeft, MapPin, Star, TrendingUp, MessageSquare, Download, ExternalLink, Edit2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, TrendingUp, MessageSquare, Download, ExternalLink, Edit2, Copy, Check } from 'lucide-react';
 import { api } from '../../api/client';
 
 interface Location {
@@ -32,6 +32,7 @@ export function LocationStatsPage() {
   const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState<Location | null>(null);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [copiedFor, setCopiedFor] = useState<string | null>(null);
 
   useEffect(() => {
     loadLocationData();
@@ -114,6 +115,22 @@ export function LocationStatsPage() {
     a.click();
   };
 
+  type PageType = 'feedback' | 'suggestions' | 'opt-in';
+
+  const getPagePath = (locId: string, pageType: PageType) => {
+    const base = `/l/${locId}`;
+    if (pageType === 'feedback') return base;
+    if (pageType === 'suggestions') return `${base}/suggestions`;
+    return `${base}/opt-in`;
+  };
+
+  const copyPageUrl = (locId: string, pageType: PageType, e: React.MouseEvent) => {
+    const url = `${window.location.origin}${getPagePath(locId, pageType)}`;
+    navigator.clipboard.writeText(url);
+    setCopiedFor(pageType);
+    setTimeout(() => setCopiedFor(null), 2000);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -181,6 +198,94 @@ export function LocationStatsPage() {
               <Edit2 className="w-5 h-5" />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Copy & View - 3 rows */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6" data-tour="feedback-link">
+        <p className="text-xs font-medium text-slate-700 mb-2">Feedback Page:</p>
+        <div className="flex items-center gap-2 mb-4" data-tour="qr-code">
+          <button
+            onClick={(e) => copyPageUrl(locationId!, 'feedback', e)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            {copiedFor === 'feedback' ? (
+              <>
+                <Check className="w-4 h-4 text-green-600" />
+                <span className="text-green-600">Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copy Link
+              </>
+            )}
+          </button>
+          <a
+            href={getPagePath(locationId!, 'feedback')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View Page
+          </a>
+        </div>
+        <p className="text-xs font-medium text-slate-700 mb-2">Suggestion Page:</p>
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={(e) => copyPageUrl(locationId!, 'suggestions', e)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            {copiedFor === 'suggestions' ? (
+              <>
+                <Check className="w-4 h-4 text-green-600" />
+                <span className="text-green-600">Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copy Link
+              </>
+            )}
+          </button>
+          <a
+            href={getPagePath(locationId!, 'suggestions')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View Page
+          </a>
+        </div>
+        <p className="text-xs font-medium text-slate-700 mb-2">Opt-In Page:</p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => copyPageUrl(locationId!, 'opt-in', e)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            {copiedFor === 'opt-in' ? (
+              <>
+                <Check className="w-4 h-4 text-green-600" />
+                <span className="text-green-600">Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copy Link
+              </>
+            )}
+          </button>
+          <a
+            href={getPagePath(locationId!, 'opt-in')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View Page
+          </a>
         </div>
       </div>
 
