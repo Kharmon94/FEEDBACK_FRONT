@@ -438,7 +438,6 @@ export function FeedbackList() {
                     <tr className="bg-slate-50 border-b border-slate-200">
                       <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Rating</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Comment / Sentiment</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Customer</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Location</th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-slate-700">Date</th>
                     </tr>
@@ -470,13 +469,6 @@ export function FeedbackList() {
                               {getSentimentLabel(item.rating)}
                             </span>
                           )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-0.5 text-sm text-slate-600">
-                            {item.name && <span>{item.name}</span>}
-                            {item.email && <span className="text-slate-500 truncate max-w-[180px]">{item.email}</span>}
-                            {!item.name && !item.email && <span className="text-slate-400">—</span>}
-                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 text-slate-600">
@@ -549,12 +541,6 @@ export function FeedbackList() {
                       </span>
                     )}
                   </div>
-                  {(item.name || item.email) && (
-                    <div className="flex items-center gap-2 mt-2 text-sm text-slate-600">
-                      <Mail className="w-4 h-4 flex-shrink-0 text-slate-400" />
-                      <span className="truncate">{item.name || item.email}</span>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
