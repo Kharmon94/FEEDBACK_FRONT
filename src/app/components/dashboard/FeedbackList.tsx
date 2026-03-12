@@ -106,7 +106,7 @@ type TableType = 'feedback' | 'suggestions' | 'opt-ins';
 const TABLE_TYPE_LABELS: Record<TableType, string> = {
   feedback: 'Feedback',
   suggestions: 'Suggestions',
-  opt-ins: 'Opt-Ins',
+  'opt-ins': 'Opt-Ins',
 };
 
 export function FeedbackList() {
