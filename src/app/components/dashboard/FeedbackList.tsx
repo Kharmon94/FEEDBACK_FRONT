@@ -56,10 +56,23 @@ function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType
   );
 }
 
+type TimeRange = '7d' | '30d' | '90d' | '6m' | '1y' | 'all';
+
+const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  '7d': '7 days',
+  '30d': '30 days',
+  '90d': '90 days',
+  '6m': '6 months',
+  '1y': '1 year',
+  all: 'All time',
+};
+
 export function FeedbackList() {
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [filteredFeedback, setFilteredFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
+  const [visibleCount, setVisibleCount] = useState(6);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [filterDevice, setFilterDevice] = useState<string>('');
@@ -75,19 +88,26 @@ export function FeedbackList() {
 
   useEffect(() => {
     loadFeedback();
-  }, []);
+  }, [timeRange]);
 
   useEffect(() => {
-    api.getFeedbackAnalytics().then(setAnalytics).catch(() => setAnalytics(null));
-  }, []);
+    const since = timeRange === 'all' ? undefined : timeRange;
+    api.getFeedbackAnalytics(since).then(setAnalytics).catch(() => setAnalytics(null));
+  }, [timeRange]);
 
   useEffect(() => {
     applyFilters();
   }, [searchTerm, filterRating, filterDevice, filterCountry, filterLocation, feedback]);
 
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [filteredFeedback]);
+
   const loadFeedback = async () => {
+    setLoading(true);
     try {
-      const data = await api.getFeedback();
+      const since = timeRange === 'all' ? undefined : timeRange;
+      const data = await api.getFeedback(undefined, since);
       setFeedback(data);
       setFilteredFeedback(data);
     } catch (error) {
@@ -174,8 +194,28 @@ export function FeedbackList() {
     );
   }
 
+  const visibleFeedback = filteredFeedback.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredFeedback.length;
+
   return (
     <div className="space-y-6">
+      {/* Time Range Selector */}
+      <div className="flex flex-wrap gap-2">
+        {(Object.keys(TIME_RANGE_LABELS) as TimeRange[]).map((range) => (
+          <button
+            key={range}
+            onClick={() => setTimeRange(range)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              timeRange === range
+                ? 'bg-slate-900 text-white'
+                : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            {TIME_RANGE_LABELS[range]}
+          </button>
+        ))}
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6" data-tour="stats-overview">
         <StatCard icon={MessageSquare} label="Total Feedback" value={totalFeedback} color="blue" />
@@ -443,7 +483,7 @@ export function FeedbackList() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredFeedback.map((item) => (
+                    {visibleFeedback.map((item) => (
                       <tr
                         key={item.id}
                         className="hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-100 last:border-0"
@@ -491,7 +531,7 @@ export function FeedbackList() {
 
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
-              {filteredFeedback.map((item) => (
+              {visibleFeedback.map((item) => (
                 <div
                   key={item.id}
                   className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
@@ -544,6 +584,18 @@ export function FeedbackList() {
                 </div>
               ))}
             </div>
+
+            {/* Load More */}
+            {hasMore && (
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={() => setVisibleCount((v) => v + 6)}
+                  className="px-6 py-3 text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium transition-colors"
+                >
+                  Load more
+                </button>
+              </div>
+            )}
 
             {/* Detail Modal */}
             {detailId && (() => {

@@ -232,9 +232,9 @@ export const api = {
     }
   },
 
-  async getFeedback(businessId?: string): Promise<Feedback[]> {
+  async getFeedback(businessId?: string, since?: string): Promise<Feedback[]> {
     try {
-      const items = await railsApi.getFeedback();
+      const items = await railsApi.getFeedback(since);
       const filtered = businessId != null
         ? items.filter((f) => String(f.location_id) === businessId)
         : items;
@@ -336,7 +336,7 @@ export const api = {
     return railsApi.changePassword(data);
   },
 
-  async getFeedbackAnalytics() {
-    return railsApi.getFeedbackAnalytics();
+  async getFeedbackAnalytics(since?: string) {
+    return railsApi.getFeedbackAnalytics(since);
   },
 };

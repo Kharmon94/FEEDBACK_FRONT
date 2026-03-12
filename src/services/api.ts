@@ -321,17 +321,19 @@ export const api = {
     return request<{ plans: Plan[] }>('/plans', { skipAuth: true });
   },
 
-  async getFeedback(): Promise<FeedbackSubmission[]> {
-    const { feedback } = await request<{ feedback: FeedbackSubmission[] }>('/feedback');
+  async getFeedback(since?: string): Promise<FeedbackSubmission[]> {
+    const q = since ? `?since=${encodeURIComponent(since)}` : '';
+    const { feedback } = await request<{ feedback: FeedbackSubmission[] }>(`/feedback${q}`);
     return feedback;
   },
 
-  async getFeedbackAnalytics(): Promise<{
+  async getFeedbackAnalytics(since?: string): Promise<{
     funnel: { page_views: number; star_clicks: number; submissions: number };
     device_breakdown: Record<string, number>;
     top_countries: Record<string, number>;
   }> {
-    return request('/feedback/analytics');
+    const q = since ? `?since=${encodeURIComponent(since)}` : '';
+    return request(`/feedback/analytics${q}`);
   },
 
   async getSuggestions(): Promise<Suggestion[]> {

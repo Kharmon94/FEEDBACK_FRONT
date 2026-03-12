@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Save, MapPin, User, Mail, Lock, ExternalLink, Edit2, ChevronRight } from 'lucide-react';
+import { Save, User, Mail, Lock, ExternalLink, ChevronRight } from 'lucide-react';
 import { api } from '../../api/client';
 import { api as railsApi } from '../../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,7 +18,6 @@ export function SettingsPanel() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [locations, setLocations] = useState<Array<{ id: string; name: string; address?: string }>>([]);
   const [emailPrefsSummary, setEmailPrefsSummary] = useState<{ enabled: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -50,15 +49,13 @@ export function SettingsPanel() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [profileData, locsData, emailData] = await Promise.all([
+      const [profileData, emailData] = await Promise.all([
         api.getProfile(),
-        api.getLocations(),
         railsApi.getEmailPreferences().catch(() => null),
       ]);
       setProfile(profileData);
       setName(profileData.name ?? '');
       setNewEmail(profileData.email ?? '');
-      setLocations(locsData);
       setEmailPrefsSummary(emailData ? { enabled: emailData.email_notifications_enabled } : null);
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -135,7 +132,7 @@ export function SettingsPanel() {
     <div className="space-y-6" data-tour="settings">
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Settings</h2>
-        <p className="text-slate-600 mt-1">Manage your account, preferences, and locations</p>
+        <p className="text-slate-600 mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Account Section */}
@@ -292,51 +289,6 @@ export function SettingsPanel() {
             <ChevronRight className="w-5 h-5 text-slate-400" />
           </button>
         </div>
-      </div>
-
-      {/* Locations Section */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <MapPin className="w-5 h-5" />
-          Locations
-        </h3>
-        {locations.length === 0 ? (
-          <div className="text-center py-6">
-            <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-            <p className="text-slate-600 mb-4">No locations yet. Create one to customize feedback pages, branding, and notifications.</p>
-            <button
-              onClick={() => navigate('/dashboard?tab=locations')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
-            >
-              Manage locations
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {locations.map((loc) => (
-              <div
-                key={loc.id}
-                className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                <span className="font-medium text-slate-900">{loc.name}</span>
-                <button
-                  onClick={() => navigate(`/dashboard/locations/edit/${loc.id}`)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 transition-colors"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={() => navigate('/dashboard?tab=locations')}
-              className="w-full mt-2 flex items-center justify-between px-4 py-3 text-left rounded-lg hover:bg-slate-50 transition-colors text-slate-600"
-            >
-              <span>View all locations</span>
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
