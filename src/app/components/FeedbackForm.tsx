@@ -95,46 +95,48 @@ export function FeedbackForm() {
   };
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative">
       {/* Back Button - Fixed to top-left */}
-      <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
         <button
           onClick={() => (locationId ? navigate(`/l/${locationId}`) : navigate(-1))}
-          className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-xs font-medium">Back</span>
+          <span className="text-sm font-medium">Back</span>
         </button>
       </div>
 
       {/* Centered Content */}
       <div className="min-h-screen flex items-center justify-center px-4 py-16">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-xl">
           {/* Logo */}
-          <div className="flex justify-center mb-6 mt-4">
+          <div className="text-center mb-6 md:mb-8">
             <img 
               src={business?.logoUrl || logo} 
               alt={business?.name || 'Business'} 
-              className="max-w-[200px] max-h-[200px] w-auto h-auto object-contain"
+              className="h-20 md:h-24 max-w-[200px] max-h-[200px] w-auto mx-auto object-contain"
             />
           </div>
 
           {/* Business Name */}
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 text-center mb-8">
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 text-center mb-6 md:mb-8">
             {business?.name || 'Your Business'}
           </h1>
 
+          {/* Form Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-6 md:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Main Question */}
             <div>
-              <label className="block text-base font-medium text-gray-900 mb-3">
+              <label className="block text-base font-medium text-slate-900 mb-3">
                 What could we have done better?
               </label>
               <textarea
                 required
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                className="w-full px-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 resize-none placeholder:text-gray-400 transition-all"
+                className="w-full px-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none placeholder:text-slate-400 transition-all"
                 rows={5}
                 placeholder="Please share your feedback so we can improve..."
               />
@@ -142,42 +144,42 @@ export function FeedbackForm() {
 
             {/* Name Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Name (optional)
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all"
+                className="w-full px-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-slate-400 transition-all"
                 placeholder="Your name"
               />
             </div>
 
             {/* Email Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Email (optional)
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all"
+                className="w-full px-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-slate-400 transition-all"
                 placeholder="your@email.com"
               />
             </div>
 
             {/* Phone Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Phone (optional)
               </label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all"
+                className="w-full px-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-slate-400 transition-all"
                 placeholder="Your phone number"
               />
             </div>
@@ -189,7 +191,7 @@ export function FeedbackForm() {
                 checked={contactMe}
                 onCheckedChange={(checked) => setContactMe(!!checked)}
               />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+              <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
                 I would like to be contacted regarding this feedback so we can resolve this issue
               </span>
             </label>
@@ -198,18 +200,18 @@ export function FeedbackForm() {
             <button
               type="submit"
               disabled={submitting || !comment.trim() || !locationId}
-              className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black shadow-sm mt-6"
+              className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black shadow-sm mt-6"
             >
               {submitting ? 'Submitting...' : 'Submit Feedback'}
             </button>
 
             {/* Suggestion Link */}
             {locationId && (
-              <div className="text-center pt-6 border-t border-gray-200 mt-6">
+              <div className="text-center pt-6 border-t border-slate-200 mt-6">
                 <button
                   type="button"
                   onClick={() => navigate(`/l/${locationId}/suggestions`)}
-                  className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors group"
+                  className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600 transition-colors group"
                 >
                   <Lightbulb className="w-4 h-4 group-hover:text-yellow-500 transition-colors" />
                   <span>Have a suggestion instead?</span>
@@ -217,6 +219,7 @@ export function FeedbackForm() {
               </div>
             )}
           </form>
+          </div>
         </div>
       </div>
     </div>

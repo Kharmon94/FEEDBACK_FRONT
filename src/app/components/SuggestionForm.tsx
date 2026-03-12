@@ -64,7 +64,7 @@ export function SuggestionForm() {
 
   if (locationNotFound) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <div className="text-center">
           <h1 className="text-xl font-semibold text-slate-900 mb-2">Location not found</h1>
           <p className="text-slate-600 mb-4">The suggestion page link may be invalid or expired.</p>
@@ -76,82 +76,82 @@ export function SuggestionForm() {
 
   if (!business) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4 md:p-6">
       <div className="w-full max-w-xl">
         {/* Logo */}
-        <div className="text-center mb-8 md:mb-10">
-          <Link to="/" className="inline-block">
+        <div className="text-center mb-6 md:mb-8">
+          <Link to={locationId ? `/l/${locationId}` : '/'} className="inline-block">
             <img 
               src={business?.logoUrl || logo} 
               alt={business?.name || 'Feedback Page'} 
-              className="h-16 md:h-20 mx-auto mb-6 hover:opacity-80 transition-opacity object-contain"
+              className="h-20 md:h-24 max-w-[200px] max-h-[200px] w-auto mx-auto object-contain hover:opacity-80 transition-opacity"
             />
           </Link>
-          <h1 className="text-2xl md:text-3xl font-semibold text-black mb-2 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2 tracking-tight mt-4">
             Share your ideas
           </h1>
-          <p className="text-sm md:text-base text-gray-600">
+          <p className="text-sm md:text-base text-slate-600">
             We'd love to hear your suggestions for {business.name}
           </p>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="suggestion" className="block text-sm font-medium text-black mb-2">
-                Your suggestion <span className="text-black">*</span>
+              <label htmlFor="suggestion" className="block text-sm font-medium text-slate-900 mb-2">
+                Your suggestion <span className="text-slate-900">*</span>
               </label>
               <div className="relative">
-                <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" strokeWidth={1.5} />
+                <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-slate-400" strokeWidth={1.5} />
                 <textarea
                   id="suggestion"
                   required
                   value={formData.suggestion}
                   onChange={(e) => setFormData({ ...formData, suggestion: e.target.value })}
                   rows={5}
-                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none transition-all"
+                  className="w-full pl-11 pr-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none transition-all placeholder:text-slate-400"
                   placeholder="I think it would be great if..."
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-black mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-slate-900 mb-2">
                 Your name (optional)
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" strokeWidth={1.5} />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" strokeWidth={1.5} />
                 <input
                   type="text"
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all placeholder:text-slate-400"
                   placeholder="Your name"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-900 mb-2">
                 Your email (optional)
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" strokeWidth={1.5} />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" strokeWidth={1.5} />
                 <input
                   type="email"
                   id="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all placeholder:text-slate-400"
                   placeholder="your@email.com"
                 />
               </div>
@@ -160,7 +160,7 @@ export function SuggestionForm() {
             <button
               type="submit"
               disabled={isSubmitting || !formData.suggestion.trim()}
-              className="w-full bg-black text-white py-3.5 rounded-lg font-medium text-sm hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+              className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group shadow-sm"
             >
               {isSubmitting ? (
                 'Submitting...'
@@ -174,7 +174,7 @@ export function SuggestionForm() {
           </form>
 
           {/* Privacy Note */}
-          <p className="text-xs text-gray-500 text-center mt-6">
+          <p className="text-xs text-slate-500 text-center mt-6">
             Your suggestion will be reviewed by the {business.name} team
           </p>
         </div>
@@ -183,7 +183,7 @@ export function SuggestionForm() {
         <div className="text-center mt-6">
           <button
             onClick={() => navigate(locationId ? `/l/${locationId}` : '/')}
-            className="text-sm text-gray-600 hover:text-black transition-colors"
+            className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
           >
             ← Back to rating
           </button>

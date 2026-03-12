@@ -100,11 +100,11 @@ export function ThankYouPage() {
       <div className="min-h-screen flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-md">
           {/* Logo */}
-          <div className="flex justify-center mb-6 mt-4">
+          <div className="text-center mb-6 md:mb-8">
             <img 
               src={business?.logoUrl || logo} 
               alt={business?.name || 'Business'} 
-              className="max-w-[200px] max-h-[200px] w-auto h-auto object-contain"
+              className="h-20 md:h-24 max-w-[200px] max-h-[200px] w-auto mx-auto object-contain"
             />
           </div>
 

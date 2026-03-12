@@ -101,15 +101,15 @@ export function LocationRatingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         {/* Logo */}
-        <div className="text-center mb-8 md:mb-12">
+        <div className="text-center mb-6 md:mb-8">
           <Link to="/" className="inline-block">
             <img 
               src={location.logoUrl || logo} 
               alt={location.name} 
-              className="h-20 md:h-28 mx-auto mb-3 md:mb-4 hover:opacity-80 transition-opacity object-contain"
+              className="h-20 md:h-24 max-w-[200px] max-h-[200px] w-auto mx-auto object-contain hover:opacity-80 transition-opacity"
             />
           </Link>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 md:mb-3 px-4">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 md:mb-3 mt-4 px-4">
             How was your experience at {location.name}?
           </h1>
           <p className="text-base md:text-lg text-slate-600 px-4">
@@ -118,7 +118,7 @@ export function LocationRatingPage() {
         </div>
 
         {/* Rating Card */}
-        <div className="bg-white rounded-2xl md:rounded-3xl shadow-lg border border-slate-200 p-6 md:p-8 lg:p-12">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 md:p-8 lg:p-12">
           <p className="text-center text-base md:text-lg text-slate-700 mb-6 md:mb-8 px-4">
             Please rate your experience:
           </p>
@@ -154,7 +154,7 @@ export function LocationRatingPage() {
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share more about your experience... (optional)"
               rows={4}
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-900 placeholder:text-slate-400"
+              className="w-full px-4 py-3 text-slate-900 bg-slate-50 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all placeholder:text-slate-400"
             />
             <p className="text-xs text-slate-500 mt-2">
               This helps us understand your experience better

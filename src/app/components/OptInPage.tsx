@@ -63,7 +63,7 @@ export function OptInPage() {
 
   if (locationNotFound) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
         <div className="text-center">
           <h1 className="text-xl font-semibold text-slate-900 mb-2">Location not found</h1>
           <p className="text-slate-600 mb-4">The opt-in page link may be invalid or expired.</p>
@@ -75,7 +75,7 @@ export function OptInPage() {
 
   if (hasLocation && !business) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Loading...</div>
       </div>
     );
@@ -83,12 +83,12 @@ export function OptInPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-white relative">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative">
         {/* Back Button */}
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="text-sm font-medium">Back to Home</span>
@@ -99,30 +99,33 @@ export function OptInPage() {
         <div className="min-h-screen flex items-center justify-center p-4 md:p-6">
           <div className="w-full max-w-xl text-center">
             {/* Logo */}
-            <div className="flex justify-center mb-8 sm:mb-10">
-              <img src={logo} alt="Logo" className="h-20 sm:h-24" />
+            <div className="text-center mb-6 md:mb-8">
+              <img src={logo} alt="Logo" className="h-20 md:h-24 max-w-[200px] max-h-[200px] w-auto mx-auto object-contain" />
             </div>
 
-            {/* Success Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="h-16 w-16 rounded-full bg-black flex items-center justify-center">
-                <CheckCircle2 className="w-9 h-9 text-white" strokeWidth={1.5} />
+            {/* Success Card */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-6 md:p-8">
+              {/* Success Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="h-16 w-16 rounded-full bg-black flex items-center justify-center">
+                  <CheckCircle2 className="w-9 h-9 text-white" strokeWidth={1.5} />
+                </div>
               </div>
+
+              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight">
+                You're all set!
+              </h1>
+              <p className="text-sm text-slate-600 mb-8">
+                Thank you for joining our newsletter and rewards program. We'll keep you updated with exclusive offers!
+              </p>
+
+              <button
+                onClick={() => navigate('/')}
+                className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-slate-800 transition-all shadow-sm"
+              >
+                Return to Home
+              </button>
             </div>
-
-            <h1 className="text-2xl md:text-3xl font-semibold text-black mb-3 tracking-tight">
-              You're all set!
-            </h1>
-            <p className="text-sm text-gray-600 mb-8">
-              Thank you for joining our newsletter and rewards program. We'll keep you updated with exclusive offers!
-            </p>
-
-            <button
-              onClick={() => navigate('/')}
-              className="bg-black text-white px-8 py-4 rounded-xl font-medium text-base hover:bg-gray-900 transition-all shadow-sm"
-            >
-              Return to Home
-            </button>
           </div>
         </div>
       </div>
@@ -130,12 +133,12 @@ export function OptInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative">
       {/* Back Button */}
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
         <button
           onClick={() => navigate(locationId ? `/l/${locationId}` : -1)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           <span className="text-sm font-medium">{locationId ? 'Back to rating' : 'Back'}</span>
@@ -146,15 +149,15 @@ export function OptInPage() {
       <div className="min-h-screen flex items-center justify-center p-4 md:p-6">
         <div className="w-full max-w-xl">
           {/* Logo */}
-          <div className="flex justify-center mb-8 sm:mb-10">
-            <img src={business?.logoUrl || logo} alt={business?.name || 'Logo'} className="h-20 sm:h-24 object-contain" />
+          <div className="text-center mb-6 md:mb-8">
+            <img src={business?.logoUrl || logo} alt={business?.name || 'Logo'} className="h-20 md:h-24 max-w-[200px] max-h-[200px] w-auto mx-auto object-contain" />
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-semibold text-black mb-3 text-center tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3 text-center tracking-tight">
             Join Our Newsletter & Rewards Program
           </h1>
           
-          <p className="text-sm text-gray-600 mb-4 text-center">
+          <p className="text-sm text-slate-600 mb-4 text-center">
             {business?.name
               ? `Get exclusive offers from ${business.name}, early access to new features, and earn rewards for your loyalty!`
               : 'Get exclusive offers, early access to new features, and earn rewards for your loyalty!'}
@@ -169,7 +172,8 @@ export function OptInPage() {
             </div>
           )}
 
-          {/* Opt-In Form */}
+          {/* Opt-In Form Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-6 md:p-8">
           <div className="space-y-6">
             {/* Checkbox */}
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -178,61 +182,61 @@ export function OptInPage() {
                 checked={optInChecked}
                 onCheckedChange={(checked) => setOptInChecked(!!checked)}
               />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+              <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
                 I agree to receive promotional emails, SMS messages, and exclusive offers. I understand I can unsubscribe at any time.
               </span>
             </label>
 
             {/* Name Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Name *
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"
                   value={optInName}
                   onChange={(e) => setOptInName(e.target.value)}
                   placeholder="John Doe"
                   disabled={!optInChecked || !hasLocation}
-                  className="w-full pl-12 pr-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-12 pr-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-slate-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
             {/* Email Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Email Address *
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="email"
                   value={optInEmail}
                   onChange={(e) => setOptInEmail(e.target.value)}
                   placeholder="your.email@example.com"
                   disabled={!optInChecked || !hasLocation}
-                  className="w-full pl-12 pr-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-12 pr-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-slate-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
             {/* Phone Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Phone Number *
               </label>
               <div className="relative">
-                <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="tel"
                   value={optInPhone}
                   onChange={(e) => setOptInPhone(e.target.value)}
                   placeholder="(555) 123-4567"
                   disabled={!optInChecked || !hasLocation}
-                  className="w-full pl-12 pr-4 py-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 placeholder:text-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-12 pr-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-black focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-slate-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -240,10 +244,11 @@ export function OptInPage() {
             <button
               onClick={handleOptInSubmit}
               disabled={!optInChecked || !hasLocation || submitting}
-              className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               {submitting ? 'Joining...' : 'Join Now'}
             </button>
+          </div>
           </div>
         </div>
       </div>

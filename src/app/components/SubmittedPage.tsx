@@ -38,27 +38,27 @@ export function SubmittedPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4 md:p-6">
       <div className="w-full max-w-xl">
         {/* Logo */}
-        <div className="text-center mb-8 md:mb-10">
+        <div className="text-center mb-6 md:mb-8">
           <Link to={locationId ? `/l/${locationId}` : '/'} className="inline-block">
             <img 
               src={logoUrl || logo} 
               alt={businessName || 'Feedback Page'} 
-              className="h-16 md:h-20 mx-auto mb-6 hover:opacity-80 transition-opacity object-contain"
+              className="h-20 md:h-24 max-w-[200px] max-h-[200px] w-auto mx-auto object-contain hover:opacity-80 transition-opacity"
             />
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 shadow-sm text-center">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 shadow-lg text-center">
           {/* Success Icon */}
           <div className="flex justify-center mb-6">
             <div className="h-16 w-16 rounded-full bg-black flex items-center justify-center">
@@ -67,10 +67,10 @@ export function SubmittedPage() {
           </div>
 
           {/* Message */}
-          <h1 className="text-2xl md:text-3xl font-semibold text-black mb-3 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight">
             {type === 'feedback' ? 'Thank you for your feedback' : 'Thanks for your suggestion!'}
           </h1>
-          <p className="text-sm text-gray-600 mb-8">
+          <p className="text-sm text-slate-600 mb-8">
             {type === 'feedback'
               ? businessName
                 ? `Your feedback has been received by ${businessName}. We take all feedback seriously and will work to improve.`
@@ -83,7 +83,7 @@ export function SubmittedPage() {
 
           <button
             onClick={() => navigate(locationId ? `/l/${locationId}` : '/')}
-            className="w-full bg-black text-white py-3.5 rounded-lg font-medium text-sm hover:bg-gray-800 transition-all"
+            className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-slate-800 transition-all shadow-sm"
           >
             Done
           </button>
