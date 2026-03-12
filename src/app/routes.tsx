@@ -1,255 +1,469 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router';
-import { HomePage } from './components/HomePage';
-import { RatingPage } from './components/RatingPage';
-import { LocationRatingPage } from './components/LocationRatingPage';
-import { FeedbackForm } from './components/FeedbackForm';
-import { ThankYouPage } from './components/ThankYouPage';
-import { OptInPage } from './components/OptInPage';
-import { SubmittedPage } from './components/SubmittedPage';
-import { SuggestionForm } from './components/SuggestionForm';
-import { LoginPage } from './components/LoginPage';
-import { AuthCallbackPage } from './components/AuthCallbackPage';
-import { OnboardingFlow } from './components/OnboardingFlow';
-import { Dashboard } from './components/Dashboard';
-import { DashboardLayout } from './components/dashboard/DashboardLayout';
-import { PricingPage } from './components/PricingPage';
-import { FeaturesPage } from './components/FeaturesPage';
-import { HowItWorksPage } from './components/HowItWorksPage';
-import { HelpCenter } from './components/HelpCenter';
-import { ContactUsPage } from './components/ContactUsPage';
-import { PrivacyPage } from './components/PrivacyPage';
-import { TermsOfServicePage } from './components/TermsOfServicePage';
-import { NotFoundPage } from './components/NotFoundPage';
-import { AddLocationPage } from './components/dashboard/AddLocationPage';
-import { EditLocationPage } from './components/dashboard/EditLocationPage';
-import { LocationStatsPage } from './components/dashboard/LocationStatsPage';
-import { CancelPlanPage } from './components/dashboard/CancelPlanPage';
-import { PlansPage } from './components/dashboard/PlansPage';
-import { ContactSupportPage } from './components/dashboard/ContactSupportPage';
-import { TrialExpiredPage } from './components/dashboard/TrialExpiredPage';
-import { AdminLayout } from './components/admin/AdminLayout';
-import { AdminDashboard } from './components/admin/AdminDashboard';
-import { AdminUsersPage } from './components/admin/AdminUsersPage';
-import { AdminUserDetail } from './components/admin/AdminUserDetail';
-import { AdminLocationsPage } from './components/admin/AdminLocationsPage';
-import { AdminLocationDetail } from './components/admin/AdminLocationDetail';
-import { AdminFeedbackPage } from './components/admin/AdminFeedbackPage';
-import { AdminSuggestionsPage } from './components/admin/AdminSuggestionsPage';
-import { AdminOptInsPage } from './components/admin/AdminOptInsPage';
-import { AdminAnalyticsPage } from './components/admin/AdminAnalyticsPage';
-import { AdminSettingsPage } from './components/admin/AdminSettingsPage';
-import { AdminLoginPage } from './components/admin/AdminLoginPage';
-import { AdminPlansPage } from './components/admin/AdminPlansPage';
-import { ForgotPasswordPage } from './components/ForgotPasswordPage';
-import { ResetPasswordPage } from './components/ResetPasswordPage';
-import { VerifyEmailPage } from './components/VerifyEmailPage';
-import { EmailPreferencesPage } from './components/EmailPreferencesPage';
-import { EmailPreferencesUnsubscribePage } from './components/EmailPreferencesUnsubscribePage';
+
+const HomePage = lazy(() => import('./components/HomePage').then((m) => ({ default: m.HomePage })));
+const RatingPage = lazy(() => import('./components/RatingPage').then((m) => ({ default: m.RatingPage })));
+const LocationRatingPage = lazy(() => import('./components/LocationRatingPage').then((m) => ({ default: m.LocationRatingPage })));
+const FeedbackForm = lazy(() => import('./components/FeedbackForm').then((m) => ({ default: m.FeedbackForm })));
+const ThankYouPage = lazy(() => import('./components/ThankYouPage').then((m) => ({ default: m.ThankYouPage })));
+const OptInPage = lazy(() => import('./components/OptInPage').then((m) => ({ default: m.OptInPage })));
+const SubmittedPage = lazy(() => import('./components/SubmittedPage').then((m) => ({ default: m.SubmittedPage })));
+const SuggestionForm = lazy(() => import('./components/SuggestionForm').then((m) => ({ default: m.SuggestionForm })));
+const LoginPage = lazy(() => import('./components/LoginPage').then((m) => ({ default: m.LoginPage })));
+const AuthCallbackPage = lazy(() => import('./components/AuthCallbackPage').then((m) => ({ default: m.AuthCallbackPage })));
+const OnboardingFlow = lazy(() => import('./components/OnboardingFlow').then((m) => ({ default: m.OnboardingFlow })));
+const Dashboard = lazy(() => import('./components/Dashboard').then((m) => ({ default: m.Dashboard })));
+const DashboardLayout = lazy(() => import('./components/dashboard/DashboardLayout').then((m) => ({ default: m.DashboardLayout })));
+const PricingPage = lazy(() => import('./components/PricingPage').then((m) => ({ default: m.PricingPage })));
+const FeaturesPage = lazy(() => import('./components/FeaturesPage').then((m) => ({ default: m.FeaturesPage })));
+const HowItWorksPage = lazy(() => import('./components/HowItWorksPage').then((m) => ({ default: m.HowItWorksPage })));
+const HelpCenter = lazy(() => import('./components/HelpCenter').then((m) => ({ default: m.HelpCenter })));
+const ContactUsPage = lazy(() => import('./components/ContactUsPage').then((m) => ({ default: m.ContactUsPage })));
+const PrivacyPage = lazy(() => import('./components/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
+const TermsOfServicePage = lazy(() => import('./components/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage })));
+const NotFoundPage = lazy(() => import('./components/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
+const AddLocationPage = lazy(() => import('./components/dashboard/AddLocationPage').then((m) => ({ default: m.AddLocationPage })));
+const EditLocationPage = lazy(() => import('./components/dashboard/EditLocationPage').then((m) => ({ default: m.EditLocationPage })));
+const LocationStatsPage = lazy(() => import('./components/dashboard/LocationStatsPage').then((m) => ({ default: m.LocationStatsPage })));
+const CancelPlanPage = lazy(() => import('./components/dashboard/CancelPlanPage').then((m) => ({ default: m.CancelPlanPage })));
+const PlansPage = lazy(() => import('./components/dashboard/PlansPage').then((m) => ({ default: m.PlansPage })));
+const ContactSupportPage = lazy(() => import('./components/dashboard/ContactSupportPage').then((m) => ({ default: m.ContactSupportPage })));
+const TrialExpiredPage = lazy(() => import('./components/dashboard/TrialExpiredPage').then((m) => ({ default: m.TrialExpiredPage })));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })));
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard })));
+const AdminUsersPage = lazy(() => import('./components/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })));
+const AdminUserDetail = lazy(() => import('./components/admin/AdminUserDetail').then((m) => ({ default: m.AdminUserDetail })));
+const AdminLocationsPage = lazy(() => import('./components/admin/AdminLocationsPage').then((m) => ({ default: m.AdminLocationsPage })));
+const AdminLocationDetail = lazy(() => import('./components/admin/AdminLocationDetail').then((m) => ({ default: m.AdminLocationDetail })));
+const AdminFeedbackPage = lazy(() => import('./components/admin/AdminFeedbackPage').then((m) => ({ default: m.AdminFeedbackPage })));
+const AdminSuggestionsPage = lazy(() => import('./components/admin/AdminSuggestionsPage').then((m) => ({ default: m.AdminSuggestionsPage })));
+const AdminOptInsPage = lazy(() => import('./components/admin/AdminOptInsPage').then((m) => ({ default: m.AdminOptInsPage })));
+const AdminAnalyticsPage = lazy(() => import('./components/admin/AdminAnalyticsPage').then((m) => ({ default: m.AdminAnalyticsPage })));
+const AdminSettingsPage = lazy(() => import('./components/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })));
+const AdminLoginPage = lazy(() => import('./components/admin/AdminLoginPage').then((m) => ({ default: m.AdminLoginPage })));
+const AdminPlansPage = lazy(() => import('./components/admin/AdminPlansPage').then((m) => ({ default: m.AdminPlansPage })));
+const ForgotPasswordPage = lazy(() => import('./components/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
+const VerifyEmailPage = lazy(() => import('./components/VerifyEmailPage').then((m) => ({ default: m.VerifyEmailPage })));
+const EmailPreferencesPage = lazy(() => import('./components/EmailPreferencesPage').then((m) => ({ default: m.EmailPreferencesPage })));
+const EmailPreferencesUnsubscribePage = lazy(() => import('./components/EmailPreferencesUnsubscribePage').then((m) => ({ default: m.EmailPreferencesUnsubscribePage })));
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900" />
+    </div>
+  );
+}
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    Component: HomePage,
-    errorElement: <NotFoundPage />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <HomePage />
+      </Suspense>
+    ),
+    errorElement: (
+      <Suspense fallback={<LoadingFallback />}>
+        <NotFoundPage />
+      </Suspense>
+    ),
   },
   {
     path: '/demo',
-    Component: RatingPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <RatingPage />
+      </Suspense>
+    ),
   },
   {
     path: '/l/:locationId',
-    Component: LocationRatingPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <LocationRatingPage />
+      </Suspense>
+    ),
   },
   {
     path: '/l/:locationId/suggestions',
-    Component: SuggestionForm,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <SuggestionForm />
+      </Suspense>
+    ),
   },
   {
     path: '/l/:locationId/opt-in',
-    Component: OptInPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <OptInPage />
+      </Suspense>
+    ),
   },
   {
     path: '/feedback',
-    Component: FeedbackForm,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <FeedbackForm />
+      </Suspense>
+    ),
   },
   {
     path: '/thank-you',
-    Component: ThankYouPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <ThankYouPage />
+      </Suspense>
+    ),
   },
   {
     path: '/opt-in',
-    Component: OptInPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <OptInPage />
+      </Suspense>
+    ),
   },
   {
     path: '/feedback-submitted',
-    Component: SubmittedPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <SubmittedPage />
+      </Suspense>
+    ),
   },
   {
     path: '/suggestion',
-    Component: SuggestionForm,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <SuggestionForm />
+      </Suspense>
+    ),
   },
   {
     path: '/suggestion-submitted',
-    Component: SubmittedPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <SubmittedPage />
+      </Suspense>
+    ),
   },
   {
     path: '/login',
-    Component: LoginPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <LoginPage />
+      </Suspense>
+    ),
   },
   {
     path: '/forgot-password',
-    Component: ForgotPasswordPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <ForgotPasswordPage />
+      </Suspense>
+    ),
   },
   {
     path: '/reset-password',
-    Component: ResetPasswordPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <ResetPasswordPage />
+      </Suspense>
+    ),
   },
   {
     path: '/verify-email',
-    Component: VerifyEmailPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <VerifyEmailPage />
+      </Suspense>
+    ),
   },
   {
     path: '/email-preferences',
-    Component: EmailPreferencesPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <EmailPreferencesPage />
+      </Suspense>
+    ),
   },
   {
     path: '/email-preferences/unsubscribe',
-    Component: EmailPreferencesUnsubscribePage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <EmailPreferencesUnsubscribePage />
+      </Suspense>
+    ),
   },
   {
     path: '/auth/callback',
-    Component: AuthCallbackPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <AuthCallbackPage />
+      </Suspense>
+    ),
   },
   {
     path: '/onboarding',
-    Component: OnboardingFlow,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <OnboardingFlow />
+      </Suspense>
+    ),
   },
   {
     path: '/dashboard',
-    Component: DashboardLayout,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <DashboardLayout />
+      </Suspense>
+    ),
     children: [
       {
         index: true,
-        Component: Dashboard,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <Dashboard />
+          </Suspense>
+        ),
       },
       {
         path: 'locations/new',
-        Component: AddLocationPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AddLocationPage />
+          </Suspense>
+        ),
       },
       {
         path: 'locations/edit/:locationId',
-        Component: EditLocationPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <EditLocationPage />
+          </Suspense>
+        ),
       },
       {
         path: 'locations/:locationId',
-        Component: LocationStatsPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <LocationStatsPage />
+          </Suspense>
+        ),
       },
       {
         path: 'plans',
-        Component: PlansPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <PlansPage />
+          </Suspense>
+        ),
       },
       {
         path: 'cancel-plan',
-        Component: CancelPlanPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <CancelPlanPage />
+          </Suspense>
+        ),
       },
       {
         path: 'contact-support',
-        Component: ContactSupportPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ContactSupportPage />
+          </Suspense>
+        ),
       },
       {
         path: 'trial-expired',
-        Component: TrialExpiredPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <TrialExpiredPage />
+          </Suspense>
+        ),
       },
     ],
   },
   {
     path: '/pricing',
-    Component: PricingPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <PricingPage />
+      </Suspense>
+    ),
   },
   {
     path: '/features',
-    Component: FeaturesPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <FeaturesPage />
+      </Suspense>
+    ),
   },
   {
     path: '/how-it-works',
-    Component: HowItWorksPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <HowItWorksPage />
+      </Suspense>
+    ),
   },
   {
     path: '/help',
-    Component: HelpCenter,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <HelpCenter />
+      </Suspense>
+    ),
   },
   {
     path: '/contact-us',
-    Component: ContactUsPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <ContactUsPage />
+      </Suspense>
+    ),
   },
   {
     path: '/privacy',
-    Component: PrivacyPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <PrivacyPage />
+      </Suspense>
+    ),
   },
   {
     path: '/terms',
-    Component: TermsOfServicePage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <TermsOfServicePage />
+      </Suspense>
+    ),
   },
   {
     path: '/terms-of-service',
-    Component: TermsOfServicePage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <TermsOfServicePage />
+      </Suspense>
+    ),
   },
   {
     path: '/admin/login',
-    Component: AdminLoginPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <AdminLoginPage />
+      </Suspense>
+    ),
   },
   {
     path: '/admin',
-    Component: AdminLayout,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <AdminLayout />
+      </Suspense>
+    ),
     children: [
       {
         index: true,
-        Component: AdminDashboard,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminDashboard />
+          </Suspense>
+        ),
       },
       {
         path: 'users',
-        Component: AdminUsersPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminUsersPage />
+          </Suspense>
+        ),
       },
       {
         path: 'users/:userId',
-        Component: AdminUserDetail,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminUserDetail />
+          </Suspense>
+        ),
       },
       {
         path: 'locations',
-        Component: AdminLocationsPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminLocationsPage />
+          </Suspense>
+        ),
       },
       {
         path: 'locations/:locationId',
-        Component: AdminLocationDetail,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminLocationDetail />
+          </Suspense>
+        ),
       },
       {
         path: 'feedback',
-        Component: AdminFeedbackPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminFeedbackPage />
+          </Suspense>
+        ),
       },
       {
         path: 'suggestions',
-        Component: AdminSuggestionsPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminSuggestionsPage />
+          </Suspense>
+        ),
       },
       {
         path: 'opt-ins',
-        Component: AdminOptInsPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminOptInsPage />
+          </Suspense>
+        ),
       },
       {
         path: 'analytics',
-        Component: AdminAnalyticsPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminAnalyticsPage />
+          </Suspense>
+        ),
       },
       {
         path: 'plans',
-        Component: AdminPlansPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminPlansPage />
+          </Suspense>
+        ),
       },
       {
         path: 'settings',
-        Component: AdminSettingsPage,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminSettingsPage />
+          </Suspense>
+        ),
       },
     ],
   },
   {
     path: '*',
-    Component: NotFoundPage,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <NotFoundPage />
+      </Suspense>
+    ),
   },
 ]);

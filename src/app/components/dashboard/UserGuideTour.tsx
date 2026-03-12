@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Joyride, { Step, CallBackProps, STATUS } from 'react-joyride';
-import { HelpCircle } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 interface UserGuideTourProps {
   run?: boolean;
@@ -81,7 +81,7 @@ export function UserGuideTour({ run = false, onComplete }: UserGuideTourProps) {
         <div className="p-2">
           <h3 className="text-xl font-bold text-slate-900 mb-3">You&apos;re All Set!</h3>
           <p className="text-slate-700 mb-2">
-            You can restart this tour anytime from the Help menu. Visit Locations and edit a location to add review platforms and branding, then share your feedback link.
+            You can restart this tour anytime from the Tutorial button. Visit Locations and edit a location to add review platforms and branding, then share your feedback link.
           </p>
         </div>
       ),
@@ -163,11 +163,11 @@ export function UserGuideButton({ onOpen, onStartTour }: UserGuideButtonProps) {
     <button
       onClick={handleClick}
       data-tour="help-button"
-      className="flex items-center gap-2 px-3 py-2 w-full justify-start text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-      title="Start User Guide"
+      className="flex items-center gap-2 px-3 py-2 w-full justify-start text-sm font-medium text-slate-900 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+      title="Start Tutorial"
     >
-      <HelpCircle className="w-5 h-5" />
-      <span className="hidden sm:inline">Help and Tutorial</span>
+      <BookOpen className="w-5 h-5 flex-shrink-0" />
+      <span className="inline">Tutorial</span>
     </button>
   );
 }

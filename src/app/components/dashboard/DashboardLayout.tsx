@@ -13,12 +13,22 @@ export function DashboardLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [runTour, setRunTour] = useState(false);
 
-  // Auto-start tour for first-time users
+  // Auto-start tour only on user's first ever session (never again unless they click Tutorial)
   useEffect(() => {
-    if (!localStorage.getItem('feedback-page-tour-completed')) {
+    if (loading || !user) return;
+
+    const completed = localStorage.getItem('feedback-page-tour-completed');
+    const autoShown = localStorage.getItem('feedback-page-tour-auto-shown');
+    if (completed || autoShown) return;
+
+    // Ensure we're on Feedback tab and give DOM time to render targets
+    navigate('/dashboard?tab=feedback', { replace: true });
+    const timer = setTimeout(() => {
+      localStorage.setItem('feedback-page-tour-auto-shown', 'true');
       setRunTour(true);
-    }
-  }, []);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [loading, user, navigate]);
 
   // Redirect unauthenticated users to login
   useEffect(() => {
