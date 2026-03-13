@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
-import { MessageSquare, MapPin, CreditCard, HelpCircle, Settings } from 'lucide-react';
+import { MessageSquare, MapPin, HelpCircle, Settings } from 'lucide-react';
 import { FeedbackList } from './dashboard/FeedbackList';
 import { LocationsManager } from './dashboard/LocationsManager';
 import { BillingPanel } from './dashboard/BillingPanel';
@@ -37,7 +37,6 @@ export function Dashboard() {
   const tabs = [
     { id: 'feedback' as const, label: 'Feedback', icon: MessageSquare },
     { id: 'locations' as const, label: 'Locations', icon: MapPin },
-    { id: 'billing' as const, label: 'Billing', icon: CreditCard },
     { id: 'settings' as const, label: 'Settings', icon: Settings },
     { id: 'help' as const, label: 'Help', icon: HelpCircle },
   ];

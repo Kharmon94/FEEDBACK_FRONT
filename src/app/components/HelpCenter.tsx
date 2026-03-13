@@ -52,7 +52,7 @@ export function HelpCenter() {
       title: 'Billing and subscription management',
       description: 'Manage your plan, payment methods, and invoices',
       category: 'Billing',
-      answer: 'Go to Dashboard > Billing to view your current plan, upgrade or downgrade, and manage payment methods. For plan changes or cancellations, use the Plans page. Contact support if you need help with invoices.',
+      answer: 'Go to Settings > Billing & plan to view your current plan, upgrade or downgrade, and manage payment methods. For plan changes or cancellations, use the Plans page. Contact support if you need help with invoices.',
     },
     {
       icon: Book,

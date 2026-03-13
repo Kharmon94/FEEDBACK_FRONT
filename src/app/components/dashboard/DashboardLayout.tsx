@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router';
-import { MessageSquare, LogOut, Menu, X, MapPin, CreditCard, HelpCircle, Settings } from 'lucide-react';
+import { MessageSquare, LogOut, Menu, X, MapPin, HelpCircle, Settings } from 'lucide-react';
 import { UserGuideButton, UserGuideTour } from './UserGuideTour';
 import { useAuth } from '../../contexts/AuthContext';
 const logo = "/logo.png";
@@ -80,7 +80,6 @@ export function DashboardLayout() {
   const tabs = [
     { id: 'feedback', label: 'Feedback', icon: MessageSquare, path: '/dashboard?tab=feedback' },
     { id: 'locations', label: 'Locations', icon: MapPin, path: '/dashboard?tab=locations' },
-    { id: 'billing', label: 'Billing', icon: CreditCard, path: '/dashboard?tab=billing' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard?tab=settings' },
     { id: 'help', label: 'Help', icon: HelpCircle, path: '/dashboard?tab=help' },
   ];
