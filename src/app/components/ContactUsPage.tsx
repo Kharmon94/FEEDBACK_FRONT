@@ -1,20 +1,21 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router';
+import { Link } from 'react-router';
 import { Mail, Phone, MessageSquare, Send, CheckCircle2, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Footer } from './Footer';
 import { SEO } from './SEO';
+import { api } from '../services/api';
 const logo = "/logo.png";
 
 export function ContactUsPage() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
+    name: user?.name ?? '',
+    email: user?.email ?? '',
     phone: '',
     subject: '',
     message: ''
@@ -31,25 +32,22 @@ export function ContactUsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setError(null);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    console.log('Contact form submitted:', formData);
-    setSubmitted(true);
-    setSubmitting(false);
-
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
+    try {
+      await api.submitContact({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || undefined,
+        subject: formData.subject,
+        message: formData.message,
       });
-      setSubmitted(false);
-    }, 3000);
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send message. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -341,6 +339,10 @@ export function ContactUsPage() {
                 />
               </div>
 
+              {error && (
+                <p className="text-sm text-red-600">{error}</p>
+              )}
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -357,11 +359,10 @@ export function ContactUsPage() {
                 )}
               </button>
 
-              {/* Submission Confirmation */}
               {submitted && (
-                <div className="mt-4 text-sm text-green-500 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5" />
-                  Message sent successfully!
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                  Message sent successfully! We'll get back to you soon.
                 </div>
               )}
             </form>

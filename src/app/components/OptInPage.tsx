@@ -77,7 +77,21 @@ export function OptInPage() {
     );
   }
 
-  if (hasLocation && !business) {
+  if (!locationId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Location required</h1>
+          <p className="text-slate-600 mb-4">
+            Newsletter sign-up must be done from a business's opt-in page. Use the link provided by the business (e.g. feedback-page.com/l/their-location/opt-in).
+          </p>
+          <Link to="/" className="text-blue-600 hover:underline">Go to home</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!business) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Loading...</div>

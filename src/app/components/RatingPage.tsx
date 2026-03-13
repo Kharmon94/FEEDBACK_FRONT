@@ -16,10 +16,8 @@ export function RatingPage() {
     const initializeDemo = async () => {
       try {
         await api.initDemo();
-        console.log('Demo initialized successfully');
         setIsInitialized(true);
-      } catch (err) {
-        console.log('Demo initialization skipped - continuing with UI');
+      } catch {
         // Continue anyway - don't block the UI
         setIsInitialized(true);
       }
@@ -29,24 +27,10 @@ export function RatingPage() {
     initializeDemo();
   }, []); // Only run once on mount
 
-  useEffect(() => {
-    console.log('Rating selected:', rating);
-  }, [rating]);
-
   const handleSubmit = () => {
-    console.log('=== SUBMIT CLICKED ===');
-    console.log('isInitialized:', isInitialized);
-    console.log('rating:', rating);
-    
-    if (!isInitialized || rating === 0) {
-      console.log('Blocked: isInitialized =', isInitialized, ', rating =', rating);
-      return;
-    }
-
-    console.log('Submitting rating:', rating, 'comment:', comment);
+    if (!isInitialized || rating === 0) return;
 
     if (rating >= 1 && rating <= 3) {
-      console.log('LOW RATING - Navigating to feedback form');
       // Use URL params as backup
       const params = new URLSearchParams();
       params.set('rating', rating.toString());
@@ -57,7 +41,6 @@ export function RatingPage() {
         state: { rating, comment } 
       });
     } else if (rating >= 4 && rating <= 5) {
-      console.log('HIGH RATING - Navigating to thank you page');
       // Use URL params as backup
       const params = new URLSearchParams();
       params.set('rating', rating.toString());
@@ -67,8 +50,6 @@ export function RatingPage() {
         replace: false,
         state: { rating, comment } 
       });
-    } else {
-      console.log('Invalid rating:', rating);
     }
   };
 

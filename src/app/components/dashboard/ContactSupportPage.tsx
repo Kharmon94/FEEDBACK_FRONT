@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Send, CheckCircle2, Mail, MessageSquare } from 'lucide-react';
+import { Send, CheckCircle2, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
+import { api } from '../../services/api';
 
 export function ContactSupportPage() {
   const { user } = useAuth();
@@ -12,18 +13,28 @@ export function ContactSupportPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
 
     setSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      await api.submitContact({
+        name: user?.name,
+        email: user?.email || '',
+        subject: formData.subject,
+        message: formData.message,
+      });
       setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit. Please try again.');
+    } finally {
       setSubmitting(false);
-    }, 1000);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -145,6 +156,10 @@ export function ContactSupportPage() {
               Include any relevant details, error messages, or steps to reproduce the issue
             </p>
           </div>
+
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
 
           {/* Submit Button */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">

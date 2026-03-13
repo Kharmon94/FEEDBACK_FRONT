@@ -50,7 +50,11 @@ export function FeedbackForm() {
   }, [locationId, stateLocationName, stateLogoUrl]);
 
   if (!rating) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <p className="text-slate-600">Taking you back...</p>
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

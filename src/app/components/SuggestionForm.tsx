@@ -36,7 +36,7 @@ export function SuggestionForm() {
         setPublicId(null);
       });
     } else {
-      setBusiness({ name: 'Feedback Page', logoUrl: undefined } as Business);
+      setBusiness(null);
       setPublicId(null);
       setLocationNotFound(false);
     }
@@ -73,6 +73,20 @@ export function SuggestionForm() {
         <div className="text-center">
           <h1 className="text-xl font-semibold text-slate-900 mb-2">Location not found</h1>
           <p className="text-slate-600 mb-4">The suggestion page link may be invalid or expired.</p>
+          <Link to="/" className="text-blue-600 hover:underline">Go to home</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!locationId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Location required</h1>
+          <p className="text-slate-600 mb-4">
+            Suggestions must be submitted from a business's feedback page. If you have a suggestion link from a business, use that. Otherwise, visit their feedback page and look for the suggestions option.
+          </p>
           <Link to="/" className="text-blue-600 hover:underline">Go to home</Link>
         </div>
       </div>

@@ -321,6 +321,20 @@ export const api = {
     return request<{ plans: Plan[] }>('/plans', { skipAuth: true });
   },
 
+  async submitContact(params: {
+    name?: string;
+    email: string;
+    phone?: string;
+    subject: string;
+    message: string;
+  }): Promise<{ success: boolean }> {
+    return request<{ success: boolean }>('/contact', {
+      method: 'POST',
+      body: JSON.stringify(params),
+      skipAuth: true,
+    });
+  },
+
   async createCheckoutSession(planSlug: string, billingPeriod: 'monthly' | 'yearly'): Promise<{ url: string }> {
     return request<{ url: string }>('/checkout/create_session', {
       method: 'POST',
