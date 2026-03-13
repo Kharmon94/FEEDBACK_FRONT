@@ -14,6 +14,8 @@ export function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showStripeConfirmModal, setShowStripeConfirmModal] = useState(false);
+  const [pendingStripeValue, setPendingStripeValue] = useState<boolean | null>(null);
 
   useEffect(() => {
     api.getAdminSettings()
@@ -277,7 +279,11 @@ export function AdminSettingsPage() {
             <input
               type="checkbox"
               checked={settings.stripe_live_mode ?? false}
-              onChange={(e) => update({ stripe_live_mode: e.target.checked })}
+              onChange={(e) => {
+                const newVal = e.target.checked;
+                setPendingStripeValue(newVal);
+                setShowStripeConfirmModal(true);
+              }}
               className="sr-only peer"
             />
             <div className="relative w-11 h-6 bg-slate-200 peer-checked:bg-slate-900 rounded-full peer-focus:ring-2 peer-focus:ring-slate-900/20 transition-colors">
@@ -288,6 +294,42 @@ export function AdminSettingsPage() {
           </label>
         </div>
       </div>
+
+      {showStripeConfirmModal && pendingStripeValue !== null && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-200">
+            <div className="p-5 border-b border-slate-200">
+              <div className="font-semibold text-slate-900">Confirm Stripe Mode Change</div>
+            </div>
+            <div className="p-5">
+              <p className="text-slate-600 text-sm">
+                Are you sure you want to switch to {pendingStripeValue ? 'Live Mode' : 'Test Mode'}? This will change which Stripe keys are used for checkout and billing. Make sure your Stripe keys and webhooks are configured for the selected mode.
+              </p>
+            </div>
+            <div className="p-5 pt-0 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowStripeConfirmModal(false);
+                  setPendingStripeValue(null);
+                }}
+                className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  update({ stripe_live_mode: pendingStripeValue });
+                  setShowStripeConfirmModal(false);
+                  setPendingStripeValue(null);
+                }}
+                className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

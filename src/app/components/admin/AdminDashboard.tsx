@@ -7,7 +7,9 @@ import {
   Star,
   Activity,
   Gift,
-  Lightbulb
+  Lightbulb,
+  CreditCard,
+  Settings
 } from 'lucide-react';
 import { api, type AdminRecentActivityItem } from '../../../services/api';
 
@@ -312,6 +314,42 @@ export function AdminDashboard() {
             className="w-full py-2 px-4 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
           >
             View Opt-Ins
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-emerald-700" />
+            </div>
+            <h4 className="font-semibold text-slate-900">Plans & Billing</h4>
+          </div>
+          <p className="text-sm text-slate-600 mb-4">
+            Manage plans, pricing, and Stripe configuration
+          </p>
+          <button 
+            onClick={() => navigate('/admin/plans')}
+            className="w-full py-2 px-4 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
+          >
+            View Plans
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+              <Settings className="w-5 h-5 text-slate-700" />
+            </div>
+            <h4 className="font-semibold text-slate-900">Settings</h4>
+          </div>
+          <p className="text-sm text-slate-600 mb-4">
+            System settings, feature toggles, and Stripe mode
+          </p>
+          <button 
+            onClick={() => navigate('/admin/settings')}
+            className="w-full py-2 px-4 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors"
+          >
+            View Settings
           </button>
         </div>
       </div>

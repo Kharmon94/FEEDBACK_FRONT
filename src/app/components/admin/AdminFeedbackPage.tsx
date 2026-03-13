@@ -30,15 +30,17 @@ export function AdminFeedbackPage() {
   const loadFeedback = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const ratingNum = filterRating !== 'all' && filterRating !== 'positive' && filterRating !== 'negative'
-        ? parseInt(filterRating, 10)
-        : undefined;
+      const ratingParam = filterRating === 'all'
+        ? undefined
+        : filterRating === 'positive' || filterRating === 'negative'
+          ? filterRating
+          : parseInt(filterRating, 10);
       const data = await api.getAdminFeedback({
         page,
         per_page: 50,
         location_id: locationIdFromUrl || undefined,
         user_id: userIdFromUrl || undefined,
-        rating: ratingNum,
+        rating: ratingParam,
       });
       setFeedback(data.feedback);
       setPagination(data.pagination);
@@ -154,6 +156,8 @@ export function AdminFeedbackPage() {
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
               >
                 <option value="all">All Ratings</option>
+                <option value="positive">Positive (4-5 stars)</option>
+                <option value="negative">Negative (1-2 stars)</option>
                 <option value="5">5 Stars</option>
                 <option value="4">4 Stars</option>
                 <option value="3">3 Stars</option>

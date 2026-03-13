@@ -489,7 +489,7 @@ export const api = {
     return adminExport('/admin/locations/export');
   },
 
-  async getAdminFeedback(params?: { page?: number; per_page?: number; location_id?: string; user_id?: string; rating?: number }): Promise<AdminFeedbackResponse> {
+  async getAdminFeedback(params?: { page?: number; per_page?: number; location_id?: string; user_id?: string; rating?: number | string }): Promise<AdminFeedbackResponse> {
     const sp = new URLSearchParams();
     if (params?.page != null) sp.set('page', String(params.page));
     if (params?.per_page != null) sp.set('per_page', String(params.per_page));
@@ -508,13 +508,22 @@ export const api = {
     return adminExport('/admin/feedback/export');
   },
 
-  async getAdminAnalytics(params?: { range?: string }): Promise<AdminAnalyticsResponse> {
-    const q = params?.range ? `?range=${encodeURIComponent(params.range)}` : '';
-    return request<AdminAnalyticsResponse>(`/admin/analytics${q}`);
+  async getAdminAnalytics(params?: { since?: string; location_id?: string; user_id?: string }): Promise<AdminAnalyticsResponse> {
+    const sp = new URLSearchParams();
+    if (params?.since) sp.set('since', params.since);
+    if (params?.location_id) sp.set('location_id', params.location_id);
+    if (params?.user_id) sp.set('user_id', params.user_id);
+    const q = sp.toString();
+    return request<AdminAnalyticsResponse>(`/admin/analytics${q ? `?${q}` : ''}`);
   },
 
-  async exportAdminAnalytics(): Promise<Blob> {
-    return adminExport('/admin/analytics/export');
+  async exportAdminAnalytics(params?: { since?: string; location_id?: string; user_id?: string }): Promise<Blob> {
+    const sp = new URLSearchParams();
+    if (params?.since) sp.set('since', params.since);
+    if (params?.location_id) sp.set('location_id', params.location_id);
+    if (params?.user_id) sp.set('user_id', params.user_id);
+    const q = sp.toString();
+    return adminExport(`/admin/analytics/export${q ? `?${q}` : ''}`);
   },
 
   async getAdminSettings(): Promise<AdminSettings> {
@@ -653,6 +662,8 @@ export interface AdminUser {
   status: string;
   locations_count: number;
   feedback_count: number;
+  suggestions_count?: number;
+  opt_ins_count?: number;
   created_at: string;
 }
 
@@ -670,6 +681,8 @@ export interface AdminLocation {
   user_name: string | null;
   user_email: string;
   feedback_count: number;
+  suggestions_count?: number;
+  opt_ins_count?: number;
   avg_rating: number | null;
   created_at: string;
 }

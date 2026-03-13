@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, Link } from 'react-router';
 import {
   ArrowLeft,
   MapPin,
@@ -102,13 +102,13 @@ export function AdminLocationDetail() {
             <span className="text-sm font-medium text-slate-600">Feedback</span>
           </div>
           <p className="text-3xl font-bold text-slate-900">{Number(location.feedback_count ?? 0).toLocaleString()}</p>
-          <a
-            href={`/admin/feedback?location_id=${location.public_id || location.id}`}
+          <Link
+            to={`/admin/feedback?location_id=${location.public_id || location.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-flex items-center gap-1"
           >
             View feedback for this location
             <ExternalLink className="w-3 h-3" />
-          </a>
+          </Link>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -117,13 +117,14 @@ export function AdminLocationDetail() {
             </div>
             <span className="text-sm font-medium text-slate-600">Suggestions</span>
           </div>
-          <a
-            href={`/admin/suggestions?location_id=${location.public_id || location.id}`}
+          <p className="text-3xl font-bold text-slate-900">{Number(location.suggestions_count ?? 0).toLocaleString()}</p>
+          <Link
+            to={`/admin/suggestions?location_id=${location.public_id || location.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-flex items-center gap-1"
           >
             View suggestions for this location
             <ExternalLink className="w-3 h-3" />
-          </a>
+          </Link>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -132,13 +133,14 @@ export function AdminLocationDetail() {
             </div>
             <span className="text-sm font-medium text-slate-600">Opt-Ins</span>
           </div>
-          <a
-            href={`/admin/opt-ins?location_id=${location.public_id || location.id}`}
+          <p className="text-3xl font-bold text-slate-900">{Number(location.opt_ins_count ?? 0).toLocaleString()}</p>
+          <Link
+            to={`/admin/opt-ins?location_id=${location.public_id || location.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-flex items-center gap-1"
           >
             View opt-ins for this location
             <ExternalLink className="w-3 h-3" />
-          </a>
+          </Link>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-2">

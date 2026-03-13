@@ -281,6 +281,7 @@ export function AdminUserDetail() {
             </div>
             <span className="text-sm font-medium text-slate-600">Suggestions</span>
           </div>
+          <p className="text-3xl font-bold text-slate-900">{Number(user.suggestions_count ?? 0).toLocaleString()}</p>
           <Link
             to={`/admin/suggestions?user_id=${user.public_id || user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
@@ -295,6 +296,7 @@ export function AdminUserDetail() {
             </div>
             <span className="text-sm font-medium text-slate-600">Opt-Ins</span>
           </div>
+          <p className="text-3xl font-bold text-slate-900">{Number(user.opt_ins_count ?? 0).toLocaleString()}</p>
           <Link
             to={`/admin/opt-ins?user_id=${user.public_id || user.id}`}
             className="text-sm text-slate-600 hover:text-slate-900 mt-1 inline-block"
