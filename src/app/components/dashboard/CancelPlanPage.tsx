@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { AlertTriangle, Check, CheckCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { api } from '../../../services/api';
 
 export function CancelPlanPage() {
   const navigate = useNavigate();
@@ -21,15 +22,16 @@ export function CancelPlanPage() {
 
   const handleCancelPlan = async () => {
     setLoading(true);
-    
     try {
-      // TODO: Add API call to cancel subscription
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
-      
+      const { url } = await api.createPortalSession();
+      if (url) {
+        window.location.href = url;
+        return;
+      }
       setCancelled(true);
     } catch (error) {
       console.error('Failed to cancel plan:', error);
-      alert('Failed to cancel plan. Please try again or contact support.');
+      alert(error instanceof Error ? error.message : 'Failed to open cancellation page. Please try again or contact support.');
     } finally {
       setLoading(false);
     }

@@ -11,6 +11,19 @@ export function BillingPanel() {
   const [showFeatures, setShowFeatures] = useState(false);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const openBillingPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { url } = await api.createPortalSession();
+      if (url) window.location.href = url;
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Could not open billing portal');
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   const currentPlanSlug = user?.plan || 'free';
   const currentPlan = useMemo(() => plans.find((p) => p.slug === currentPlanSlug) || null, [plans, currentPlanSlug]);
@@ -108,49 +121,26 @@ export function BillingPanel() {
         )}
       </div>
 
-      {/* Payment Method */}
+      {/* Payment Method & Billing History */}
       <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-black mb-4">Payment Method</h3>
+        <h3 className="text-lg font-semibold text-black mb-4">Payment & Invoices</h3>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 rounded-lg gap-4 border border-gray-200">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center">
               <CreditCard className="w-6 h-6 text-white" />
             </div>
             <div>
-              <div className="font-medium text-black">•••• •••• •••• 4242</div>
-              <div className="text-sm text-gray-600">Expires 12/2025</div>
+              <div className="font-medium text-black">Manage payment method and view invoices</div>
+              <div className="text-sm text-gray-600">Update your card or download past invoices in Stripe</div>
             </div>
           </div>
-          <button className="px-4 py-2 text-sm font-medium text-black hover:bg-gray-100 rounded-lg transition-colors border border-gray-300">
-            Update
+          <button
+            onClick={openBillingPortal}
+            disabled={portalLoading}
+            className="px-4 py-2 text-sm font-medium text-black hover:bg-gray-100 rounded-lg transition-colors border border-gray-300 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {portalLoading ? 'Loading...' : 'Manage'}
           </button>
-        </div>
-      </div>
-
-      {/* Billing History */}
-      <div className="bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-black mb-4">Billing History</h3>
-        <div className="space-y-3">
-          {[
-            { date: 'Feb 1, 2026', amount: 29, status: 'Paid' },
-            { date: 'Jan 1, 2026', amount: 29, status: 'Paid' },
-            { date: 'Dec 1, 2025', amount: 29, status: 'Paid' },
-          ].map((invoice, index) => (
-            <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-lg gap-3 border border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="text-black font-medium">{invoice.date}</div>
-                <span className="px-2 py-1 text-xs font-medium bg-black text-white rounded">
-                  {invoice.status}
-                </span>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="font-semibold text-black">${invoice.amount}.00</div>
-                <button className="text-sm font-medium text-black hover:underline">
-                  Download
-                </button>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>

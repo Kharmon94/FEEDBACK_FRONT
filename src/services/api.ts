@@ -321,6 +321,20 @@ export const api = {
     return request<{ plans: Plan[] }>('/plans', { skipAuth: true });
   },
 
+  async createCheckoutSession(planSlug: string, billingPeriod: 'monthly' | 'yearly'): Promise<{ url: string }> {
+    return request<{ url: string }>('/checkout/create_session', {
+      method: 'POST',
+      body: JSON.stringify({ plan_slug: planSlug, billing_period: billingPeriod }),
+    });
+  },
+
+  async createPortalSession(): Promise<{ url: string }> {
+    return request<{ url: string }>('/portal/create_session', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+  },
+
   async getFeedback(since?: string, locationId?: string): Promise<FeedbackSubmission[]> {
     const params = new URLSearchParams();
     if (since) params.set('since', since);
@@ -709,6 +723,7 @@ export interface AdminSettings {
   notify_on_new_feedback: boolean;
   notify_on_new_suggestion: boolean;
   notify_on_new_optin?: boolean;
+  stripe_live_mode?: boolean;
 }
 
 export interface AdminSuggestion {

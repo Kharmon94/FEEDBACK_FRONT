@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Check, Crown, Zap, Building2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { api, type Plan } from '../../../services/api';
 
 export function PlansPage() {
+  const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const { user } = useAuth();
   const currentPlanSlug = user?.plan || 'free';
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -160,23 +163,32 @@ export function PlansPage() {
               </div>
 
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (plan.slug === 'enterprise') {
-                    alert('Contact sales for Enterprise plan');
-                  } else {
-                    alert(`Upgrading to ${plan.name} plan`);
+                    navigate('/contact-us');
+                    return;
+                  }
+                  if (isCurrentPlan) return;
+                  setCheckoutLoading(plan.slug);
+                  try {
+                    const { url } = await api.createCheckoutSession(plan.slug, billingPeriod);
+                    if (url) window.location.href = url;
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : 'Failed to start checkout');
+                  } finally {
+                    setCheckoutLoading(null);
                   }
                 }}
-                disabled={isCurrentPlan}
+                disabled={isCurrentPlan || checkoutLoading != null}
                 className={`w-full py-2.5 rounded-lg font-medium transition-colors mb-4 ${
                   isCurrentPlan
                     ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
                     : plan.highlighted
                     ? 'bg-slate-900 text-white hover:bg-slate-800'
                     : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                }`}
+                } disabled:opacity-70 disabled:cursor-not-allowed`}
               >
-                {isCurrentPlan ? 'Current Plan' : (plan.cta || (plan.slug === 'enterprise' ? 'Contact Sales' : 'Select Plan'))}
+                {checkoutLoading === plan.slug ? 'Loading...' : isCurrentPlan ? 'Current Plan' : (plan.cta || (plan.slug === 'enterprise' ? 'Contact Sales' : 'Select Plan'))}
               </button>
 
               <div className="pt-4 border-t border-slate-200">

@@ -61,14 +61,12 @@ export function PricingPage() {
     // If logged in, proceed with checkout
     setLoading(planId);
     try {
-      // This would create a Stripe checkout session in production
-      // For now, just navigate to dashboard
-      setTimeout(() => {
-        setLoading(null);
-        navigate('/dashboard');
-      }, 1000);
+      const { url } = await api.createCheckoutSession(planId, billingPeriod);
+      if (url) window.location.href = url;
     } catch (error) {
       console.error('Error selecting plan:', error);
+      alert(error instanceof Error ? error.message : 'Failed to start checkout');
+    } finally {
       setLoading(null);
     }
   };

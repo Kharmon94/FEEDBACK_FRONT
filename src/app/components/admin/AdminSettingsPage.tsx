@@ -4,7 +4,8 @@ import {
   AlertCircle,
   CheckCircle,
   Shield,
-  Globe
+  Globe,
+  CreditCard
 } from 'lucide-react';
 import { api, type AdminSettings } from '../../../services/api';
 
@@ -250,6 +251,38 @@ export function AdminSettingsPage() {
             <div className="relative w-11 h-6 bg-slate-200 peer-checked:bg-slate-900 rounded-full peer-focus:ring-2 peer-focus:ring-slate-900/20 transition-colors">
               <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full transition-transform ${
                 (settings.notify_on_new_optin ?? true) ? 'translate-x-5' : ''
+              }`} />
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+            <CreditCard className="w-5 h-5 text-amber-700" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Stripe</h3>
+            <p className="text-sm text-slate-600">Billing and payment configuration</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <label className="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+            <div>
+              <div className="font-medium text-slate-900">Stripe Live Mode</div>
+              <div className="text-sm text-slate-600">When enabled, checkout and billing use live Stripe keys. When disabled, test keys are used.</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={settings.stripe_live_mode ?? false}
+              onChange={(e) => update({ stripe_live_mode: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="relative w-11 h-6 bg-slate-200 peer-checked:bg-slate-900 rounded-full peer-focus:ring-2 peer-focus:ring-slate-900/20 transition-colors">
+              <div className={`absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full transition-transform ${
+                (settings.stripe_live_mode ?? false) ? 'translate-x-5' : ''
               }`} />
             </div>
           </label>
