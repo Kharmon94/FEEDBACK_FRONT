@@ -4,7 +4,7 @@ import { Mail, Phone, MessageSquare, Send, CheckCircle2, Menu, X } from 'lucide-
 import { useAuth } from '../contexts/AuthContext';
 import { Footer } from './Footer';
 import { SEO } from './SEO';
-import { api } from '../services/api';
+import { api } from '../../services/api';
 const logo = "/logo.png";
 
 export function ContactUsPage() {
