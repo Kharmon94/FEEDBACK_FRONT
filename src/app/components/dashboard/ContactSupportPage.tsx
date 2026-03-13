@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Send, CheckCircle2, Mail } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
-import { api } from '../../services/api';
+import { api } from '../../../services/api';
 
 export function ContactSupportPage() {
   const { user } = useAuth();
