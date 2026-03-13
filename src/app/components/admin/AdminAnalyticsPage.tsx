@@ -28,7 +28,7 @@ export function AdminAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [locations, setLocations] = useState<AdminLocation[]>([]);
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [filterUsers, setFilterUsers] = useState<AdminUser[]>([]);
   const [timeRange, setTimeRange] = useState<string>('all');
   const [filterLocationId, setFilterLocationId] = useState<string>('');
   const [filterUserId, setFilterUserId] = useState<string>('');
@@ -55,7 +55,7 @@ export function AdminAnalyticsPage() {
 
   useEffect(() => {
     api.getAdminLocations({ per_page: 500 }).then((r) => setLocations(r.locations)).catch(() => setLocations([]));
-    api.getAdminUsers({ per_page: 500 }).then((r) => setUsers(r.users)).catch(() => setUsers([]));
+    api.getAdminUsers({ per_page: 500 }).then((r) => setFilterUsers(r.users)).catch(() => setFilterUsers([]));
   }, []);
 
   const exportReport = async () => {
@@ -103,7 +103,7 @@ export function AdminAnalyticsPage() {
   }));
 
   const selectedLocation = locations.find((l) => (l.public_id || l.id) === filterLocationId);
-  const selectedUser = users.find((u) => (u.public_id || u.id) === filterUserId);
+  const selectedUser = filterUsers.find((u) => (u.public_id || u.id) === filterUserId);
 
   return (
     <div className="space-y-6">
@@ -170,7 +170,7 @@ export function AdminAnalyticsPage() {
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900"
               >
                 <option value="">All users</option>
-                {users.map((u) => (
+                {filterUsers.map((u) => (
                   <option key={u.id} value={u.public_id || u.id}>{u.name || u.email}</option>
                 ))}
               </select>
