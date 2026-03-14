@@ -362,21 +362,25 @@ export function FeedbackList() {
 
   return (
     <div className="space-y-6">
-      {/* Table Type & Time Range Selectors */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-        <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-          <label htmlFor="table-type" className="text-sm font-medium text-slate-700">View:</label>
-          <select
-            id="table-type"
-            value={tableType}
-            onChange={(e) => setTableType(e.target.value as TableType)}
-            className="w-full min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 focus:border-slate-900 focus:ring-2 focus:ring-slate-900 sm:flex-initial"
-          >
-            {(Object.keys(TABLE_TYPE_LABELS) as TableType[]).map((t) => (
-              <option key={t} value={t}>{TABLE_TYPE_LABELS[t]}</option>
-            ))}
-          </select>
+      {/* View Tabs & Time Range Selectors */}
+      <div className="flex flex-col gap-4">
+        <div className="flex border-b border-slate-200">
+          {(Object.keys(TABLE_TYPE_LABELS) as TableType[]).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTableType(t)}
+              className={`px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                tableType === t
+                  ? 'border-slate-900 text-slate-900'
+                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
+              }`}
+            >
+              {TABLE_TYPE_LABELS[t]}
+            </button>
+          ))}
         </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
         {tableType === 'feedback' && (
           <>
             <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
@@ -408,6 +412,7 @@ export function FeedbackList() {
             </div>
           </>
         )}
+      </div>
       </div>
 
       {/* Stats Grid - Feedback only */}
