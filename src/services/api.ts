@@ -403,6 +403,11 @@ export const api = {
     return request('/profile/password', { method: 'PUT', body: JSON.stringify(data) });
   },
 
+  async deleteAccount(password?: string): Promise<void> {
+    const body = password != null ? { password } : {};
+    await request('/profile', { method: 'DELETE', body: JSON.stringify(body) });
+  },
+
   async getOnboarding(): Promise<{ business_name?: string; name?: string; logo_url?: string; review_platforms?: Record<string, string> }> {
     return request('/onboarding');
   },

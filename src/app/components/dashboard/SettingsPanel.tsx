@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Save, User, Mail, Lock, ExternalLink, ChevronRight } from 'lucide-react';
+import { Save, User, Mail, Lock, ExternalLink, ChevronRight, AlertTriangle } from 'lucide-react';
 import { api } from '../../api/client';
 import { api as railsApi } from '../../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -15,7 +15,7 @@ interface Profile {
 }
 
 export function SettingsPanel() {
-  const { user, refreshUser } = useAuth();
+  const { signOut, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [emailPrefsSummary, setEmailPrefsSummary] = useState<{ enabled: boolean } | null>(null);
@@ -39,6 +39,12 @@ export function SettingsPanel() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // Close account state
+  const [closeConfirmChecked, setCloseConfirmChecked] = useState(false);
+  const [closePassword, setClosePassword] = useState('');
+  const [closeDeleting, setCloseDeleting] = useState(false);
+  const [closeError, setCloseError] = useState('');
 
   const hasPassword = !profile?.provider;
 
@@ -98,6 +104,26 @@ export function SettingsPanel() {
       setEmailError(err instanceof Error ? err.message : 'Failed to update email');
     } finally {
       setEmailSaving(false);
+    }
+  };
+
+  const handleCloseAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!closeConfirmChecked) return;
+    if (hasPassword && !closePassword.trim()) {
+      setCloseError('Please enter your password to confirm.');
+      return;
+    }
+    setCloseError('');
+    setCloseDeleting(true);
+    try {
+      await railsApi.deleteAccount(hasPassword ? closePassword : undefined);
+      await signOut();
+      navigate('/', { replace: true });
+    } catch (err) {
+      setCloseError(err instanceof Error ? err.message : 'Failed to close account');
+    } finally {
+      setCloseDeleting(false);
     }
   };
 
@@ -287,6 +313,52 @@ export function SettingsPanel() {
             <ChevronRight className="w-5 h-5 text-slate-400" />
           </button>
         </div>
+      </div>
+
+      {/* Close account */}
+      <div className="bg-white rounded-xl border border-red-200 p-6">
+        <h3 className="text-lg font-semibold text-slate-900 mb-2 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-red-600" />
+          Close account
+        </h3>
+        <p className="text-sm text-slate-600 mb-4">
+          Permanently delete your account and all associated data. This cannot be undone.
+        </p>
+        <form onSubmit={handleCloseAccount} className="space-y-4">
+          {closeError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">{closeError}</div>
+          )}
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={closeConfirmChecked}
+              onChange={(e) => setCloseConfirmChecked(e.target.checked)}
+              className="mt-1 rounded border-slate-300"
+            />
+            <span className="text-sm text-slate-700">
+              I understand this will permanently delete my account and data.
+            </span>
+          </label>
+          {hasPassword && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Confirm your password</label>
+              <input
+                type="password"
+                value={closePassword}
+                onChange={(e) => setClosePassword(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-red-600"
+                placeholder="••••••••"
+              />
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={!closeConfirmChecked || closeDeleting || (hasPassword && !closePassword.trim())}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {closeDeleting ? 'Closing account...' : 'Close account'}
+          </button>
+        </form>
       </div>
     </div>
   );

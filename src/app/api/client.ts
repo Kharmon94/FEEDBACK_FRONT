@@ -338,6 +338,10 @@ export const api = {
     return railsApi.changePassword(data);
   },
 
+  async deleteAccount(password?: string) {
+    return railsApi.deleteAccount(password);
+  },
+
   async getFeedbackAnalytics(since?: string, locationId?: string) {
     return railsApi.getFeedbackAnalytics(since, locationId);
   },
