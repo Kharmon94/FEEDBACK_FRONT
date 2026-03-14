@@ -34,6 +34,8 @@ export interface Location {
   color_scheme?: { primary?: string; secondary?: string; accent?: string } | null;
   email_notifications?: boolean;
   notification_emails?: string[];
+  opt_in_enabled?: boolean;
+  opt_in_redirect_url?: string | null;
 }
 
 export interface FeedbackSubmission {

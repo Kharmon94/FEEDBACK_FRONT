@@ -19,12 +19,16 @@ export function OptInPage() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [publicId, setPublicId] = useState<string | null>(null);
   const [locationNotFound, setLocationNotFound] = useState(false);
+  const [optInEnabled, setOptInEnabled] = useState(true);
+  const [optInRedirectUrl, setOptInRedirectUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (locationId) {
       api.getLocation(locationId).then((loc) => {
         setBusiness({ name: loc.name, logoUrl: loc.logoUrl } as Business);
         setPublicId(loc.publicId || locationId);
+        setOptInEnabled(loc.optInEnabled !== false);
+        setOptInRedirectUrl(loc.optInRedirectUrl ?? null);
         setLocationNotFound(false);
       }).catch(() => {
         setLocationNotFound(true);
@@ -37,6 +41,12 @@ export function OptInPage() {
       setLocationNotFound(false);
     }
   }, [locationId]);
+
+  useEffect(() => {
+    if (business && optInEnabled && optInRedirectUrl) {
+      window.location.href = optInRedirectUrl;
+    }
+  }, [business, optInEnabled, optInRedirectUrl]);
 
   const [optInName, setOptInName] = useState('');
   const [optInEmail, setOptInEmail] = useState('');
@@ -95,6 +105,43 @@ export function OptInPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-slate-600">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!optInEnabled) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 relative">
+        <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
+          <button
+            onClick={() => navigate((publicId || locationId) ? `/l/${publicId || locationId}` : -1)}
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm font-medium">Back</span>
+          </button>
+        </div>
+        <div className="min-h-screen flex items-center justify-center p-4 md:p-6">
+          <div className="w-full max-w-xl text-center">
+            <div className="text-center mb-6 md:mb-8">
+              <img src={business?.logoUrl || logo} alt={business?.name || 'Logo'} className="h-20 md:h-24 max-w-[200px] max-h-[200px] w-auto mx-auto object-contain" />
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-6 md:p-8">
+              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight">
+                Newsletter sign-up is disabled for this location
+              </h1>
+              <p className="text-sm text-slate-600 mb-6">
+                This location has disabled the newsletter and rewards sign-up. Please contact the business for more information.
+              </p>
+              <button
+                onClick={() => navigate((publicId || locationId) ? `/l/${publicId || locationId}` : '/')}
+                className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-slate-800 transition-all shadow-sm"
+              >
+                Back to Feedback
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

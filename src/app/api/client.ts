@@ -48,6 +48,8 @@ function mapLocationFromApi(l: {
   color_scheme?: { primary?: string; secondary?: string; accent?: string } | null;
   email_notifications?: boolean;
   notification_emails?: string[];
+  opt_in_enabled?: boolean;
+  opt_in_redirect_url?: string | null;
 }) {
   const rp = l.review_platforms ?? {};
   return {
@@ -64,6 +66,8 @@ function mapLocationFromApi(l: {
     colorScheme: l.color_scheme ?? { primary: '#000000', secondary: '#ffffff', accent: '#fbbf24' },
     emailNotifications: l.email_notifications ?? true,
     notificationEmails: l.notification_emails ?? [],
+    optInEnabled: l.opt_in_enabled !== false,
+    optInRedirectUrl: l.opt_in_redirect_url ?? undefined,
     createdAt: '',
   };
 }
@@ -132,6 +136,8 @@ export const api = {
     colorScheme?: { primary?: string; secondary?: string; accent?: string };
     emailNotifications?: boolean;
     notificationEmails?: string[];
+    optInEnabled?: boolean;
+    optInRedirectUrl?: string | null;
   }) {
     const platforms = reviewPlatformsToHash(data.reviewPlatforms);
     const loc = await railsApi.createLocation({
@@ -145,6 +151,8 @@ export const api = {
       color_scheme: data.colorScheme,
       email_notifications: data.emailNotifications,
       notification_emails: data.notificationEmails,
+      opt_in_enabled: data.optInEnabled,
+      opt_in_redirect_url: data.optInRedirectUrl ?? undefined,
     });
     return mapLocationFromApi(loc);
   },
@@ -160,6 +168,8 @@ export const api = {
     colorScheme?: { primary?: string; secondary?: string; accent?: string };
     emailNotifications?: boolean;
     notificationEmails?: string[];
+    optInEnabled?: boolean;
+    optInRedirectUrl?: string | null;
   }) {
     const platforms = data.reviewPlatforms ? reviewPlatformsToHash(data.reviewPlatforms) : undefined;
     const loc = await railsApi.updateLocation(locationId, {
@@ -173,6 +183,8 @@ export const api = {
       color_scheme: data.colorScheme,
       email_notifications: data.emailNotifications,
       notification_emails: data.notificationEmails,
+      opt_in_enabled: data.optInEnabled,
+      opt_in_redirect_url: data.optInRedirectUrl ?? undefined,
     });
     return mapLocationFromApi(loc);
   },

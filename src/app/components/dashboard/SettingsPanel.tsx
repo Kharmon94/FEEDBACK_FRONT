@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
-import { Save, User, Mail, Lock, ExternalLink, ChevronRight, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Save, User, Mail, Lock, ChevronRight, AlertTriangle, Bell } from 'lucide-react';
 import { api } from '../../api/client';
 import { api as railsApi } from '../../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,7 +18,10 @@ export function SettingsPanel() {
   const { signOut, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [emailPrefsSummary, setEmailPrefsSummary] = useState<{ enabled: boolean } | null>(null);
+  const [emailPrefs, setEmailPrefs] = useState<{ email_notifications_enabled: boolean; email_marketing_opt_out: boolean } | null>(null);
+  const [emailPrefsSaving, setEmailPrefsSaving] = useState(false);
+  const [emailPrefsSaved, setEmailPrefsSaved] = useState(false);
+  const [emailPrefsError, setEmailPrefsError] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Profile form state
@@ -62,7 +65,7 @@ export function SettingsPanel() {
       setProfile(profileData);
       setName(profileData.name ?? '');
       setNewEmail(profileData.email ?? '');
-      setEmailPrefsSummary(emailData ? { enabled: emailData.email_notifications_enabled } : null);
+      setEmailPrefs(emailData ? { email_notifications_enabled: emailData.email_notifications_enabled, email_marketing_opt_out: emailData.email_marketing_opt_out } : null);
     } catch (error) {
       console.error('Failed to load settings:', error);
     } finally {
@@ -124,6 +127,27 @@ export function SettingsPanel() {
       setCloseError(err instanceof Error ? err.message : 'Failed to close account');
     } finally {
       setCloseDeleting(false);
+    }
+  };
+
+  const handleSaveEmailPrefs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (emailPrefs == null) return;
+    setEmailPrefsError('');
+    setEmailPrefsSaving(true);
+    setEmailPrefsSaved(false);
+    try {
+      const data = await railsApi.updateEmailPreferences({
+        email_notifications_enabled: emailPrefs.email_notifications_enabled,
+        email_marketing_opt_out: emailPrefs.email_marketing_opt_out,
+      });
+      setEmailPrefs({ email_notifications_enabled: data.email_notifications_enabled, email_marketing_opt_out: data.email_marketing_opt_out });
+      setEmailPrefsSaved(true);
+      setTimeout(() => setEmailPrefsSaved(false), 3000);
+    } catch (err) {
+      setEmailPrefsError(err instanceof Error ? err.message : 'Failed to save preferences');
+    } finally {
+      setEmailPrefsSaving(false);
     }
   };
 
@@ -282,25 +306,69 @@ export function SettingsPanel() {
         </div>
       )}
 
-      {/* Preferences Section */}
+      {/* Email preferences */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Preferences</h3>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium text-slate-900">Email notifications</p>
-            <p className="text-sm text-slate-600 mt-1">
-              {emailPrefsSummary != null
-                ? emailPrefsSummary.enabled ? 'Notifications are on' : 'Notifications are off'
-                : 'Manage which emails you receive'}
-            </p>
-          </div>
-          <Link
-            to="/email-preferences"
-            className="inline-flex items-center gap-2 px-4 py-2 text-slate-900 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-          >
-            Manage <ExternalLink className="w-4 h-4" />
-          </Link>
-        </div>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+          <Bell className="w-5 h-5" />
+          Email preferences
+        </h3>
+        <p className="text-sm text-slate-600 mb-4">Manage which emails you receive from Feedback Page</p>
+        {emailPrefs != null ? (
+          <form onSubmit={handleSaveEmailPrefs} className="space-y-4">
+            {emailPrefsError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">{emailPrefsError}</div>
+            )}
+            {emailPrefsSaved && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">Preferences saved</div>
+            )}
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={emailPrefs.email_notifications_enabled}
+                  onChange={(e) => setEmailPrefs(p => p ? { ...p, email_notifications_enabled: e.target.checked } : null)}
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                />
+                <span>
+                  <span className="font-medium text-slate-900 block">Receive email notifications</span>
+                  <span className="text-sm text-slate-600">Get notified about new feedback, suggestions, and account updates</span>
+                </span>
+              </label>
+            </div>
+            <div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={emailPrefs.email_marketing_opt_out}
+                  onChange={(e) => setEmailPrefs(p => p ? { ...p, email_marketing_opt_out: e.target.checked } : null)}
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                />
+                <span>
+                  <span className="font-medium text-slate-900 block">Opt out of marketing emails</span>
+                  <span className="text-sm text-slate-600">Unsubscribe from product updates and promotional emails</span>
+                </span>
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEmailPrefs(p => p ? { ...p, email_notifications_enabled: false, email_marketing_opt_out: true } : null)}
+              className="text-sm text-slate-600 hover:text-red-600 underline"
+            >
+              Unsubscribe from all emails
+            </button>
+            <p className="text-xs text-slate-500">You will still receive essential account emails (e.g. password reset)</p>
+            <button
+              type="submit"
+              disabled={emailPrefsSaving}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50"
+            >
+              <Save className="w-5 h-5" />
+              {emailPrefsSaving ? 'Saving...' : emailPrefsSaved ? 'Saved!' : 'Save preferences'}
+            </button>
+          </form>
+        ) : (
+          <p className="text-sm text-slate-500">Loading preferences...</p>
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-6">

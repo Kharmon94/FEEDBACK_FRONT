@@ -13,6 +13,8 @@ interface Location {
   logoUrl?: string;
   reviewPlatforms: Array<{ name: string; url: string }>;
   createdAt: string;
+  optInEnabled?: boolean;
+  optInRedirectUrl?: string | null;
 }
 
 interface Feedback {
@@ -290,7 +292,18 @@ export function LocationStatsPage() {
             View Page
           </a>
         </div>
-        <p className="text-xs font-medium text-slate-700 mb-2">Opt-In Page:</p>
+        <p className="text-xs font-medium text-slate-700 mb-2">
+          Opt-In Page:
+          {location.optInEnabled === false && (
+            <span className="ml-2 text-amber-600 font-normal">(Disabled)</span>
+          )}
+          {location.optInEnabled !== false && location.optInRedirectUrl && (
+            <span className="ml-2 text-blue-600 font-normal">(Custom URL)</span>
+          )}
+          {location.optInEnabled !== false && !location.optInRedirectUrl && (
+            <span className="ml-2 text-slate-500 font-normal">(Built-in form)</span>
+          )}
+        </p>
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => copyPageUrl(publicId, 'opt-in', e)}

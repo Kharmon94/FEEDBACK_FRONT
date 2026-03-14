@@ -255,6 +255,8 @@ export const api = {
     color_scheme?: { primary?: string; secondary?: string; accent?: string };
     email_notifications?: boolean;
     notification_emails?: string[];
+    opt_in_enabled?: boolean;
+    opt_in_redirect_url?: string | null;
   }): Promise<Location> {
     const { location } = await request<{ location: Location }>('/locations', {
       method: 'POST',
@@ -274,6 +276,8 @@ export const api = {
     color_scheme?: { primary?: string; secondary?: string; accent?: string };
     email_notifications?: boolean;
     notification_emails?: string[];
+    opt_in_enabled?: boolean;
+    opt_in_redirect_url?: string | null;
   }): Promise<Location> {
     const { location } = await request<{ location: Location }>(`/locations/${id}`, {
       method: 'PUT',

@@ -23,6 +23,8 @@ interface Location {
     secondary: string;
     accent: string;
   };
+  optInEnabled?: boolean;
+  optInRedirectUrl?: string;
 }
 
 export function EditLocationPage() {
@@ -51,10 +53,13 @@ export function EditLocationPage() {
   const [saving, setSaving] = useState(false);
   
   // Collapsible sections state
+  const [optInEnabled, setOptInEnabled] = useState(true);
+  const [optInRedirectUrl, setOptInRedirectUrl] = useState('');
   const [sectionsOpen, setSectionsOpen] = useState({
     basicInfo: true,
     reviewPlatforms: false,
     notifications: false,
+    newsletterRewards: false,
     customization: false,
     colorScheme: false,
     dangerZone: false
@@ -91,6 +96,8 @@ export function EditLocationPage() {
           secondary: '#ffffff', // white  
           accent: '#fbbf24' // yellow-400 for stars
         });
+        setOptInEnabled(loc.optInEnabled !== false);
+        setOptInRedirectUrl(loc.optInRedirectUrl || '');
       } else {
         alert('Location not found');
         navigate('/dashboard?tab=locations');
@@ -133,6 +140,8 @@ export function EditLocationPage() {
         if (email) formData.append('email', email);
         formData.append('custom_message', customMessage);
         formData.append('email_notifications', String(emailNotifications));
+        formData.append('opt_in_enabled', String(optInEnabled));
+        if (optInRedirectUrl.trim()) formData.append('opt_in_redirect_url', optInRedirectUrl.trim());
         formData.append('color_scheme[primary]', colorScheme.primary);
         formData.append('color_scheme[secondary]', colorScheme.secondary);
         formData.append('color_scheme[accent]', colorScheme.accent);
@@ -180,7 +189,9 @@ export function EditLocationPage() {
         emailNotifications,
         notificationEmails: notificationEmails.filter(e => e.trim() !== ''),
         customMessage,
-        colorScheme
+        colorScheme,
+        optInEnabled,
+        optInRedirectUrl: optInRedirectUrl.trim() || undefined
       };
 
       await api.updateLocation(locationId, locationData);
@@ -518,6 +529,60 @@ export function EditLocationPage() {
                     </div>
                     <p className="text-xs text-slate-500 mt-2">
                       These emails will receive notifications when new feedback is submitted (maximum 5 emails)
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Newsletter & Rewards - Collapsible */}
+          <div className="border border-slate-200 rounded-lg">
+            <button
+              type="button"
+              onClick={() => toggleSection('newsletterRewards')}
+              className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+            >
+              <h2 className="text-lg font-semibold text-slate-900">Newsletter & Rewards</h2>
+              {sectionsOpen.newsletterRewards ? (
+                <ChevronUp className="w-5 h-5 text-slate-600" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-slate-600" />
+              )}
+            </button>
+
+            {sectionsOpen.newsletterRewards && (
+              <div className="px-4 pb-4 border-t border-slate-200 pt-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-slate-900">Enable newsletter/rewards sign-up</label>
+                    <p className="text-sm text-slate-600 mt-1">Allow visitors to join your newsletter and rewards program from the thank-you page</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={optInEnabled}
+                      onChange={(e) => setOptInEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+
+                {optInEnabled && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Custom sign-up URL (optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={optInRedirectUrl}
+                      onChange={(e) => setOptInRedirectUrl(e.target.value)}
+                      className="w-full px-4 py-2.5 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="https://..."
+                    />
+                    <p className="text-xs text-slate-500 mt-2">
+                      Redirect visitors to your own signup page (e.g. Mailchimp) instead of the built-in form. Leave blank to use our form.
                     </p>
                   </div>
                 )}

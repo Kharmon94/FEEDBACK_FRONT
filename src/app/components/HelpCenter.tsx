@@ -45,7 +45,7 @@ export function HelpCenter() {
       title: 'Setting up email notifications',
       description: 'Get notified when you receive new feedback',
       category: 'Features',
-      answer: 'For each location, go to Locations → Edit and enable email notifications in the Notification Settings section. Manage your global email preferences (notifications, marketing) in Settings or at /email-preferences.',
+      answer: 'For each location, go to Locations → Edit and enable email notifications in the Notification Settings section. Manage your global email preferences (notifications, marketing) in Settings → Email preferences.',
     },
     {
       icon: CreditCard,
@@ -270,7 +270,7 @@ export function HelpCenter() {
               Contact Support
             </Link>
             <Link
-              to="/email-preferences"
+              to="/dashboard?tab=settings"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white rounded-xl hover:bg-white/20 transition-colors font-medium"
             >
               Email Preferences

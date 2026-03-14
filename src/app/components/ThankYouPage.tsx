@@ -31,6 +31,8 @@ export function ThankYouPage() {
     name?: string;
     reviewPlatforms?: Array<{ name: string; url: string }>;
     publicId?: string;
+    optInEnabled?: boolean;
+    optInRedirectUrl?: string | null;
   } | null>(() => {
     if (stateReviewPlatforms.length > 0 || stateLocationName || stateLogoUrl) {
       return {
@@ -56,7 +58,9 @@ export function ThankYouPage() {
           logoUrl: loc.logoUrl,
           name: loc.name,
           reviewPlatforms: loc.reviewPlatforms || [],
-          publicId: loc.publicId
+          publicId: loc.publicId,
+          optInEnabled: loc.optInEnabled !== false,
+          optInRedirectUrl: loc.optInRedirectUrl ?? undefined
         });
       }).catch(() => {
         setBusiness({ name: 'Business', reviewPlatforms: [] });
@@ -198,18 +202,34 @@ export function ThankYouPage() {
             </div>
           )}
 
-          {/* Opt-In Button */}
-          <div className="mb-8">
-            <button
-              onClick={() => navigate(`/l/${publicId}/opt-in`, { state: { rating } })}
-              className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 border-2 border-black bg-white rounded-lg hover:bg-black hover:text-white transition-all group"
-            >
-              <Gift className="w-4 h-4" strokeWidth={2} />
-              <span className="text-sm font-semibold">
-                Join Our Newsletter & Rewards Program
-              </span>
-            </button>
-          </div>
+          {/* Opt-In Button - Only show when enabled */}
+          {business?.optInEnabled !== false && (
+            <div className="mb-8">
+              {business?.optInRedirectUrl ? (
+                <a
+                  href={business.optInRedirectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 border-2 border-black bg-white rounded-lg hover:bg-black hover:text-white transition-all group"
+                >
+                  <Gift className="w-4 h-4" strokeWidth={2} />
+                  <span className="text-sm font-semibold">
+                    Join Our Newsletter & Rewards Program
+                  </span>
+                </a>
+              ) : (
+                <button
+                  onClick={() => navigate(`/l/${publicId}/opt-in`, { state: { rating } })}
+                  className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 border-2 border-black bg-white rounded-lg hover:bg-black hover:text-white transition-all group"
+                >
+                  <Gift className="w-4 h-4" strokeWidth={2} />
+                  <span className="text-sm font-semibold">
+                    Join Our Newsletter & Rewards Program
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
