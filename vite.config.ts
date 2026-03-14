@@ -23,6 +23,8 @@ export default defineConfig({
             }
             return 'vendor'
           }
+          // Explicit chunk names to avoid case-sensitivity issues (OptIn vs Optin) on Linux servers
+          if (id.includes('OptInPage')) return 'OptInPage'
         },
       },
     },
