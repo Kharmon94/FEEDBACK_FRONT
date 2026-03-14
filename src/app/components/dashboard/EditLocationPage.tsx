@@ -631,20 +631,34 @@ export function EditLocationPage() {
 
             {sectionsOpen.customization && (
               <div className="px-4 pb-4 space-y-4 border-t border-slate-200 pt-4">
-                {/* Preview Button */}
+                {/* Preview Toggle */}
                 <div className="flex justify-center sm:justify-end">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowPreview(true);
+                      setShowPreview(p => !p);
                     }}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors font-medium"
                   >
                     <Eye className="w-4 h-4" />
-                    Preview Page
+                    {showPreview ? 'Hide Preview' : 'Preview Page'}
                   </button>
                 </div>
+
+                {/* Inline Preview */}
+                {showPreview && (
+                  <div className="rounded-xl border border-slate-200 overflow-hidden bg-slate-50">
+                    <FeedbackPagePreview
+                      locationName={name}
+                      locationAddress={address}
+                      logoUrl={logoPreview}
+                      customMessage={customMessage}
+                      pageCopy={pageCopy}
+                      colorScheme={colorScheme}
+                    />
+                  </div>
+                )}
 
                 {/* Custom Message */}
                 <div>
@@ -915,34 +929,6 @@ export function EditLocationPage() {
         </form>
       </div>
 
-      {/* Preview Modal */}
-      {showPreview && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPreview(false)}>
-          <div className="bg-white rounded-xl max-w-4xl w-full h-[80vh] overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">Feedback Page Preview</h3>
-              <button
-                onClick={() => setShowPreview(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="h-[calc(100%-64px)] overflow-auto">
-              <FeedbackPagePreview
-                locationName={name}
-                locationAddress={address}
-                logoUrl={logoPreview}
-                customMessage={customMessage}
-                pageCopy={pageCopy}
-                colorScheme={colorScheme}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

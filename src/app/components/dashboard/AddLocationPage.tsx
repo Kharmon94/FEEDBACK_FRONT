@@ -23,6 +23,11 @@ export function AddLocationPage() {
   
   // Step 3: Design Customization
   const [customMessage, setCustomMessage] = useState('');
+  const [pageCopy, setPageCopy] = useState<{ feedback: Record<string, string>; suggestions: Record<string, string>; rewards: Record<string, string> }>({
+    feedback: {},
+    suggestions: {},
+    rewards: {}
+  });
   const [colorScheme, setColorScheme] = useState({
     primary: '#000000',
     secondary: '#ffffff',
@@ -74,7 +79,12 @@ export function AddLocationPage() {
             url: p.url
           })),
         customMessage: customMessage || undefined,
-        colorScheme: colorScheme || undefined
+        colorScheme: colorScheme || undefined,
+        pageCopy: (() => {
+          const clean = (obj: Record<string, string>) => Object.fromEntries(Object.entries(obj || {}).filter(([, v]) => v?.trim()));
+          const f = clean(pageCopy.feedback); const s = clean(pageCopy.suggestions); const r = clean(pageCopy.rewards);
+          return (Object.keys(f).length || Object.keys(s).length || Object.keys(r).length) ? { feedback: f, suggestions: s, rewards: r } : undefined;
+        })()
       };
 
       await api.createLocation(locationData);
@@ -381,6 +391,25 @@ export function AddLocationPage() {
               </div>
 
               <div>
+                <h3 className="text-base font-medium text-slate-900 mb-3">Page Copy (Optional)</h3>
+                <p className="text-sm text-slate-600 mb-3">Customize headlines and prompts on your feedback, suggestions, and rewards pages. Leave blank to use defaults.</p>
+                <div className="space-y-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Feedback page title</label>
+                    <input type="text" value={pageCopy.feedback?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, page_title: e.target.value } }))} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" placeholder="How was your experience at {name}?" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Suggestions page title</label>
+                    <input type="text" value={pageCopy.suggestions?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, page_title: e.target.value } }))} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" placeholder="Share your ideas" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Rewards page title</label>
+                    <input type="text" value={pageCopy.rewards?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, page_title: e.target.value } }))} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" placeholder="Join Our Newsletter & Rewards Program" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-3">
                   Color Scheme
                 </label>
@@ -465,16 +494,9 @@ export function AddLocationPage() {
                   <FeedbackPagePreview
                     locationName={name || 'Your Location'}
                     locationAddress={address || 'Your Address'}
-                    phone={phone}
-                    email={email}
                     logoUrl={logoPreview || undefined}
-                    reviewPlatforms={reviewPlatforms
-                      .filter(p => p.url && (p.name !== 'Custom' || p.customName))
-                      .map(p => ({
-                        name: p.name === 'Custom' && p.customName ? p.customName : p.name,
-                        url: p.url
-                      }))}
                     customMessage={customMessage}
+                    pageCopy={pageCopy}
                     colorScheme={colorScheme}
                   />
                 </div>
