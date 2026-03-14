@@ -364,7 +364,7 @@ export function FeedbackList() {
     <div className="space-y-6">
       {/* View Tabs & Time Range Selectors */}
       <div className="flex flex-col gap-4">
-        <div className="flex border-b border-slate-200">
+        <div className="flex justify-center border-b border-slate-200">
           {(Object.keys(TABLE_TYPE_LABELS) as TableType[]).map((t) => (
             <button
               key={t}
