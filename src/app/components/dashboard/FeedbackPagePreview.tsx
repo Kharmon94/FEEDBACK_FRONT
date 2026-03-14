@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 const logo = "/logo.png";
-import { getPageCopy } from '../utils/pageCopy';
+import { getPageCopy } from '../../utils/pageCopy';
 
 interface FeedbackPagePreviewProps {
   locationName: string;
