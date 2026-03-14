@@ -193,12 +193,15 @@ export function EditLocationPage() {
         throw new Error(errMsg);
       }
 
+      // Don't send base64 logo URLs (backend rejects them); only http(s) URLs
+      const safeLogoUrl = finalLogoUrl && !finalLogoUrl.startsWith('data:') ? finalLogoUrl : undefined;
+
       const locationData = {
         name,
         address,
         phone: phone || undefined,
         email: email || undefined,
-        logoUrl: finalLogoUrl || undefined,
+        logoUrl: safeLogoUrl,
         reviewPlatforms: reviewPlatforms
           .filter(p => p.url && (p.name !== 'Custom' || p.customName))
           .map(p => ({
