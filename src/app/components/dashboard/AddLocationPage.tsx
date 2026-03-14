@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, ArrowRight, Check, Trash2, Eye } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Trash2, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../../api/client';
 import { getBaseUrl, getToken } from '../../../services/api';
 import { FeedbackPagePreview } from './FeedbackPagePreview';
@@ -35,7 +35,8 @@ export function AddLocationPage() {
     accent: '#fbbf24'
   });
   const [showPreview, setShowPreview] = useState(false);
-  
+  const [pageCopyOpen, setPageCopyOpen] = useState(false);
+
   const [saving, setSaving] = useState(false);
 
   const steps = [
@@ -431,98 +432,115 @@ export function AddLocationPage() {
                 </p>
               </div>
 
-              <div className="border-t border-slate-200 pt-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">Page Copy</h3>
-                <p className="text-sm text-slate-600 mb-4">Customize the copy shown on your feedback, suggestions, and rewards pages. Leave blank to use defaults.</p>
+              {/* Page Copy - Collapsible (matches Edit Location) */}
+              <div className="border border-slate-200 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setPageCopyOpen(o => !o)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+                >
+                  <h2 className="text-lg font-semibold text-slate-900">Page Copy</h2>
+                  {pageCopyOpen ? (
+                    <ChevronUp className="w-5 h-5 text-slate-600" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-slate-600" />
+                  )}
+                </button>
 
-                {/* Feedback Page */}
-                <div className="mb-6">
+                {pageCopyOpen && (
+                <div className="px-4 pb-4 border-t border-slate-200 pt-4 space-y-6">
+                  <p className="text-sm text-slate-600">Customize the copy shown on your feedback, suggestions, and rewards pages. Leave blank to use defaults.</p>
+
+                  {/* Feedback Page */}
+                  <div>
                   <h4 className="text-base font-medium text-slate-900 mb-3">Feedback Page</h4>
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Page title</label>
-                      <input type="text" value={pageCopy.feedback?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="How was your experience at {name}?" />
+                      <input type="text" value={pageCopy.feedback?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="How was your experience at {name}?" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Rating prompt</label>
-                      <input type="text" value={pageCopy.feedback?.rating_prompt ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, rating_prompt: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Please rate your experience:" />
+                      <input type="text" value={pageCopy.feedback?.rating_prompt ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, rating_prompt: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Please rate your experience:" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Comment placeholder</label>
-                      <input type="text" value={pageCopy.feedback?.comment_placeholder ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, comment_placeholder: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Share more about your experience... (optional)" />
+                      <input type="text" value={pageCopy.feedback?.comment_placeholder ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, comment_placeholder: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Share more about your experience... (optional)" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Comment helper</label>
-                      <input type="text" value={pageCopy.feedback?.comment_helper ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, comment_helper: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="This helps us understand your experience better" />
+                      <input type="text" value={pageCopy.feedback?.comment_helper ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, comment_helper: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="This helps us understand your experience better" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Suggestion link text</label>
-                      <input type="text" value={pageCopy.feedback?.suggestion_link ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, suggestion_link: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Have a suggestion instead?" />
+                      <input type="text" value={pageCopy.feedback?.suggestion_link ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, suggestion_link: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Have a suggestion instead?" />
                     </div>
                   </div>
                 </div>
 
-                {/* Suggestions Page */}
-                <div className="mb-6">
+                  {/* Suggestions Page */}
+                  <div>
                   <h4 className="text-base font-medium text-slate-900 mb-3">Suggestions Page</h4>
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Page title</label>
-                      <input type="text" value={pageCopy.suggestions?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Share your ideas" />
+                      <input type="text" value={pageCopy.suggestions?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Share your ideas" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Page subtitle</label>
-                      <input type="text" value={pageCopy.suggestions?.page_subtitle ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, page_subtitle: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="We'd love to hear your suggestions for {name}" />
+                      <input type="text" value={pageCopy.suggestions?.page_subtitle ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, page_subtitle: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="We'd love to hear your suggestions for {name}" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Suggestion placeholder</label>
-                      <input type="text" value={pageCopy.suggestions?.suggestion_placeholder ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, suggestion_placeholder: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="I think it would be great if..." />
+                      <input type="text" value={pageCopy.suggestions?.suggestion_placeholder ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, suggestion_placeholder: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="I think it would be great if..." />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Submit button</label>
-                      <input type="text" value={pageCopy.suggestions?.submit_button ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, submit_button: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Submit suggestion" />
+                      <input type="text" value={pageCopy.suggestions?.submit_button ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, submit_button: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Submit suggestion" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Privacy note</label>
-                      <input type="text" value={pageCopy.suggestions?.privacy_note ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, privacy_note: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Your suggestion will be reviewed by the {name} team" />
+                      <input type="text" value={pageCopy.suggestions?.privacy_note ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, privacy_note: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Your suggestion will be reviewed by the {name} team" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Back link text</label>
-                      <input type="text" value={pageCopy.suggestions?.back_link ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, back_link: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Rate your experience" />
+                      <input type="text" value={pageCopy.suggestions?.back_link ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, back_link: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Rate your experience" />
                     </div>
                   </div>
-                </div>
+                  </div>
 
-                {/* Rewards Page */}
-                <div>
+                  {/* Rewards Page */}
+                  <div>
                   <h4 className="text-base font-medium text-slate-900 mb-3">Rewards Page</h4>
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Page title</label>
-                      <input type="text" value={pageCopy.rewards?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Join Our Newsletter & Rewards Program" />
+                      <input type="text" value={pageCopy.rewards?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Join Our Newsletter & Rewards Program" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Page subtitle</label>
-                      <input type="text" value={pageCopy.rewards?.page_subtitle ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, page_subtitle: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Get exclusive offers from {name}, early access to new features, and earn rewards for your loyalty!" />
+                      <input type="text" value={pageCopy.rewards?.page_subtitle ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, page_subtitle: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Get exclusive offers from {name}, early access to new features, and earn rewards for your loyalty!" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Consent text</label>
-                      <input type="text" value={pageCopy.rewards?.consent_text ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, consent_text: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="I agree to receive promotional emails, SMS messages, and exclusive offers..." />
+                      <input type="text" value={pageCopy.rewards?.consent_text ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, consent_text: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="I agree to receive promotional emails, SMS messages, and exclusive offers..." />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Join button</label>
-                      <input type="text" value={pageCopy.rewards?.join_button ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, join_button: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Join Now" />
+                      <input type="text" value={pageCopy.rewards?.join_button ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, join_button: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Join Now" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Success title</label>
-                      <input type="text" value={pageCopy.rewards?.success_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, success_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="You're all set!" />
+                      <input type="text" value={pageCopy.rewards?.success_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, success_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="You're all set!" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Success message</label>
-                      <input type="text" value={pageCopy.rewards?.success_message ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, success_message: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Thank you for joining our newsletter and rewards program..." />
+                      <input type="text" value={pageCopy.rewards?.success_message ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, success_message: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Thank you for joining our newsletter and rewards program..." />
                     </div>
                   </div>
                 </div>
+                </div>
+                )}
               </div>
 
               <div>
