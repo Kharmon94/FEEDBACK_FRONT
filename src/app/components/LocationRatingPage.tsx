@@ -4,6 +4,7 @@ import { Star, Lightbulb } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
 import { trackFeedbackEvent } from '../../services/api';
+import { getPageCopy } from '../utils/pageCopy';
 
 export function LocationRatingPage() {
   const { locationId } = useParams<{ locationId: string }>();
@@ -113,17 +114,22 @@ export function LocationRatingPage() {
             />
           </Link>
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 md:mb-3 mt-4 px-4">
-            How was your experience at {location.name}?
+            {getPageCopy(location.pageCopy, 'feedback', 'page_title', location.name)}
           </h1>
           <p className="text-base md:text-lg text-slate-600 px-4">
             {location.address}
           </p>
+          {location.customMessage && (
+            <p className="text-sm text-slate-700 mt-3 px-4 italic">
+              {location.customMessage}
+            </p>
+          )}
         </div>
 
         {/* Rating Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 md:p-8 lg:p-12">
           <p className="text-center text-base md:text-lg text-slate-700 mb-6 md:mb-8 px-4">
-            Please rate your experience:
+            {getPageCopy(location.pageCopy, 'feedback', 'rating_prompt', location.name)}
           </p>
 
           {/* Star Rating */}
@@ -155,12 +161,12 @@ export function LocationRatingPage() {
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Share more about your experience... (optional)"
+              placeholder={getPageCopy(location.pageCopy, 'feedback', 'comment_placeholder', location.name)}
               rows={4}
               className="w-full px-4 py-3 text-slate-900 bg-slate-50 border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all placeholder:text-slate-400"
             />
             <p className="text-xs text-slate-500 mt-2">
-              This helps us understand your experience better
+              {getPageCopy(location.pageCopy, 'feedback', 'comment_helper', location.name)}
             </p>
           </div>
 
@@ -177,7 +183,7 @@ export function LocationRatingPage() {
               className="inline-flex items-center gap-2 text-sm md:text-base text-slate-600 hover:text-blue-600 transition-colors group"
             >
               <Lightbulb className="w-4 h-4 md:w-5 md:h-5 group-hover:text-yellow-500 transition-colors" />
-              <span>Have a suggestion instead?</span>
+              <span>{getPageCopy(location.pageCopy, 'feedback', 'suggestion_link', location.name)}</span>
             </button>
           </div>
         </div>

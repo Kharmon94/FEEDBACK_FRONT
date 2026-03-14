@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 const logo = "/logo.png";
+import { getPageCopy } from '../utils/pageCopy';
 
 interface FeedbackPagePreviewProps {
   locationName: string;
   locationAddress: string;
   logoUrl?: string | null;
   customMessage?: string;
+  pageCopy?: { feedback?: Record<string, string>; suggestions?: Record<string, string>; rewards?: Record<string, string> };
   colorScheme?: {
     primary: string;
     secondary: string;
@@ -19,6 +21,7 @@ export function FeedbackPagePreview({
   locationAddress,
   logoUrl,
   customMessage,
+  pageCopy,
   colorScheme = {
     primary: '#1e293b', // slate-900
     secondary: '#f8fafc', // slate-50
@@ -38,7 +41,7 @@ export function FeedbackPagePreview({
             className="h-16 mx-auto mb-3"
           />
           <h1 className="text-2xl font-bold text-slate-900 mb-1 px-4">
-            How was your experience at {locationName}?
+            {getPageCopy(pageCopy, 'feedback', 'page_title', locationName)}
           </h1>
           <p className="text-sm text-slate-600 px-4">
             {locationAddress}
@@ -63,7 +66,7 @@ export function FeedbackPagePreview({
               color: colorScheme.primary
             }}
           >
-            Please rate your experience:
+            {getPageCopy(pageCopy, 'feedback', 'rating_prompt', locationName)}
           </p>
 
           {/* Star Rating */}

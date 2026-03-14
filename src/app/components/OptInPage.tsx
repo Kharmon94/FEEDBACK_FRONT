@@ -5,6 +5,7 @@ const logo = "/logo.png";
 import { api } from '../api/client';
 import { Checkbox } from './ui/checkbox';
 import type { Business } from '../types';
+import { getPageCopy } from '../utils/pageCopy';
 
 export function OptInPage() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export function OptInPage() {
   const [locationNotFound, setLocationNotFound] = useState(false);
   const [optInEnabled, setOptInEnabled] = useState(true);
   const [optInRedirectUrl, setOptInRedirectUrl] = useState<string | null>(null);
+  const [pageCopy, setPageCopy] = useState<{ feedback?: Record<string, string>; suggestions?: Record<string, string>; rewards?: Record<string, string> } | undefined>(undefined);
 
   useEffect(() => {
     if (locationId) {
@@ -29,6 +31,7 @@ export function OptInPage() {
         setPublicId(loc.publicId || locationId);
         setOptInEnabled(loc.optInEnabled !== false);
         setOptInRedirectUrl(loc.optInRedirectUrl ?? null);
+        setPageCopy(loc.pageCopy);
         setLocationNotFound(false);
       }).catch(() => {
         setLocationNotFound(true);
@@ -178,10 +181,10 @@ export function OptInPage() {
               </div>
 
               <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3 tracking-tight">
-                You're all set!
+                {getPageCopy(pageCopy, 'rewards', 'success_title', business?.name)}
               </h1>
               <p className="text-sm text-slate-600 mb-8">
-                Thank you for joining our newsletter and rewards program. We'll keep you updated with exclusive offers!
+                {getPageCopy(pageCopy, 'rewards', 'success_message', business?.name)}
               </p>
 
               <button
@@ -219,13 +222,11 @@ export function OptInPage() {
           </div>
 
           <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-3 text-center tracking-tight">
-            Join Our Newsletter & Rewards Program
+            {getPageCopy(pageCopy, 'rewards', 'page_title', business?.name)}
           </h1>
           
           <p className="text-sm text-slate-600 mb-4 text-center">
-            {business?.name
-              ? `Get exclusive offers from ${business.name}, early access to new features, and earn rewards for your loyalty!`
-              : 'Get exclusive offers, early access to new features, and earn rewards for your loyalty!'}
+            {getPageCopy(pageCopy, 'rewards', 'page_subtitle', business?.name)}
           </p>
 
           {!hasLocation && (
@@ -248,7 +249,7 @@ export function OptInPage() {
                 onCheckedChange={(checked) => setOptInChecked(!!checked)}
               />
               <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                I agree to receive promotional emails, SMS messages, and exclusive offers. I understand I can unsubscribe at any time.
+                {getPageCopy(pageCopy, 'rewards', 'consent_text', business?.name)}
               </span>
             </label>
 
@@ -311,7 +312,7 @@ export function OptInPage() {
               disabled={!optInChecked || !hasLocation || submitting}
               className="w-full bg-black text-white py-4 sm:py-5 rounded-xl font-medium text-base sm:text-lg hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
-              {submitting ? 'Joining...' : 'Join Now'}
+              {submitting ? 'Joining...' : getPageCopy(pageCopy, 'rewards', 'join_button', business?.name)}
             </button>
           </div>
           </div>

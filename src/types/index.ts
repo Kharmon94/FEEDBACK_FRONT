@@ -20,6 +20,38 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface PageCopyFeedback {
+  page_title?: string;
+  rating_prompt?: string;
+  comment_placeholder?: string;
+  comment_helper?: string;
+  suggestion_link?: string;
+}
+
+export interface PageCopySuggestions {
+  page_title?: string;
+  page_subtitle?: string;
+  suggestion_placeholder?: string;
+  submit_button?: string;
+  privacy_note?: string;
+  back_link?: string;
+}
+
+export interface PageCopyRewards {
+  page_title?: string;
+  page_subtitle?: string;
+  consent_text?: string;
+  join_button?: string;
+  success_title?: string;
+  success_message?: string;
+}
+
+export interface PageCopy {
+  feedback?: PageCopyFeedback;
+  suggestions?: PageCopySuggestions;
+  rewards?: PageCopyRewards;
+}
+
 export interface Location {
   id: number;
   public_id?: string;
@@ -36,6 +68,7 @@ export interface Location {
   notification_emails?: string[];
   opt_in_enabled?: boolean;
   opt_in_redirect_url?: string | null;
+  page_copy?: PageCopy | null;
 }
 
 export interface FeedbackSubmission {

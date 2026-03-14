@@ -4,6 +4,7 @@ import { Sparkles, User, Mail, MessageSquare, ArrowRight } from 'lucide-react';
 const logo = "/logo.png";
 import { api } from '../api/client';
 import { Business } from '../types';
+import { getPageCopy } from '../utils/pageCopy';
 
 export function SuggestionForm() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export function SuggestionForm() {
   const locationIdFromState = (location.state as { locationId?: string })?.locationId;
   const locationId = params.locationId || searchParams.get('locationId') || locationIdFromState || '';
   const [business, setBusiness] = useState<Business | null>(null);
+  const [pageCopy, setPageCopy] = useState<{ feedback?: Record<string, string>; suggestions?: Record<string, string>; rewards?: Record<string, string> } | undefined>(undefined);
   const [locationNotFound, setLocationNotFound] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -29,6 +31,7 @@ export function SuggestionForm() {
       api.getLocation(locationId).then((loc) => {
         setBusiness({ name: loc.name, logoUrl: loc.logoUrl } as Business);
         setPublicId(loc.publicId || locationId);
+        setPageCopy(loc.pageCopy);
         setLocationNotFound(false);
       }).catch(() => {
         setLocationNotFound(true);
@@ -38,6 +41,7 @@ export function SuggestionForm() {
     } else {
       setBusiness(null);
       setPublicId(null);
+      setPageCopy(undefined);
       setLocationNotFound(false);
     }
   }, [locationId]);
@@ -114,10 +118,10 @@ export function SuggestionForm() {
             />
           </Link>
           <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2 tracking-tight mt-4">
-            Share your ideas
+            {getPageCopy(pageCopy, 'suggestions', 'page_title', business.name)}
           </h1>
           <p className="text-sm md:text-base text-slate-600">
-            We'd love to hear your suggestions for {business.name}
+            {getPageCopy(pageCopy, 'suggestions', 'page_subtitle', business.name)}
           </p>
         </div>
 
@@ -137,7 +141,7 @@ export function SuggestionForm() {
                   onChange={(e) => setFormData({ ...formData, suggestion: e.target.value })}
                   rows={5}
                   className="w-full pl-11 pr-4 py-3 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-none transition-all placeholder:text-slate-400"
-                  placeholder="I think it would be great if..."
+                  placeholder={getPageCopy(pageCopy, 'suggestions', 'suggestion_placeholder', business.name)}
                 />
               </div>
             </div>
@@ -185,7 +189,7 @@ export function SuggestionForm() {
                 'Submitting...'
               ) : (
                 <>
-                  Submit suggestion
+                  {getPageCopy(pageCopy, 'suggestions', 'submit_button', business.name)}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </>
               )}
@@ -194,7 +198,7 @@ export function SuggestionForm() {
 
           {/* Privacy Note */}
           <p className="text-xs text-slate-500 text-center mt-6">
-            Your suggestion will be reviewed by the {business.name} team
+            {getPageCopy(pageCopy, 'suggestions', 'privacy_note', business.name)}
           </p>
         </div>
 
@@ -204,7 +208,7 @@ export function SuggestionForm() {
             onClick={() => navigate((publicId || locationId) ? `/l/${publicId || locationId}` : '/')}
             className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
           >
-            ← Back to rating
+            ← {getPageCopy(pageCopy, 'suggestions', 'back_link', business.name)}
           </button>
         </div>
       </div>

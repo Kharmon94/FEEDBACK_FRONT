@@ -25,7 +25,14 @@ interface Location {
   };
   optInEnabled?: boolean;
   optInRedirectUrl?: string;
+  pageCopy?: { feedback?: Record<string, string>; suggestions?: Record<string, string>; rewards?: Record<string, string> };
 }
+
+const DEFAULT_PAGE_COPY = {
+  feedback: {} as Record<string, string>,
+  suggestions: {} as Record<string, string>,
+  rewards: {} as Record<string, string>,
+};
 
 export function EditLocationPage() {
   const navigate = useNavigate();
@@ -55,12 +62,14 @@ export function EditLocationPage() {
   // Collapsible sections state
   const [optInEnabled, setOptInEnabled] = useState(true);
   const [optInRedirectUrl, setOptInRedirectUrl] = useState('');
+  const [pageCopy, setPageCopy] = useState<{ feedback: Record<string, string>; suggestions: Record<string, string>; rewards: Record<string, string> }>({ ...DEFAULT_PAGE_COPY });
   const [sectionsOpen, setSectionsOpen] = useState({
     basicInfo: true,
     reviewPlatforms: false,
     notifications: false,
     newsletterRewards: false,
     customization: false,
+    pageCopy: false,
     colorScheme: false,
     dangerZone: false
   });
@@ -98,6 +107,11 @@ export function EditLocationPage() {
         });
         setOptInEnabled(loc.optInEnabled !== false);
         setOptInRedirectUrl(loc.optInRedirectUrl || '');
+        setPageCopy({
+          feedback: (loc.pageCopy?.feedback ?? {}) as Record<string, string>,
+          suggestions: (loc.pageCopy?.suggestions ?? {}) as Record<string, string>,
+          rewards: (loc.pageCopy?.rewards ?? {}) as Record<string, string>,
+        });
       } else {
         alert('Location not found');
         navigate('/dashboard?tab=locations');
@@ -142,6 +156,11 @@ export function EditLocationPage() {
         formData.append('email_notifications', String(emailNotifications));
         formData.append('opt_in_enabled', String(optInEnabled));
         if (optInRedirectUrl.trim()) formData.append('opt_in_redirect_url', optInRedirectUrl.trim());
+        const cleanPageCopy = (() => {
+          const clean = (obj: Record<string, string>) => Object.fromEntries(Object.entries(obj || {}).filter(([, v]) => v?.trim()));
+          return { feedback: clean(pageCopy.feedback), suggestions: clean(pageCopy.suggestions), rewards: clean(pageCopy.rewards) };
+        })();
+        formData.append('page_copy', JSON.stringify(cleanPageCopy));
         formData.append('color_scheme[primary]', colorScheme.primary);
         formData.append('color_scheme[secondary]', colorScheme.secondary);
         formData.append('color_scheme[accent]', colorScheme.accent);
@@ -191,7 +210,12 @@ export function EditLocationPage() {
         customMessage,
         colorScheme,
         optInEnabled,
-        optInRedirectUrl: optInRedirectUrl.trim() || undefined
+        optInRedirectUrl: optInRedirectUrl.trim() || undefined,
+        pageCopy: (() => {
+          const clean = (obj: Record<string, string>) => Object.fromEntries(Object.entries(obj).filter(([, v]) => v?.trim()));
+          const f = clean(pageCopy.feedback || {}); const s = clean(pageCopy.suggestions || {}); const r = clean(pageCopy.rewards || {});
+          return (Object.keys(f).length || Object.keys(s).length || Object.keys(r).length) ? { feedback: f, suggestions: s, rewards: r } : undefined;
+        })()
       };
 
       await api.updateLocation(locationId, locationData);
@@ -715,6 +739,117 @@ export function EditLocationPage() {
             )}
           </div>
 
+          {/* Page Copy - Collapsible */}
+          <div className="border border-slate-200 rounded-lg">
+            <button
+              type="button"
+              onClick={() => toggleSection('pageCopy')}
+              className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+            >
+              <h2 className="text-lg font-semibold text-slate-900">Page Copy</h2>
+              {sectionsOpen.pageCopy ? (
+                <ChevronUp className="w-5 h-5 text-slate-600" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-slate-600" />
+              )}
+            </button>
+
+            {sectionsOpen.pageCopy && (
+              <div className="px-4 pb-4 border-t border-slate-200 pt-4 space-y-6">
+                <p className="text-sm text-slate-600">Customize the copy shown on your feedback, suggestions, and rewards pages. Leave blank to use defaults.</p>
+
+                {/* Feedback Page */}
+                <div>
+                  <h3 className="text-base font-medium text-slate-900 mb-3">Feedback Page</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Page title</label>
+                      <input type="text" value={pageCopy.feedback?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="How was your experience at {name}?" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Rating prompt</label>
+                      <input type="text" value={pageCopy.feedback?.rating_prompt ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, rating_prompt: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Please rate your experience:" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Comment placeholder</label>
+                      <input type="text" value={pageCopy.feedback?.comment_placeholder ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, comment_placeholder: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Share more about your experience... (optional)" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Comment helper</label>
+                      <input type="text" value={pageCopy.feedback?.comment_helper ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, comment_helper: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="This helps us understand your experience better" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Suggestion link text</label>
+                      <input type="text" value={pageCopy.feedback?.suggestion_link ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, feedback: { ...p.feedback, suggestion_link: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Have a suggestion instead?" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Suggestions Page */}
+                <div>
+                  <h3 className="text-base font-medium text-slate-900 mb-3">Suggestions Page</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Page title</label>
+                      <input type="text" value={pageCopy.suggestions?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Share your ideas" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Page subtitle</label>
+                      <input type="text" value={pageCopy.suggestions?.page_subtitle ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, page_subtitle: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="We'd love to hear your suggestions for {name}" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Suggestion placeholder</label>
+                      <input type="text" value={pageCopy.suggestions?.suggestion_placeholder ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, suggestion_placeholder: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="I think it would be great if..." />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Submit button</label>
+                      <input type="text" value={pageCopy.suggestions?.submit_button ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, submit_button: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Submit suggestion" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Privacy note</label>
+                      <input type="text" value={pageCopy.suggestions?.privacy_note ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, privacy_note: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Your suggestion will be reviewed by the {name} team" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Back link text</label>
+                      <input type="text" value={pageCopy.suggestions?.back_link ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, suggestions: { ...p.suggestions, back_link: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Rate your experience" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rewards Page */}
+                <div>
+                  <h3 className="text-base font-medium text-slate-900 mb-3">Rewards Page</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Page title</label>
+                      <input type="text" value={pageCopy.rewards?.page_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, page_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Join Our Newsletter & Rewards Program" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Page subtitle</label>
+                      <input type="text" value={pageCopy.rewards?.page_subtitle ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, page_subtitle: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Get exclusive offers from {name}, early access to new features, and earn rewards for your loyalty!" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Consent text</label>
+                      <input type="text" value={pageCopy.rewards?.consent_text ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, consent_text: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="I agree to receive promotional emails, SMS messages, and exclusive offers..." />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Join button</label>
+                      <input type="text" value={pageCopy.rewards?.join_button ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, join_button: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Join Now" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Success title</label>
+                      <input type="text" value={pageCopy.rewards?.success_title ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, success_title: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="You're all set!" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Success message</label>
+                      <input type="text" value={pageCopy.rewards?.success_message ?? ''} onChange={(e) => setPageCopy(p => ({ ...p, rewards: { ...p.rewards, success_message: e.target.value } }))} className="w-full px-4 py-2 border border-slate-300 rounded-lg" placeholder="Thank you for joining our newsletter and rewards program..." />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Danger Zone - Collapsible */}
           <div className="border-2 border-red-200 rounded-lg">
             <button
@@ -801,6 +936,7 @@ export function EditLocationPage() {
                 locationAddress={address}
                 logoUrl={logoPreview}
                 customMessage={customMessage}
+                pageCopy={pageCopy}
                 colorScheme={colorScheme}
               />
             </div>

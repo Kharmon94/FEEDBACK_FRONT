@@ -257,6 +257,7 @@ export const api = {
     notification_emails?: string[];
     opt_in_enabled?: boolean;
     opt_in_redirect_url?: string | null;
+    page_copy?: { feedback?: Record<string, string>; suggestions?: Record<string, string>; rewards?: Record<string, string> } | null;
   }): Promise<Location> {
     const { location } = await request<{ location: Location }>('/locations', {
       method: 'POST',
@@ -278,6 +279,7 @@ export const api = {
     notification_emails?: string[];
     opt_in_enabled?: boolean;
     opt_in_redirect_url?: string | null;
+    page_copy?: { feedback?: Record<string, string>; suggestions?: Record<string, string>; rewards?: Record<string, string> } | null;
   }): Promise<Location> {
     const { location } = await request<{ location: Location }>(`/locations/${id}`, {
       method: 'PUT',
