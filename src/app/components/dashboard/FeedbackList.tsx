@@ -461,13 +461,27 @@ export function FeedbackList() {
                   <span className="text-slate-600">Page views</span>
                   <span className="font-semibold">{analytics.funnel.page_views}</span>
                 </div>
-                {([1, 2, 3, 4, 5] as const).map((r) => (
-                  <div key={r} className="flex justify-between text-sm">
-                    <span className="text-slate-600">{r}★</span>
-                    <span className="font-semibold">{analytics.funnel.star_clicks_by_rating?.[r] ?? 0}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between text-sm">
+                {([1, 2, 3, 4, 5] as const).map((r) => {
+                  const count = analytics.funnel.star_clicks_by_rating?.[r] ?? 0;
+                  const starTotal = [1, 2, 3, 4, 5].reduce((s, i) => s + (analytics.funnel.star_clicks_by_rating?.[i] ?? 0), 0);
+                  const percentage = starTotal > 0 ? (count / starTotal) * 100 : 0;
+                  return (
+                    <div key={r} className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 w-10">
+                        <span className="text-sm font-medium text-slate-700">{r}</span>
+                        <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      </div>
+                      <div className="flex-1 h-5 bg-slate-100 rounded-full overflow-hidden min-w-[4rem]">
+                        <div
+                          className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all rounded-full"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-slate-700 w-12 text-right">{count}</span>
+                    </div>
+                  );
+                })}
+                <div className="flex justify-between text-sm pt-1">
                   <span className="text-slate-600">Submissions</span>
                   <span className="font-semibold">{analytics.funnel.submissions}</span>
                 </div>
