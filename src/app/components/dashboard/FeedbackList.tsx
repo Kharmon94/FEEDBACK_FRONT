@@ -341,13 +341,27 @@ export function FeedbackList() {
     }
   };
 
-  // Cards use same scope as Analytics section (time range + location only) so Total = Submissions, star stats match
-  const totalFeedback = feedback.length;
-  const positiveCount = feedback.filter(f => Number(f.rating) >= 4).length;
-  const negativeCount = feedback.filter(f => Number(f.rating) <= 3).length;
-  const averageRating = totalFeedback > 0
-    ? (feedback.reduce((sum, f) => sum + Number(f.rating), 0) / totalFeedback)
+  // Cards match Analytics section: Total = Submissions, Positive/Needs Attention/Average from star_clicks_by_rating (1★–5★)
+  const starByRating = tableType === 'feedback' && analytics?.funnel?.star_clicks_by_rating
+    ? analytics.funnel.star_clicks_by_rating
+    : null;
+  const totalFeedback = (tableType === 'feedback' && analytics?.funnel?.submissions != null)
+    ? analytics.funnel.submissions
+    : feedback.length;
+  const positiveCount = starByRating != null
+    ? (starByRating[4] ?? 0) + (starByRating[5] ?? 0)
+    : feedback.filter(f => Number(f.rating) >= 4).length;
+  const negativeCount = starByRating != null
+    ? (starByRating[1] ?? 0) + (starByRating[2] ?? 0) + (starByRating[3] ?? 0)
+    : feedback.filter(f => Number(f.rating) <= 3).length;
+  const starTotal = starByRating != null
+    ? [1, 2, 3, 4, 5].reduce((s, r) => s + (starByRating[r] ?? 0), 0)
     : 0;
+  const averageRating = starByRating != null && starTotal > 0
+    ? [1, 2, 3, 4, 5].reduce((s, r) => s + r * (starByRating[r] ?? 0), 0) / starTotal
+    : totalFeedback > 0
+      ? (feedback.reduce((sum, f) => sum + Number(f.rating), 0) / totalFeedback)
+      : 0;
 
   if (loading) {
     return (
