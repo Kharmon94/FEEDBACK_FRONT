@@ -267,9 +267,9 @@ export function FeedbackList() {
       );
     }
 
-    // Rating filter
+    // Rating filter (Number() so API string/number both work)
     if (filterRating !== null) {
-      filtered = filtered.filter(f => f.rating === filterRating);
+      filtered = filtered.filter(f => Number(f.rating) === filterRating);
     }
 
     // Device filter
@@ -341,11 +341,13 @@ export function FeedbackList() {
     }
   };
 
-  const totalFeedback = feedback.length;
-  const positiveCount = feedback.filter(f => Number(f.rating) >= 4).length;
-  const negativeCount = feedback.filter(f => Number(f.rating) <= 3).length;
+  // Use filtered list for stats so star/rating data matches what's visible (respects search + rating/device/country filters)
+  const feedbackForStats = tableType === 'feedback' ? filteredFeedback : feedback;
+  const totalFeedback = tableType === 'feedback' ? feedbackForStats.length : feedback.length;
+  const positiveCount = feedbackForStats.filter(f => Number(f.rating) >= 4).length;
+  const negativeCount = feedbackForStats.filter(f => Number(f.rating) <= 3).length;
   const averageRating = totalFeedback > 0
-    ? (feedback.reduce((sum, f) => sum + Number(f.rating), 0) / totalFeedback)
+    ? (feedbackForStats.reduce((sum, f) => sum + Number(f.rating), 0) / totalFeedback)
     : 0;
 
   if (loading) {
